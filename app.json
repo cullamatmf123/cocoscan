@@ -4,7 +4,7 @@
     "slug": "cocoscan",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "scheme": "cocoscan",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/splash.png",
@@ -16,65 +16,29 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.cocoscan.app",
-      "infoPlist": {
-        "NSCameraUsageDescription": "The app needs access to your camera to scan coconuts.",
-        "NSPhotoLibraryUsageDescription": "The app accesses your photos to let you select images for analysis."
-      }
+      "bundleIdentifier": "com.markmark987654321.cocoscan"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#2D5A3D"
       },
-      "package": "com.cocoscan.app",
-      "versionCode": 1,
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.RECORD_AUDIO"
-      ]
+      "package": "com.markmark987654321.cocoscan"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
-        "expo-splash-screen",
+        "expo-build-properties",
         {
-          "image": "./assets/icon.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#2D5A3D"
-        }
-      ],
-      [
-        "expo-image-picker",
-        {
-          "photosPermission": "The app accesses your photos to let you select images for analysis.",
-          "cameraPermission": "The app needs access to your camera to scan coconuts."
-        }
-      ],
-      [
-        "expo-camera",
-        {
-          "cameraPermission": "The app needs access to your camera to scan coconuts."
+          "android": {
+            "compileSdkVersion": 33,
+            "targetSdkVersion": 33,
+            "buildToolsVersion": "33.0.0"
+          }
         }
       ]
-    ],
-    "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
-    },
-    "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "82408c9e-43eb-4178-a9fb-225c52e8ccf2"
-      }
-    },
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/82408c9e-43eb-4178-a9fb-225c52e8ccf2"
-    }
+    ]
   }
 }

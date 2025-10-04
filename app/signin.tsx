@@ -1,38 +1,56 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { signIn } from '../services/authService';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSignIn = () => {
+  const handleSignIn = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+      setError('Please fill in all fields');
       return;
     }
 
     if (!email.includes('@')) {
-      Alert.alert('Error', 'Please enter a valid email address');
+      setError('Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    setError('');
+
+    try {
+      await signIn(email, password);
       // Navigate to home page after successful sign-in
       router.replace('/home');
-    }, 1500);
+    } catch (error: any) {
+      console.error('Sign in error:', error);
+      setError(error.message || 'Failed to sign in');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const navigateToSignUp = () => {
     router.push('/signup');
   };
 
-  const handleForgotPassword = () => {
-    Alert.alert('Forgot Password', 'Password reset functionality coming soon!');
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+    
+    try {
+      await sendPasswordReset(email);
+      Alert.alert('Password Reset', 'A password reset link has been sent to your email.');
+    } catch (error: any) {
+      setError(error.message || 'Failed to send password reset email');
+    }
   };
 
   return (
@@ -46,23 +64,30 @@ export default function SignIn() {
 
         <Text style={styles.title}>Welcome Back</Text>
 
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
+            <Text style={styles.label}>Email</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
               placeholderTextColor="#999"
               value={email}
               onChangeText={setEmail}
-              keyboardType="email-address"
               autoCapitalize="none"
-              autoCorrect={false}
+              keyboardType="email-address"
+              editable={!isLoading}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Password</Text>
+            <View style={styles.passwordHeader}>
+              <Text style={styles.label}>Password</Text>
+              <TouchableOpacity onPress={handleForgotPassword} disabled={isLoading}>
+                <Text style={styles.forgotPassword}>Forgot Password?</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
@@ -70,28 +95,26 @@ export default function SignIn() {
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              autoCapitalize="none"
+              editable={!isLoading}
             />
           </View>
 
-          <TouchableOpacity onPress={handleForgotPassword} style={styles.forgotPasswordContainer}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity 
-            style={[styles.signInButton, isLoading && styles.buttonDisabled]} 
+            style={[styles.button, isLoading && styles.buttonDisabled]} 
             onPress={handleSignIn}
             disabled={isLoading}
           >
-            <Text style={styles.signInButtonText}>
-              {isLoading ? 'Signing In...' : 'Sign In'}
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.buttonText}>Sign In</Text>
+            )}
           </TouchableOpacity>
 
-          <View style={styles.signUpContainer}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={navigateToSignUp}>
-              <Text style={styles.signUpLink}>Sign Up</Text>
+          <View style={styles.signupContainer}>
+            <Text style={styles.signupText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={navigateToSignUp} disabled={isLoading}>
+              <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -107,7 +130,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 30,
+    padding: 20,
     justifyContent: 'center',
   },
   logoContainer: {
@@ -118,9 +141,9 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: 'white',
-    alignItems: 'center',
+    backgroundColor: '#fff',
     justifyContent: 'center',
+    alignItems: 'center',
     borderWidth: 3,
     borderColor: '#FFD700',
   },
@@ -129,65 +152,79 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
+    fontWeight: 'bold',
+    color: '#fff',
     textAlign: 'center',
     marginBottom: 30,
   },
   formContainer: {
-    width: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   inputGroup: {
     marginBottom: 20,
   },
-  inputLabel: {
-    color: 'white',
-    marginBottom: 8,
+  label: {
     fontSize: 16,
+    color: '#2D5A3D',
+    marginBottom: 8,
+    fontWeight: '500',
   },
   input: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
     padding: 15,
     fontSize: 16,
     color: '#333',
   },
-  forgotPasswordContainer: {
-    alignItems: 'flex-end',
-    marginBottom: 20,
-  },
-  forgotPasswordText: {
-    color: '#FFD700',
-    fontSize: 14,
-  },
-  signInButton: {
-    backgroundColor: '#FFD700',
-    padding: 16,
-    borderRadius: 8,
+  passwordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+  },
+  forgotPassword: {
+    color: '#2D5A3D',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  button: {
+    backgroundColor: '#2D5A3D',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+    marginTop: 10,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.7,
   },
-  signInButtonText: {
-    color: '#2D5A3D',
-    fontSize: 18,
-    fontWeight: '600',
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
-  signUpContainer: {
+  signupContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginTop: 20,
   },
-  signUpText: {
-    color: 'white',
-    fontSize: 16,
+  signupText: {
+    color: '#666',
   },
-  signUpLink: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: '600',
+  signupLink: {
+    color: '#2D5A3D',
+    fontWeight: 'bold',
     marginLeft: 5,
+  },
+  errorText: {
+    color: '#ff6b6b',
+    textAlign: 'center',
+    marginBottom: 15,
+    fontWeight: '500',
   },
 });
