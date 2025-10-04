@@ -1,8 +1,7 @@
 // config/firebase.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getApp, getApps, initializeApp } from 'firebase/app';
-import { Auth, getAuth, getReactNativePersistence, initializeAuth } from 'firebase/auth';
-import { enableIndexedDbPersistence, Firestore, getFirestore } from 'firebase/firestore';
+import { Auth, getAuth, initializeAuth } from 'firebase/auth';
+import { Firestore, getFirestore } from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -21,18 +20,12 @@ let db: Firestore;
 
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
-  db = getFirestore(app);
   
-  enableIndexedDbPersistence(db).catch((err) => {
-    if (err.code === 'failed-precondition') {
-      console.warn('Offline persistence can only be enabled in one tab at a time.');
-    } else if (err.code === 'unimplemented') {
-      console.warn('The current browser does not support offline persistence.');
-    }
-  });
+  // For React Native, we'll use standard auth initialization
+  // AsyncStorage persistence is handled automatically in React Native
+  auth = initializeAuth(app);
+  
+  db = getFirestore(app);
 } else {
   app = getApp();
   auth = getAuth(app);
@@ -40,3 +33,4 @@ if (getApps().length === 0) {
 }
 
 export { auth, db };
+

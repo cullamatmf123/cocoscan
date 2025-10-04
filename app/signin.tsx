@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { signIn } from '../services/authService';
+import { sendPasswordReset, signIn } from '../services/authService';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
