@@ -1,8 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ResultParams {
+  id?: string;
+  fromHistory?: string; // '1' when opened from history
   imageUri?: string;
   photoBase64?: string;
   prediction?: string;
@@ -15,8 +18,12 @@ interface ResultParams {
 
 export default function ResultScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<ResultParams>();
+  const params = useLocalSearchParams() as Partial<ResultParams>;
+  const savedRef = useRef(false);
+
   const {
+    id,
+    fromHistory,
     imageUri,
     photoBase64,
     prediction = 'Unknown',
@@ -37,27 +44,79 @@ export default function ResultScreen() {
     }
   }, [imageUri, photoBase64]);
 
+  // Save result to local history once when screen mounts with data
+  useEffect(() => {
+    const saveToHistory = async () => {
+      if (savedRef.current) return; // avoid duplicates on rerenders
+      // If opened from history or an id already exists, do not save again
+      if (fromHistory === '1' || (id && id.length > 0)) return;
+      if (!imageUri && !photoBase64) return;
+      try {
+        const key = 'scanHistory';
+        const existing = await AsyncStorage.getItem(key);
+        const list = existing ? JSON.parse(existing) : [];
+        const entry = {
+          id: `${Date.now()}`,
+          timestamp: new Date().toISOString(),
+          imageUri: imageUri || null,
+          photoBase64: photoBase64 || null,
+          prediction,
+          confidence,
+          details,
+          recommendations,
+          weather,
+          soil,
+        };
+        // newest first
+        const updated = [entry, ...list].slice(0, 100);
+        await AsyncStorage.setItem(key, JSON.stringify(updated));
+        savedRef.current = true;
+      } catch (e) {
+        console.warn('Failed to save history:', e);
+      }
+    };
+    saveToHistory();
+  }, [imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil]);
+
   const handleAboutPress = () => {
     router.push({
       pathname: '/about',
       params: {
+        tab: 'overview',
         imageUri,
         photoBase64,
         prediction,
         details,
-        recommendations
-      }
+        recommendations,
+      },
     });
   };
 
   const handleTreatmentPress = () => {
     router.push({
-      pathname: '/treatment',
+      pathname: '/about',
       params: {
+        tab: 'prevention',
         imageUri,
+        photoBase64,
         prediction,
-        recommendations
-      }
+        details,
+        recommendations,
+      },
+    });
+  };
+
+  const handlePesticidePress = () => {
+    router.push({
+      pathname: '/about',
+      params: {
+        tab: 'pesticide',
+        imageUri,
+        photoBase64,
+        prediction,
+        details,
+        recommendations,
+      },
     });
   };
 
@@ -114,7 +173,9 @@ export default function ResultScreen() {
               styles.chip, 
               prediction?.toLowerCase() === 'healthy' ? styles.chipHealthy : styles.chipWarn
             ]}>
-              <Text style={styles.chipText}>AI: {prediction} ({confidence}%)</Text>
+              <Text style={styles.chipText}>
+                AI: {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'} ({confidence}%)
+              </Text>
             </View>
             <View style={styles.chip}>
               <Text style={styles.chipText}>🌤️ {weather}</Text>
@@ -145,7 +206,7 @@ export default function ResultScreen() {
             <TouchableOpacity 
               style={[styles.ghostBtn]} 
               activeOpacity={0.9}
-              onPress={() => Alert.alert('Coming Soon', 'Pesticide recommendation feature will be available soon.')}
+              onPress={handlePesticidePress}
             >
               <Text style={styles.ghostBtnText}>Pesticide Recommendation</Text>
             </TouchableOpacity>
