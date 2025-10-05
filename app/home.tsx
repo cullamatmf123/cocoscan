@@ -84,7 +84,7 @@ export default function HomeScreen() {
               <Text style={styles.menuItemText}>Profile</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about'); }}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
