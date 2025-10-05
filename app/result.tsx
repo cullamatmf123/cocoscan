@@ -14,6 +14,9 @@ interface ResultParams {
   recommendations?: string;
   weather?: string;
   soil?: string;
+  temperature?: string;
+  humidity?: string;
+  lightCondition?: string;
 }
 
 export default function ResultScreen() {
@@ -31,7 +34,10 @@ export default function ResultScreen() {
     details = '',
     recommendations = 'No specific recommendations available.',
     weather = 'Not specified',
-    soil = 'Not specified'
+    soil = 'Not specified',
+    temperature = 'Not specified',
+    humidity = 'Not specified',
+    lightCondition = 'Not specified'
   } = params;
 
   useEffect(() => {
@@ -66,6 +72,9 @@ export default function ResultScreen() {
           recommendations,
           weather,
           soil,
+          temperature,
+          humidity,
+          lightCondition,
         };
         // newest first
         const updated = [entry, ...list].slice(0, 100);
@@ -76,8 +85,7 @@ export default function ResultScreen() {
       }
     };
     saveToHistory();
-  }, [imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil]);
-
+  }, [imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition]);
   const handleAboutPress = () => {
     router.push({
       pathname: '/about',
@@ -168,22 +176,31 @@ export default function ResultScreen() {
           </View>
 
           {/* Info chips */}
-          <View style={styles.chipsRow}>
-            <View style={[
-              styles.chip, 
-              prediction?.toLowerCase() === 'healthy' ? styles.chipHealthy : styles.chipWarn
-            ]}>
-              <Text style={styles.chipText}>
-                AI: {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'} ({confidence}%)
-              </Text>
-            </View>
-            <View style={styles.chip}>
-              <Text style={styles.chipText}>🌤️ {weather}</Text>
-            </View>
-            <View style={styles.chip}>
-              <Text style={styles.chipText}>🌱 {soil}</Text>
-            </View>
-          </View>
+<View style={styles.chipsRow}>
+  <View style={[
+    styles.chip, 
+    prediction?.toLowerCase() === 'healthy' ? styles.chipHealthy : styles.chipWarn
+  ]}>
+    <Text style={styles.chipText}>
+      AI: {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'} ({confidence}%)
+    </Text>
+  </View>
+  <View style={styles.chip}>
+    <Text style={styles.chipText}>🌤️ {weather}</Text>
+  </View>
+  <View style={styles.chip}>
+    <Text style={styles.chipText}>☀️ {lightCondition}</Text>
+  </View>
+  <View style={styles.chip}>
+    <Text style={styles.chipText}>🌡️ {temperature}°C</Text>
+  </View>
+  <View style={styles.chip}>
+    <Text style={styles.chipText}>💧 {humidity}%</Text>
+  </View>
+  <View style={styles.chip}>
+    <Text style={styles.chipText}>🌱 {soil}</Text>
+  </View>
+</View>
 
           {/* Buttons */}
           <View style={styles.buttonsCol}>

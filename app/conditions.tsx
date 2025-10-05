@@ -1,13 +1,16 @@
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function ConditionsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [weather, setWeather] = useState('');
   const [soil, setSoil] = useState('');
+  const [temperature, setTemperature] = useState('');
+  const [humidity, setHumidity] = useState('');
+  const [lightCondition, setLightCondition] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Extract all parameters from the navigation
@@ -28,10 +31,13 @@ export default function ConditionsScreen() {
   const weatherOptions = [
     { label: 'Select weather condition', value: '' },
     { label: 'Sunny', value: 'sunny' },
-    { label: 'Rainy', value: 'rainy' },
+    { label: 'Partly Cloudy', value: 'partly_cloudy' },
     { label: 'Cloudy', value: 'cloudy' },
+    { label: 'Overcast', value: 'overcast' },
+    { label: 'Light Rain', value: 'light_rain' },
+    { label: 'Heavy Rain', value: 'heavy_rain' },
     { label: 'Windy', value: 'windy' },
-    { label: 'Other', value: 'other' },
+    { label: 'Foggy', value: 'foggy' },
   ];
 
   const soilOptions = [
@@ -42,11 +48,54 @@ export default function ConditionsScreen() {
     { label: 'Peaty', value: 'peaty' },
     { label: 'Chalky', value: 'chalky' },
     { label: 'Silty', value: 'silty' },
+    { label: 'Rocky', value: 'rocky' },
   ];
 
+  const lightOptions = [
+    { label: 'Select light condition', value: '' },
+    { label: 'Direct Sunlight', value: 'direct_sunlight' },
+    { label: 'Bright Shade', value: 'bright_shade' },
+    { label: 'Partial Shade', value: 'partial_shade' },
+    { label: 'Full Shade', value: 'full_shade' },
+    { label: 'Artificial Light', value: 'artificial_light' },
+    { label: 'Low Light', value: 'low_light' },
+  ];
+
+  const validateInputs = () => {
+    if (!weather || !soil || !lightCondition) {
+      Alert.alert('Incomplete Information', 'Please select weather, soil type, and light conditions.');
+      return false;
+    }
+
+    if (!temperature.trim()) {
+      Alert.alert('Missing Temperature', 'Please enter the current temperature.');
+      return false;
+    }
+
+    if (!humidity.trim()) {
+      Alert.alert('Missing Humidity', 'Please enter the current humidity level.');
+      return false;
+    }
+
+    // Validate temperature range (reasonable for coconut growing regions: 15-45°C)
+    const tempValue = parseFloat(temperature);
+    if (isNaN(tempValue) || tempValue < -10 || tempValue > 60) {
+      Alert.alert('Invalid Temperature', 'Please enter a valid temperature between -10°C and 60°C.');
+      return false;
+    }
+
+    // Validate humidity range (0-100%)
+    const humidityValue = parseFloat(humidity);
+    if (isNaN(humidityValue) || humidityValue < 0 || humidityValue > 100) {
+      Alert.alert('Invalid Humidity', 'Please enter a valid humidity percentage between 0% and 100%.');
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSubmit = () => {
-    if (!weather || !soil) {
-      Alert.alert('Incomplete Information', 'Please select both weather and soil conditions.');
+    if (!validateInputs()) {
       return;
     }
 
@@ -57,7 +106,7 @@ export default function ConditionsScreen() {
 
     setIsSubmitting(true);
     
-    // Navigate to result page with all collected data
+    // Navigate to result page with all collected environmental data
     router.push({
       pathname: '/result',
       params: {
@@ -67,7 +116,10 @@ export default function ConditionsScreen() {
         details,
         recommendations,
         weather,
-        soil
+        soil,
+        temperature: temperature.trim(),
+        humidity: humidity.trim(),
+        lightCondition
       }
     });
   };
@@ -98,8 +150,8 @@ export default function ConditionsScreen() {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.title}>External Conditions</Text>
-          <Text style={styles.subtitle}>Please provide the following information:</Text>
+          <Text style={styles.title}>Environmental Conditions</Text>
+          <Text style={styles.subtitle}>Provide detailed environmental data for accurate analysis:</Text>
           
           <View style={styles.pickerContainer}>
             <Text style={styles.label}>Weather Condition</Text>
@@ -119,6 +171,52 @@ export default function ConditionsScreen() {
                 ))}
               </Picker>
             </View>
+          </View>
+
+          <View style={styles.pickerContainer}>
+            <Text style={styles.label}>Light Condition</Text>
+            <View style={styles.pickerWrapper}>
+              <Picker
+                selectedValue={lightCondition}
+                onValueChange={(itemValue) => setLightCondition(itemValue)}
+                style={styles.picker}
+                dropdownIconColor="#666"
+              >
+                {lightOptions.map((option) => (
+                  <Picker.Item 
+                    key={option.value} 
+                    label={option.label} 
+                    value={option.value} 
+                  />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Temperature (°C)</Text>
+            <TextInput
+              style={styles.textInput}
+              value={temperature}
+              onChangeText={setTemperature}
+              placeholder="e.g., 28.5"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+              maxLength={5}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Humidity (%)</Text>
+            <TextInput
+              style={styles.textInput}
+              value={humidity}
+              onChangeText={setHumidity}
+              placeholder="e.g., 75"
+              placeholderTextColor="#999"
+              keyboardType="numeric"
+              maxLength={3}
+            />
           </View>
 
           <View style={styles.pickerContainer}>
@@ -147,7 +245,7 @@ export default function ConditionsScreen() {
             disabled={isSubmitting}
           >
             <Text style={styles.submitButtonText}>
-              {isSubmitting ? 'Submitting...' : 'Submit'}
+              {isSubmitting ? 'Processing...' : 'Analyze Conditions'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -227,6 +325,9 @@ const styles = StyleSheet.create({
   pickerContainer: {
     marginBottom: 20,
   },
+  inputContainer: {
+    marginBottom: 20,
+  },
   label: {
     fontSize: 15,
     fontWeight: 'bold',
@@ -243,6 +344,17 @@ const styles = StyleSheet.create({
   picker: {
     height: 50,
     color: '#2d5a3d',
+  },
+  textInput: {
+    borderWidth: 1.5,
+    borderColor: '#2d5a3d',
+    borderRadius: 10,
+    backgroundColor: '#f7f7f7',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#2d5a3d',
+    height: 50,
   },
   submitButton: {
     backgroundColor: '#FFD700',
