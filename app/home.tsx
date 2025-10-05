@@ -1,11 +1,19 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, ImageBackground, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getCurrentUser, onAuthStateChanged } from '../services/authService';
+import { AuthService } from '../services/authService';
 
 export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
+
+  const handleStartScanning = () => {
+    router.push('/camera');
+  };
+
+  const handleHistoryPress = () => {
+    router.push('/history');
+  };
 
   useEffect(() => {
     const computeName = (email?: string | null, fallback?: string | null) => {
@@ -16,22 +24,13 @@ export default function HomeScreen() {
       const base = noTrailingDigits || handle;
       return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
     };
-
-    const current = getCurrentUser();
+    const current = AuthService.getCurrentUser();
     setDisplayName(computeName(current?.email ?? null, current?.displayName ?? null));
-
-    const unsub = onAuthStateChanged((u) => {
+    const unsub = AuthService.onAuthStateChanged((u) => {
       setDisplayName(computeName(u?.email ?? null, u?.displayName ?? null));
     });
     return () => unsub && unsub();
   }, []);
-  const handleStartScanning = () => {
-    router.push('/camera');
-  };
-
-  const handleHistoryPress = () => {
-    router.push('/history');
-  };
 
   const handleProfilePress = () => {
     router.push('/profile');

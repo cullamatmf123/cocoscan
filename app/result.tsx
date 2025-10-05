@@ -18,13 +18,9 @@ interface ResultParams {
 
 export default function ResultScreen() {
   const router = useRouter();
-<<<<<<< HEAD
   const params = useLocalSearchParams() as Partial<ResultParams>;
   const savedRef = useRef(false);
 
-=======
-  const params = useLocalSearchParams() as ResultParams;
->>>>>>> d8cc992be317314bb0e0e71f26d51093f6704f01
   const {
     id,
     fromHistory,
@@ -84,7 +80,7 @@ export default function ResultScreen() {
 
   const handleAboutPress = () => {
     router.push({
-      pathname: '/',
+      pathname: '/about',
       params: {
         tab: 'overview',
         imageUri,
@@ -98,11 +94,7 @@ export default function ResultScreen() {
 
   const handleTreatmentPress = () => {
     router.push({
-<<<<<<< HEAD
       pathname: '/about',
-=======
-      pathname: '/',
->>>>>>> d8cc992be317314bb0e0e71f26d51093f6704f01
       params: {
         tab: 'prevention',
         imageUri,

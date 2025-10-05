@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getCurrentUser, onAuthStateChanged } from '../services/authService';
+import { AuthService } from '../services/authService';
 
 export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState<string>('');
@@ -16,11 +16,10 @@ export default function ProfileScreen() {
       const base = noTrailingDigits || handle;
       return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
     };
-
-    const current = getCurrentUser();
+    const current = AuthService.getCurrentUser();
     setDisplayName(computeName(current?.email ?? null, current?.displayName ?? null));
 
-    const unsub = onAuthStateChanged((u) => {
+    const unsub = AuthService.onAuthStateChanged((u) => {
       setDisplayName(computeName(u?.email ?? null, u?.displayName ?? null));
     });
     return () => unsub && unsub();
@@ -28,7 +27,6 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header with green shape and title */}
       <View style={styles.headerWrap}>
         <View style={styles.headerBgPrimary} />
         <View style={styles.headerBgWave} />
