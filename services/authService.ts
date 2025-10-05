@@ -1,117 +1,129 @@
-// services/authService.ts
 import {
-    createUserWithEmailAndPassword,
-    onAuthStateChanged as firebaseOnAuthStateChanged,
-    sendPasswordResetEmail as firebaseSendPasswordReset,
-    signOut as firebaseSignOut,
-    signInWithEmailAndPassword,
-    Unsubscribe,
-    User,
-    UserCredential
+  createUserWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  onAuthStateChanged,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  updateProfile,
+  User
 } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db } from '../config/firebase';
+import { auth } from '../config/firebase';
 
-export interface UserData {
-  name: string;
-  email: string;
-  createdAt: any;
-  updatedAt: any;
+export interface AuthResult {
+  success: boolean;
+  user?: User | null;
+  error?: string;
 }
 
-// Helper function to get user-friendly error messages
-const getAuthErrorMessage = (code: string): string => {
-  switch (code) {
-    case 'auth/email-already-in-use':
-      return 'An account with this email already exists.';
-    case 'auth/invalid-email':
-      return 'The email address is not valid.';
-    case 'auth/operation-not-allowed':
-      return 'This operation is not allowed.';
-    case 'auth/weak-password':
-      return 'The password is too weak (minimum 6 characters).';
-    case 'auth/user-disabled':
-      return 'This user account has been disabled.';
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-      return 'Invalid email or password.';
-    case 'auth/too-many-requests':
-      return 'Too many failed attempts. Please try again later.';
-    case 'auth/network-request-failed':
-      return 'A network error occurred. Please check your connection.';
-    default:
-      return 'An unknown error occurred. Please try again.';
-  }
-};
-
-// Sign up a new user
-export const signUp = async (email: string, password: string, name: string): Promise<UserCredential> => {
-  try {
-    if (!auth) throw new Error('Firebase Auth not initialized');
-    
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
-    if (db) {
-      const userData: UserData = {
-        name: name.trim(),
-        email: email.trim(),
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+export class AuthService {
+  // Sign up with email and password
+  static async signUp(email: string, password: string, fullName: string): Promise<AuthResult> {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      await setDoc(doc(db, 'users', userCredential.user.uid), userData);
+      // Update user profile with display name
+      if (userCredential?.user) {
+        await updateProfile(userCredential.user, {
+          displayName: fullName
+        });
+      }
+      
+      return {
+        success: true,
+        user: userCredential.user
+      };
+    } catch (error: any) {
+      let errorMessage = 'Sign up failed';
+      
+      // Handle common Firebase auth errors
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email is already in use.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'Password should be at least 6 characters.';
+          break;
+        default:
+          errorMessage = error.message || 'An error occurred during sign up.';
+      }
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
     }
-    
-    return userCredential;
-  } catch (error: any) {
-    console.error('Error signing up:', error);
-    throw new Error(getAuthErrorMessage(error.code) || 'Failed to create account');
   }
-};
 
-// Sign in an existing user
-export const signIn = async (email: string, password: string): Promise<UserCredential> => {
-  try {
-    if (!auth) throw new Error('Firebase Auth not initialized');
-    return await signInWithEmailAndPassword(auth, email, password);
-  } catch (error: any) {
-    console.error('Error signing in:', error);
-    throw new Error(getAuthErrorMessage(error.code) || 'Failed to sign in');
+  // Sign in with email and password
+  static async signIn(email: string, password: string): Promise<AuthResult> {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      return {
+        success: true,
+        user: userCredential.user
+      };
+    } catch (error: any) {
+      let errorMessage = 'Sign in failed';
+      
+      // Handle common Firebase auth errors
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+          errorMessage = 'Invalid email or password.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed attempts. Please try again later.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled.';
+          break;
+        default:
+          errorMessage = error.message || 'An error occurred during sign in.';
+      }
+      
+      return {
+        success: false,
+        error: errorMessage
+      };
+    }
   }
-};
 
-// Sign out the current user
-export const signOut = async (): Promise<void> => {
-  try {
-    if (!auth) throw new Error('Firebase Auth not initialized');
-    await firebaseSignOut(auth);
-  } catch (error: any) {
-    console.error('Error signing out:', error);
-    throw new Error(error.message || 'Failed to sign out');
+  // Sign out the current user
+  static async signOut(): Promise<AuthResult> {
+    try {
+      await firebaseSignOut(auth);
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to sign out'
+      };
+    }
   }
-};
 
-// Send password reset email
-export const sendPasswordReset = async (email: string): Promise<void> => {
-  try {
-    if (!auth) throw new Error('Firebase Auth not initialized');
-    await firebaseSendPasswordReset(auth, email);
-  } catch (error: any) {
-    console.error('Error sending password reset email:', error);
-    throw new Error(getAuthErrorMessage(error.code) || 'Failed to send password reset email');
+  // Send password reset email
+  static async resetPassword(email: string): Promise<AuthResult> {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      return { success: true };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || 'Failed to send password reset email'
+      };
+    }
   }
-};
 
-// Get the current user
-export const getCurrentUser = (): User | null => {
-  return auth?.currentUser || null;
-};
-
-// Listen for auth state changes
-export const onAuthStateChanged = (callback: (user: User | null) => void): Unsubscribe => {
-  if (!auth) {
-    console.error('Firebase Auth not initialized');
-    return () => {};
+  // Get the current user
+  static getCurrentUser(): User | null {
+    return auth.currentUser;
   }
-  return firebaseOnAuthStateChanged(auth, callback);
-};
+
+  // Listen for auth state changes
+  static onAuthStateChanged(callback: (user: User | null) => void) {
+    return onAuthStateChanged(auth, callback);
+  }
+}

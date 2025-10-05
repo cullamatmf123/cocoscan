@@ -15,7 +15,7 @@ interface ResultParams {
 
 export default function ResultScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<ResultParams>();
+  const params = useLocalSearchParams() as ResultParams;
   const {
     imageUri,
     photoBase64,
@@ -39,7 +39,7 @@ export default function ResultScreen() {
 
   const handleAboutPress = () => {
     router.push({
-      pathname: '/about',
+      pathname: '/',
       params: {
         imageUri,
         photoBase64,
@@ -52,7 +52,7 @@ export default function ResultScreen() {
 
   const handleTreatmentPress = () => {
     router.push({
-      pathname: '/treatment',
+      pathname: '/',
       params: {
         imageUri,
         prediction,
