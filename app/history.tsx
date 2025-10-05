@@ -119,7 +119,7 @@ export default function HistoryScreen() {
       >
         <View style={styles.titleRow}>
           <Text style={styles.itemTitle}>
-            {((item.prediction || '').toLowerCase().includes('healthy') ? 'Healthy' : 'Pest Detected')}
+            {((item.prediction || '').toLowerCase().includes('healthy') ? 'Healthy' : 'Unhealthy')}
           </Text>
           <View
             style={[
@@ -130,7 +130,7 @@ export default function HistoryScreen() {
             ]}
           >
             <Text style={styles.badgeText} numberOfLines={1}>
-              {((item.prediction || '').toLowerCase().includes('healthy') ? 'Healthy' : 'Pest Detected')}
+              {((item.prediction || '').toLowerCase().includes('healthy') ? 'Healthy' : 'Unhealthy')}
             </Text>
           </View>
         </View>
@@ -278,7 +278,7 @@ const styles = StyleSheet.create({
   },
   selectAllText: {
     color: '#2D5A3D',
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
   },
   headerTitle: {
@@ -295,17 +295,17 @@ const styles = StyleSheet.create({
   rightControls: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
   },
   selectAllButton: {
     paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingHorizontal: 6,
     marginRight: 4,
   },
   deleteButton: {
     paddingVertical: 8,
     paddingHorizontal: 10,
-    width: 60,
+    width: 24,
     alignItems: 'flex-end',
   },
   deleteText: {
