@@ -8,26 +8,54 @@ export default function SignInScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async () => {
+  const validateForm = () => {
     if (!email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
-      return;
+      return false;
     }
+    
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleSignIn = async () => {
+    if (!validateForm()) return;
 
     setLoading(true);
     
     try {
-      const result = await AuthService.signIn(email, password);
+      // Role-based authentication: false = user portal (blocks admin users)
+      const result = await AuthService.signIn(email, password, false);
       
       if (result.success) {
         router.replace('/home');
       } else {
-        Alert.alert('Sign In Failed', result.error || 'An error occurred');
+        Alert.alert('Sign In Failed', result.error || result.message || 'An error occurred');
       }
     } catch (error) {
+      console.error('Sign in error:', error);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      Alert.alert('Error', 'Please enter your email address first');
+      return;
+    }
+
+    try {
+      await AuthService.resetPassword(email);
+      Alert.alert('Success', 'Password reset email sent. Please check your inbox.');
+    } catch (error) {
+      console.error('Password reset error:', error);
+      Alert.alert('Error', 'Failed to send password reset email. Please try again.');
     }
   };
 
@@ -42,17 +70,15 @@ export default function SignInScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {/* Logo with palm tree icon */}
         <View style={styles.logoContainer}>
           <View style={styles.logoCircle}>
             <Text style={styles.palmTreeIcon}>🌴</Text>
           </View>
         </View>
 
-        {/* Title */}
         <Text style={styles.title}>Sign In</Text>
+        <Text style={styles.subtitle}>Welcome back! Please sign in to continue</Text>
 
-        {/* Form */}
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email</Text>
@@ -64,6 +90,7 @@ export default function SignInScreen() {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              autoCorrect={false}
               editable={!loading}
             />
           </View>
@@ -78,15 +105,19 @@ export default function SignInScreen() {
               onChangeText={setPassword}
               secureTextEntry
               editable={!loading}
+              onSubmitEditing={handleSignIn}
             />
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
+          <TouchableOpacity 
+            style={styles.forgotPassword} 
+            onPress={handleForgotPassword}
+            disabled={loading}
+          >
             <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Buttons */}
         <View style={styles.buttonsContainer}>
           <TouchableOpacity 
             style={[styles.signInButton, loading && styles.buttonDisabled]} 
@@ -106,6 +137,12 @@ export default function SignInScreen() {
               <Text style={[styles.signUpLink, loading && styles.linkDisabled]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
+        </View>
+
+        <View style={styles.adminLinkContainer}>
+          <TouchableOpacity onPress={() => router.push('/admin/admin')} disabled={loading}>
+            <Text style={[styles.adminLink, loading && styles.linkDisabled]}>Admin Portal</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </View>
@@ -132,7 +169,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     backgroundColor: 'transparent',
     borderWidth: 3,
-    borderColor: '#FFD700',
+    borderColor: '#2D5A3D',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -143,8 +180,14 @@ const styles = StyleSheet.create({
   title: {
     color: '#2D5A3D',
     fontSize: 28,
-    fontWeight: '700' as const,
+    fontWeight: '700',
     letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  subtitle: {
+    color: '#666',
+    fontSize: 16,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -162,7 +205,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F5F9F7',
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 12,
@@ -176,7 +219,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   forgotPasswordText: {
-    color: '#FFD700',
+    color: '#2D5A3D',
     fontSize: 14,
     fontWeight: '500',
   },
@@ -202,27 +245,38 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     backgroundColor: '#A0A0A0',
+    opacity: 0.6,
   },
   signInText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: '700' as const,
+    fontWeight: '700',
     letterSpacing: 1,
   },
   signUpPrompt: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 20,
   },
   signUpPromptText: {
     color: '#666666',
     fontSize: 16,
   },
   signUpLink: {
-    color: '#FFD700',
+    color: '#2D5A3D',
     fontSize: 16,
     fontWeight: '600',
   },
   linkDisabled: {
     color: '#A0A0A0',
+  },
+  adminLinkContainer: {
+    marginTop: 20,
+  },
+  adminLink: {
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
 });

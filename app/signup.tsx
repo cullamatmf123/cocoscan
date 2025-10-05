@@ -8,182 +8,150 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validateForm = () => {
-    if (!fullName || !email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return false;
-    }
+    const newErrors: { [key: string]: string } = {};
     
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return false;
+    if (!fullName.trim()) newErrors.fullName = 'Full name is required';
+    if (!email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
     }
-    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
-      return false;
+      newErrors.confirmPassword = 'Passwords do not match';
     }
     
-    if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
-      return false;
-    }
-    
-    if (!agreeToTerms) {
-      Alert.alert('Error', 'You must agree to the Terms of Service and Privacy Policy');
-      return false;
-    }
-    
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSignUp = async () => {
     if (!validateForm()) return;
-    
+
     setLoading(true);
     
     try {
-      const result = await AuthService.signUp(email, password, fullName);
+      const result = await AuthService.signUp({
+        email,
+        password,
+        fullName,
+        isAdmin: false // Regular user
+      });
       
       if (result.success) {
-        // Show success message and automatically redirect
         Alert.alert(
-          'Account Created',
-          'Your account has been created successfully! Redirecting to sign in...',
-          [{ 
-            text: 'OK', 
-            onPress: () => {
-              // Clear form fields
-              setFullName('');
-              setEmail('');
-              setPassword('');
-              setConfirmPassword('');
-              setAgreeToTerms(false);
-              // Navigate to signin
-              router.replace('/signin');
-            }
-          }]
+          'Success',
+          'Your account has been created successfully! Please sign in.',
+          [{ text: 'OK', onPress: () => router.replace('/signin') }]
         );
       } else {
-        Alert.alert('Sign Up Failed', result.error || 'An error occurred during sign up');
+        Alert.alert('Error', result.error || 'Failed to create account');
       }
-    } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'An error occurred during sign up');
     } finally {
       setLoading(false);
     }
   };
+
   const handleGoToSignIn = () => {
-    try {
-      router.push('/signin');
-    } catch (error) {
-      console.log('Navigation to signin failed:', error);
-    }
+    router.push('/signin');
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <View style={styles.content}>
-        <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <Text style={styles.palmTreeIcon}>🌴</Text>
-          </View>
+    <ScrollView 
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
+      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.subtitle}>Sign up to get started</Text>
+
+      <View style={styles.form}>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Full Name</Text>
+          <TextInput
+            style={[styles.input, errors.fullName && styles.inputError]}
+            placeholder="Enter your full name"
+            value={fullName}
+            onChangeText={setFullName}
+            autoCapitalize="words"
+            placeholderTextColor="#999"
+            editable={!loading}
+          />
+          {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
         </View>
 
-        <Text style={styles.title}>Create Account</Text>
-
-        <View style={styles.formContainer}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your full name"
-              placeholderTextColor="#A0A0A0"
-              value={fullName}
-              onChangeText={setFullName}
-              autoCapitalize="words"
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              placeholderTextColor="#A0A0A0"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Create a password (min 6 characters)"
-              placeholderTextColor="#A0A0A0"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm your password"
-              placeholderTextColor="#A0A0A0"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!loading}
-            />
-          </View>
-
-          <TouchableOpacity 
-            style={styles.checkboxContainer} 
-            onPress={() => setAgreeToTerms(!agreeToTerms)}
-            activeOpacity={0.7}
-            disabled={loading}
-          >
-            <View style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}>
-              {agreeToTerms && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-            <Text style={styles.checkboxText}>
-              I agree to the <Text style={styles.termsText}>Terms of Service</Text> and <Text style={styles.termsText}>Privacy Policy</Text>
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={[styles.input, errors.email && styles.inputError]}
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            placeholderTextColor="#999"
+            editable={!loading}
+          />
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         </View>
 
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity 
-            style={[styles.signUpButton, loading && styles.buttonDisabled]} 
-            onPress={handleSignUp}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.signUpButtonText}>Sign Up</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.signInPrompt}>
-            <Text style={styles.signInPromptText}>Already have an account? </Text>
-            <TouchableOpacity onPress={handleGoToSignIn} disabled={loading}>
-              <Text style={[styles.signInLink, loading && styles.linkDisabled]}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            style={[styles.input, errors.password && styles.inputError]}
+            placeholder="Create a password (min 6 characters)"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholderTextColor="#999"
+            editable={!loading}
+          />
+          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
         </View>
+
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Confirm Password</Text>
+          <TextInput
+            style={[styles.input, errors.confirmPassword && styles.inputError]}
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+            secureTextEntry
+            placeholderTextColor="#999"
+            onSubmitEditing={handleSignUp}
+            editable={!loading}
+          />
+          {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+        </View>
+
+        <TouchableOpacity 
+          style={[styles.button, loading && styles.buttonDisabled]} 
+          onPress={handleSignUp}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign Up</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Already have an account? </Text>
+        <TouchableOpacity onPress={handleGoToSignIn} disabled={loading}>
+          <Text style={[styles.signInLink, loading && styles.linkDisabled]}>Sign In</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -192,144 +160,81 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F5F5F5',
   },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  logoContainer: {
-    marginBottom: 20,
-  },
-  logoCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'transparent',
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  palmTreeIcon: {
-    fontSize: 40,
-    textAlign: 'center',
+  contentContainer: {
+    padding: 24,
+    paddingTop: 40,
   },
   title: {
-    color: '#2D5A3D',
     fontSize: 28,
-    fontWeight: '700' as const,
-    letterSpacing: 1,
-    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#2D5A3D',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
     marginBottom: 32,
   },
-  formContainer: {
+  form: {
     width: '100%',
-    marginBottom: 24,
   },
   inputContainer: {
     marginBottom: 20,
   },
-  inputLabel: {
-    color: '#2D5A3D',
-    fontSize: 16,
+  label: {
+    fontSize: 14,
     fontWeight: '600',
+    color: '#444',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    borderColor: '#DDD',
+    borderRadius: 8,
+    padding: 14,
     fontSize: 16,
-    color: '#333333',
+    color: '#333',
   },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 8,
+  inputError: {
+    borderColor: '#E74C3C',
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#C4C4C4',
-    marginRight: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: '#2D5A3D',
-    borderColor: '#2D5A3D',
-  },
-  checkmark: {
-    color: '#FFFFFF',
+  errorText: {
+    color: '#E74C3C',
     fontSize: 12,
-    fontWeight: 'bold',
+    marginTop: 4,
   },
-  checkboxText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#666666',
-    lineHeight: 20,
-  },
-  termsText: {
-    color: '#FFD700',
-    fontWeight: '600',
-  },
-  buttonsContainer: {
-    width: '100%',
-    alignItems: 'center',
-  },
-  signUpButton: {
+  button: {
     backgroundColor: '#2D5A3D',
-    borderRadius: 25,
-    paddingVertical: 16,
-    width: '100%',
+    padding: 16,
+    borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    justifyContent: 'center',
+    marginTop: 16,
   },
   buttonDisabled: {
-    backgroundColor: '#A0A0A0',
+    backgroundColor: '#A0C0A8',
   },
-  signUpButtonText: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700' as const,
-    letterSpacing: 1,
-  },
-  signInPrompt: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  signInPromptText: {
-    color: '#666666',
+  buttonText: {
+    color: '#fff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  footerText: {
+    color: '#666',
   },
   signInLink: {
-    color: '#FFD700',
-    fontSize: 16,
+    color: '#2D5A3D',
     fontWeight: '600',
   },
   linkDisabled: {
-    color: '#A0A0A0',
+    opacity: 0.5,
   },
 });

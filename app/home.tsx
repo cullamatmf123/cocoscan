@@ -18,18 +18,25 @@ export default function HomeScreen() {
   useEffect(() => {
     const computeName = (email?: string | null, fallback?: string | null) => {
       if (fallback && fallback.trim()) return fallback.trim();
-      if (!email) return '';
+      if (!email) return 'User';
       const handle = (email.split('@')[0] || '');
       const noTrailingDigits = handle.replace(/[0-9]+$/, '');
       const base = noTrailingDigits || handle;
       return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
     };
-    const current = AuthService.getCurrentUser();
-    setDisplayName(computeName(current?.email ?? null, current?.displayName ?? null));
-    const unsub = AuthService.onAuthStateChanged((u) => {
-      setDisplayName(computeName(u?.email ?? null, u?.displayName ?? null));
+
+    // Subscribe to auth state changes
+    const unsubscribe = AuthService.onAuthStateChanged((user) => {
+      if (user) {
+        setDisplayName(computeName(user.email, user.displayName));
+      } else {
+        // If no user is logged in, redirect to signin
+        router.replace('/signin');
+      }
     });
-    return () => unsub && unsub();
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
 
   const handleProfilePress = () => {
