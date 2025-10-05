@@ -50,7 +50,7 @@ export default function RootLayout() {
         <Stack.Screen 
           name="index" 
           options={{ 
-            title: 'Home',
+            title: 'index',
             headerShown: false,
           }} 
         />
@@ -112,23 +112,6 @@ export default function RootLayout() {
           }} 
         />
         
-        <Stack.Screen 
-          name="about" 
-          options={{ 
-            title: 'About Plant',
-            headerShown: false,
-            animation: 'slide_from_right',
-          }} 
-        />
-        
-        <Stack.Screen 
-          name="treatment" 
-          options={{ 
-            title: 'Treatment',
-            headerShown: false,
-            animation: 'slide_from_right',
-          }} 
-        />
       </Stack>
     </View>
   );

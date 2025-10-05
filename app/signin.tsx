@@ -1,120 +1,109 @@
 import { router } from 'expo-router';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { sendPasswordReset, signIn } from '../services/authService';
+import { AuthService } from '../services/authService';
 
-export default function SignIn() {
+export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
-    if (!email.trim() || !password.trim()) {
-      setError('Please fill in all fields');
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    if (!email.includes('@')) {
-      setError('Please enter a valid email address');
-      return;
-    }
-
-    setIsLoading(true);
-    setError('');
-
-    try {
-      await signIn(email, password);
-      // Navigate to home page after successful sign-in
-      router.replace('/home');
-    } catch (error: any) {
-      console.error('Sign in error:', error);
-      setError(error.message || 'Failed to sign in');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const navigateToSignUp = () => {
-    router.push('/signup');
-  };
-
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setError('Please enter your email address first');
-      return;
-    }
+    setLoading(true);
     
     try {
-      await sendPasswordReset(email);
-      Alert.alert('Password Reset', 'A password reset link has been sent to your email.');
-    } catch (error: any) {
-      setError(error.message || 'Failed to send password reset email');
+      const result = await AuthService.signIn(email, password);
+      
+      if (result.success) {
+        router.replace('/home');
+      } else {
+        Alert.alert('Sign In Failed', result.error || 'An error occurred');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoToSignUp = () => {
+    try {
+      router.push('/signup');
+    } catch (error) {
+      console.log('Navigation to signup failed:', error);
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
+        {/* Logo with palm tree icon */}
         <View style={styles.logoContainer}>
           <View style={styles.logoCircle}>
             <Text style={styles.palmTreeIcon}>🌴</Text>
           </View>
         </View>
 
-        <Text style={styles.title}>Welcome Back</Text>
+        {/* Title */}
+        <Text style={styles.title}>Sign In</Text>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
+        {/* Form */}
         <View style={styles.formContainer}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter your email"
-              placeholderTextColor="#999"
+              placeholderTextColor="#A0A0A0"
               value={email}
               onChangeText={setEmail}
-              autoCapitalize="none"
               keyboardType="email-address"
-              editable={!isLoading}
+              autoCapitalize="none"
+              editable={!loading}
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <View style={styles.passwordHeader}>
-              <Text style={styles.label}>Password</Text>
-              <TouchableOpacity onPress={handleForgotPassword} disabled={isLoading}>
-                <Text style={styles.forgotPassword}>Forgot Password?</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Password</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
-              placeholderTextColor="#999"
+              placeholderTextColor="#A0A0A0"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
-              editable={!isLoading}
+              editable={!loading}
             />
           </View>
 
+          <TouchableOpacity style={styles.forgotPassword}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Buttons */}
+        <View style={styles.buttonsContainer}>
           <TouchableOpacity 
-            style={[styles.button, isLoading && styles.buttonDisabled]} 
+            style={[styles.signInButton, loading && styles.buttonDisabled]} 
             onPress={handleSignIn}
-            disabled={isLoading}
+            disabled={loading}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.buttonText}>Sign In</Text>
+              <Text style={styles.signInText}>Sign In</Text>
             )}
           </TouchableOpacity>
 
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={navigateToSignUp} disabled={isLoading}>
-              <Text style={styles.signupLink}>Sign Up</Text>
+          <View style={styles.signUpPrompt}>
+            <Text style={styles.signUpPromptText}>Don't have an account? </Text>
+            <TouchableOpacity onPress={handleGoToSignUp} disabled={loading}>
+              <Text style={[styles.signUpLink, loading && styles.linkDisabled]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -126,105 +115,114 @@ export default function SignIn() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2D5A3D',
+    backgroundColor: '#FFFFFF',
   },
   content: {
     flex: 1,
-    padding: 20,
+    alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 24,
   },
   logoContainer: {
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFD700',
-  },
-  palmTreeIcon: {
-    fontSize: 50,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 30,
-  },
-  formContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  inputGroup: {
     marginBottom: 20,
   },
-  label: {
-    fontSize: 16,
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'transparent',
+    borderWidth: 3,
+    borderColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  palmTreeIcon: {
+    fontSize: 40,
+    textAlign: 'center',
+  },
+  title: {
     color: '#2D5A3D',
+    fontSize: 28,
+    fontWeight: '700' as const,
+    letterSpacing: 1,
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  formContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    color: '#2D5A3D',
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
-    fontWeight: '500',
   },
   input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
-    color: '#333',
-  },
-  passwordHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    color: '#333333',
   },
   forgotPassword: {
-    color: '#2D5A3D',
+    alignSelf: 'flex-end',
+    marginTop: 8,
+  },
+  forgotPasswordText: {
+    color: '#FFD700',
     fontSize: 14,
     fontWeight: '500',
   },
-  button: {
-    backgroundColor: '#2D5A3D',
-    borderRadius: 10,
-    padding: 15,
+  buttonsContainer: {
+    width: '100%',
     alignItems: 'center',
-    marginTop: 10,
+  },
+  signInButton: {
+    backgroundColor: '#2D5A3D',
+    borderRadius: 25,
+    paddingVertical: 16,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   buttonDisabled: {
-    opacity: 0.7,
+    backgroundColor: '#A0A0A0',
   },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  signInText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700' as const,
+    letterSpacing: 1,
   },
-  signupContainer: {
+  signUpPrompt: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
+    alignItems: 'center',
   },
-  signupText: {
-    color: '#666',
+  signUpPromptText: {
+    color: '#666666',
+    fontSize: 16,
   },
-  signupLink: {
-    color: '#2D5A3D',
-    fontWeight: 'bold',
-    marginLeft: 5,
+  signUpLink: {
+    color: '#FFD700',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  errorText: {
-    color: '#ff6b6b',
-    textAlign: 'center',
-    marginBottom: 15,
-    fontWeight: '500',
+  linkDisabled: {
+    color: '#A0A0A0',
   },
 });
