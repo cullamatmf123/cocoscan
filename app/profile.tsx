@@ -30,6 +30,9 @@ export default function ProfileScreen() {
       <View style={styles.headerWrap}>
         <View style={styles.headerBgPrimary} />
         <View style={styles.headerBgWave} />
+        <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backButton} accessibilityLabel="Back to home">
+          <Text style={styles.backText}>‹ Back</Text>
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>My{"\n"}Profile</Text>
       </View>
 
@@ -96,6 +99,19 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: '900',
     lineHeight: 30,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    zIndex: 2,
+  },
+  backText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '700',
   },
   
   sheet: {

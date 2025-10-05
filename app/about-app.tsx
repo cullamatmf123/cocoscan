@@ -1,5 +1,5 @@
-import React from 'react';
 import { router } from 'expo-router';
+import React from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AboutAppScreen() {
@@ -20,7 +20,7 @@ export default function AboutAppScreen() {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Overview</Text>
           <Text style={styles.paragraph}>
-            CocoScan helps growers quickly assess dwarf coconut trees for symptoms of coconut rhinoceros beetle
+            CocoScan helps growers quickly assess dwarf coconut trees by scanning coconut rhinoceros beetle
             (Oryctes rhinoceros) damage using their device camera. The app provides an AI prediction, confidence,
             and guidance links for prevention, control, and pesticide recommendations.
           </Text>
