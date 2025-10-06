@@ -9,7 +9,7 @@ import { AuthService } from '../../services/authService';
 
 import { db } from '../../config/firebase';
 
-export default function AnalyticsScreen() {
+export default function ReportHistoryScreen() {
   const [totalScans, setTotalScans] = useState(0);
   const params = useLocalSearchParams<{ totalScans?: string; totalUsers?: string }>();
   const [totalUsers, setTotalUsers] = useState(0);
@@ -227,8 +227,8 @@ export default function AnalyticsScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Go to ReportHistory"
-          onPress={() => router.push({ pathname: '/admin/analytics', params: { totalScans: String(totalScans), totalUsers: String(totalUsers) } })}
+          accessibilityLabel="Go to Report History"
+          onPress={() => router.push({ pathname: '/admin/report-history', params: { totalScans: String(totalScans), totalUsers: String(totalUsers) } })}
           style={styles.dockBtn}
         >
           <Ionicons name="time-outline" size={22} color="#0F172A" />

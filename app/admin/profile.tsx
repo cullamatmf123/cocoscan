@@ -154,7 +154,7 @@ export default function AdminProfileScreen() {
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Dashboard" onPress={() => router.push('/admin/dashboard')} style={styles.dockBtn}>
           <Ionicons name="home-outline" size={22} color="#0F172A" />
         </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to ReportHistory" onPress={() => router.push('/admin/analytics')} style={styles.dockBtn}>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Report History" onPress={() => router.push('/admin/report-history')} style={styles.dockBtn}>
           <Ionicons name="time-outline" size={22} color="#0F172A" />
         </TouchableOpacity>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to User Management" onPress={() => router.push('/admin/user-management')} style={[styles.dockBtn, styles.dockCircleOutline]}>

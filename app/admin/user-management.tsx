@@ -3,13 +3,13 @@
       const dash = await AsyncStorage.getItem('dashboard_total_scans');
       const dashNum = dash !== null ? parseInt(dash, 10) : NaN;
       if (!Number.isNaN(dashNum)) {
-        router.push({ pathname: '/admin/analytics', params: { totalScans: String(dashNum) } });
+        router.push({ pathname: '/admin/report-history', params: { totalScans: String(dashNum) } });
         return;
       }
       // Fallback: keep existing behavior
-      router.push('/admin/analytics');
+      router.push('/admin/report-history');
     } catch {
-      router.push('/admin/analytics');
+      router.push('/admin/report-history');
     }
   };
 import { Ionicons } from '@expo/vector-icons';

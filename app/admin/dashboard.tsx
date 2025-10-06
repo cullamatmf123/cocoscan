@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   }, []);
 
   const goUsers = () => router.push('/admin/user-management');
-  const goAnalytics = () => router.push('/admin/analytics');
+  const goAnalytics = () => router.push('/admin/report-history');
   const goProfile = () => router.push('/admin/profile');
   const handleSignOut = async () => {
     try {
@@ -43,19 +43,13 @@ export default function AdminDashboard() {
         <View style={styles.headerIcons}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Notifications"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={goAnalytics}
-          >
-            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            accessibilityRole="button"
             accessibilityLabel="Profile"
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             onPress={goProfile}
           >
-            <Ionicons name="person-circle-outline" size={22} color="#FFFFFF" />
+            <View style={styles.emojiBtn}>
+              <Text style={styles.emojiText}>🌴</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -78,13 +72,13 @@ export default function AdminDashboard() {
       {/* Report History Row */}
       <TouchableOpacity style={styles.rowCard} onPress={goAnalytics} activeOpacity={0.8}>
         <Text style={styles.rowTitle}>Report History</Text>
-        <Text style={styles.rowArrow}></Text>
+        <Ionicons name="chevron-forward" size={20} color="#1E293B" />
       </TouchableOpacity>
 
       {/* Users Row */}
       <TouchableOpacity style={styles.sectionHeaderRow} onPress={goUsers} activeOpacity={0.8}>
         <Text style={styles.sectionTitle}>Users</Text>
-        <Text style={styles.rowArrow}></Text>
+        <Ionicons name="chevron-forward" size={20} color="#1E293B" />
       </TouchableOpacity>
 
       {/* System Status */}
@@ -112,8 +106,8 @@ export default function AdminDashboard() {
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Go to ReportHistory"
-          onPress={() => router.push('/admin/analytics')}
+          accessibilityLabel="Go to Report History"
+          onPress={() => router.push('/admin/report-history')}
           style={styles.dockBtn}
         >
           <Ionicons name="time-outline" size={22} color="#0F172A" />
@@ -189,6 +183,7 @@ const styles = StyleSheet.create({
   headerWelcome: {
     color: '#EAFBF1',
     fontSize: 14,
+    marginTop: 8,
     marginBottom: 6,
   },
   headerName: {
@@ -200,10 +195,10 @@ const styles = StyleSheet.create({
   },
   headerIcons: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 8,
     alignItems: 'center',
     paddingTop: 2,
-    paddingLeft: 8,
+    paddingLeft: 0,
   },
   statsCardWrapper: {
     marginTop: -8,
@@ -252,7 +247,8 @@ const styles = StyleSheet.create({
     borderColor: '#9EE6BE',
     backgroundColor: '#FFFFFF',
     paddingVertical: 14,
-    paddingHorizontal: 14,
+    paddingLeft: 14,
+    paddingRight: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -322,4 +318,18 @@ const styles = StyleSheet.create({
   menuCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
   menuText: { color: '#0F172A', fontWeight: '700' },
+  emojiBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    marginLeft: -4,
+  },
+  emojiText: {
+    fontSize: 24,
+  },
 });
