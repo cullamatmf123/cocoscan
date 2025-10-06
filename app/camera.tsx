@@ -31,7 +31,6 @@ const mockClassifyHealth = async (): Promise<HealthPrediction> => {
 };
 
 export default function CameraScreen() {
-  const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const [aiLoading, setAiLoading] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<any>(null);
@@ -207,7 +206,7 @@ export default function CameraScreen() {
     <View style={styles.container}>
       <CameraView
         style={styles.camera}
-        facing={facing}
+        facing="back"
         ref={cameraRef}
       />
       
@@ -221,19 +220,20 @@ export default function CameraScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.flipButton}
-          onPress={() => setFacing(current => (current === 'back' ? 'front' : 'back'))}
-          disabled={aiLoading}
-        >
-          <Text style={styles.flipText}>Flip</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           style={styles.galleryButton}
           onPress={handlePickImage}
           disabled={aiLoading}
         >
-          <Text style={styles.galleryText}>📁</Text>
+          <View style={styles.galleryIconContainer}>
+            <View style={styles.galleryIconRow}>
+              <View style={[styles.galleryIconSquare, styles.galleryIconSquareTopLeft]} />
+              <View style={[styles.galleryIconSquare, styles.galleryIconSquareTopRight]} />
+            </View>
+            <View style={styles.galleryIconRow}>
+              <View style={[styles.galleryIconSquare, styles.galleryIconSquareBottomLeft]} />
+              <View style={[styles.galleryIconSquare, styles.galleryIconSquareBottomRight]} />
+            </View>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -323,29 +323,42 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: '#fff',
   },
-  flipButton: {
-    position: 'absolute',
-    right: 30,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-  },
-  flipText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
   galleryButton: {
     position: 'absolute',
-    left: 30,
+    right: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  galleryText: {
-    fontSize: 24,
+  galleryIconContainer: {
+    width: 30,
+    height: 30,
+  },
+  galleryIconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  galleryIconSquare: {
+    width: 12,
+    height: 12,
+    borderRadius: 2,
+    backgroundColor: '#fff',
+  },
+  galleryIconSquareTopLeft: {
+    borderTopLeftRadius: 4,
+  },
+  galleryIconSquareTopRight: {
+    borderTopRightRadius: 4,
+  },
+  galleryIconSquareBottomLeft: {
+    borderBottomLeftRadius: 4,
+  },
+  galleryIconSquareBottomRight: {
+    borderBottomRightRadius: 4,
   },
   loadingOverlay: {
     position: 'absolute',

@@ -1,10 +1,9 @@
 // Import the functions you need from the SDKs you need
-import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { FirebaseApp, getApp, getApps, initializeApp } from "firebase/app";
+import { Auth, getAuth } from "firebase/auth";
+import { Firestore, getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBhUr94wnjPzgBq491eVHEsnelpq0ngblQ",
   authDomain: "cocoscan-app-web.firebaseapp.com",
@@ -16,14 +15,34 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
+let app: FirebaseApp;
+let auth: Auth;
+let db: Firestore;
+
+try {
+  if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+    console.log('Firebase initialized successfully');
+  } else {
+    app = getApp();
+  }
+
+  auth = getAuth(app);
+  db = getFirestore(app);
+
+  // Optional: Enable offline persistence
+  // import { enableIndexedDbPersistence } from 'firebase/firestore';
+  // enableIndexedDbPersistence(db).catch((err) => {
+  //   if (err.code === 'failed-precondition') {
+  //     console.warn('Offline persistence can only be enabled in one tab at a time.');
+  //   } else if (err.code === 'unimplemented') {
+  //     console.warn('The current browser does not support offline persistence.');
+  //   }
+  // });
+
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  throw error; // Re-throw to prevent the app from starting with broken Firebase
 }
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-export { auth, db };
+export { auth, db, app as default };

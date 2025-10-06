@@ -1,7 +1,9 @@
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
+import { db, auth } from '../config/firebase';
 
 export default function ConditionsScreen() {
   const router = useRouter();
@@ -63,41 +65,27 @@ export default function ConditionsScreen() {
 
   const validateInputs = () => {
     if (!weather || !soil || !lightCondition) {
-      Alert.alert('Incomplete Information', 'Please select weather, soil type, and light conditions.');
+      Alert.alert('Incomplete Information', 'Please fill in all fields');
       return false;
     }
 
-    if (!temperature.trim()) {
-      Alert.alert('Missing Temperature', 'Please enter the current temperature.');
+    if (!temperature.trim() || isNaN(Number(temperature)) || 
+        Number(temperature) < -10 || Number(temperature) > 60) {
+      Alert.alert('Invalid Temperature', 'Please enter a valid temperature between -10°C and 60°C');
       return false;
     }
 
-    if (!humidity.trim()) {
-      Alert.alert('Missing Humidity', 'Please enter the current humidity level.');
-      return false;
-    }
-
-    // Validate temperature range (reasonable for coconut growing regions: 15-45°C)
-    const tempValue = parseFloat(temperature);
-    if (isNaN(tempValue) || tempValue < -10 || tempValue > 60) {
-      Alert.alert('Invalid Temperature', 'Please enter a valid temperature between -10°C and 60°C.');
-      return false;
-    }
-
-    // Validate humidity range (0-100%)
-    const humidityValue = parseFloat(humidity);
-    if (isNaN(humidityValue) || humidityValue < 0 || humidityValue > 100) {
-      Alert.alert('Invalid Humidity', 'Please enter a valid humidity percentage between 0% and 100%.');
+    if (!humidity.trim() || isNaN(Number(humidity)) || 
+        Number(humidity) < 0 || Number(humidity) > 100) {
+      Alert.alert('Invalid Humidity', 'Please enter a valid humidity percentage between 0% and 100%');
       return false;
     }
 
     return true;
   };
 
-  const handleSubmit = () => {
-    if (!validateInputs()) {
-      return;
-    }
+  const handleSubmit = async () => {
+    if (!validateInputs()) return;
 
     if (!imageUri) {
       Alert.alert('Error', 'No image data available. Please go back and take a photo again.');
@@ -106,158 +94,167 @@ export default function ConditionsScreen() {
 
     setIsSubmitting(true);
     
-    // Navigate to result page with all collected environmental data
-    router.push({
-      pathname: '/result',
-      params: {
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Create a new document in the 'scans' collection
+      const scanRef = doc(collection(db, 'scans'));
+      const scanData = {
+        userId: user.uid,
         imageUri,
         prediction,
-        confidence,
+        confidence: parseFloat(confidence),
         details,
         recommendations,
-        weather,
-        soil,
-        temperature: temperature.trim(),
-        humidity: humidity.trim(),
-        lightCondition
-      }
-    });
+        conditions: {
+          weather,
+          soil,
+          temperature: parseFloat(temperature),
+          humidity: parseFloat(humidity),
+          lightCondition
+        },
+        status: 'pending',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await setDoc(scanRef, scanData);
+
+      // Navigate to result page with the scan ID
+      router.push({
+        pathname: '/result',
+        params: {
+          scanId: scanRef.id,
+          ...params,
+          weather,
+          soil,
+          temperature,
+          humidity,
+          lightCondition
+        }
+      });
+
+    } catch (error) {
+      console.error('Error saving scan:', error);
+      Alert.alert('Error', 'Failed to save scan data. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
-    const onBackPress = () => {
-      router.back();
+    const backAction = () => {
+      Alert.alert(
+        'Cancel Scan',
+        'Are you sure you want to cancel? All unsaved data will be lost.',
+        [
+          { text: 'No', onPress: () => null, style: 'cancel' },
+          { text: 'Yes', onPress: () => router.back() }
+        ]
+      );
       return true;
     };
-    
-    const sub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-    return () => sub.remove();
-  }, [router]);
 
-  const handleCancel = () => {
-    router.replace('/home');
-  };
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
+
+    return () => backHandler.remove();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.appTitle}>CocoScan</Text>
-          <View style={{ flex: 1 }} />
-          <View style={styles.iconCircleSmall}>
-            <Text style={styles.palmTreeIconSmall}>🌴</Text>
-          </View>
-        </View>
-
-        <View style={styles.card}>
           <Text style={styles.title}>Environmental Conditions</Text>
-          <Text style={styles.subtitle}>Provide detailed environmental data for accurate analysis:</Text>
-          
-          <View style={styles.pickerContainer}>
-            <Text style={styles.label}>Weather Condition</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={weather}
-                onValueChange={(itemValue) => setWeather(itemValue)}
-                style={styles.picker}
-                dropdownIconColor="#666"
-              >
-                {weatherOptions.map((option) => (
-                  <Picker.Item 
-                    key={option.value} 
-                    label={option.label} 
-                    value={option.value} 
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-
-          <View style={styles.pickerContainer}>
-            <Text style={styles.label}>Light Condition</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={lightCondition}
-                onValueChange={(itemValue) => setLightCondition(itemValue)}
-                style={styles.picker}
-                dropdownIconColor="#666"
-              >
-                {lightOptions.map((option) => (
-                  <Picker.Item 
-                    key={option.value} 
-                    label={option.label} 
-                    value={option.value} 
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Temperature (°C)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={temperature}
-              onChangeText={setTemperature}
-              placeholder="e.g., 28.5"
-              placeholderTextColor="#999"
-              keyboardType="numeric"
-              maxLength={5}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Humidity (%)</Text>
-            <TextInput
-              style={styles.textInput}
-              value={humidity}
-              onChangeText={setHumidity}
-              placeholder="e.g., 75"
-              placeholderTextColor="#999"
-              keyboardType="numeric"
-              maxLength={3}
-            />
-          </View>
-
-          <View style={styles.pickerContainer}>
-            <Text style={styles.label}>Soil Type</Text>
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={soil}
-                onValueChange={(itemValue) => setSoil(itemValue)}
-                style={styles.picker}
-                dropdownIconColor="#666"
-              >
-                {soilOptions.map((option) => (
-                  <Picker.Item 
-                    key={option.value} 
-                    label={option.label} 
-                    value={option.value} 
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <Text style={styles.submitButtonText}>
-              {isSubmitting ? 'Processing...' : 'Analyze Conditions'}
-            </Text>
-          </TouchableOpacity>
+          <Text style={styles.subtitle}>Provide details about the current conditions</Text>
         </View>
-      </ScrollView>
 
-      <TouchableOpacity 
-        style={styles.cancelButton} 
-        onPress={handleCancel}
-        disabled={isSubmitting}
-      >
-        <Text style={styles.cancelButtonText}>Cancel</Text>
-      </TouchableOpacity>
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Weather Condition</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={weather}
+              onValueChange={(itemValue) => setWeather(itemValue)}
+              style={styles.picker}
+            >
+              {weatherOptions.map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Soil Type</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={soil}
+              onValueChange={(itemValue) => setSoil(itemValue)}
+              style={styles.picker}
+            >
+              {soilOptions.map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Temperature (°C)</Text>
+          <TextInput
+            style={styles.input}
+            value={temperature}
+            onChangeText={setTemperature}
+            placeholder="e.g., 25.5"
+            keyboardType="numeric"
+            placeholderTextColor="#999"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Humidity (%)</Text>
+          <TextInput
+            style={styles.input}
+            value={humidity}
+            onChangeText={setHumidity}
+            placeholder="e.g., 70"
+            keyboardType="numeric"
+            placeholderTextColor="#999"
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Light Condition</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={lightCondition}
+              onValueChange={(itemValue) => setLightCondition(itemValue)}
+              style={styles.picker}
+            >
+              {lightOptions.map((option) => (
+                <Picker.Item key={option.value} label={option.label} value={option.value} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.submitButtonText}>Submit Conditions</Text>
+          )}
+        </TouchableOpacity>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -267,132 +264,66 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#2d5a3d',
   },
+  container: {
+    flex: 1,
+    padding: 20,
+  },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 30,
-    marginBottom: 10,
-  },
-  appTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    letterSpacing: 1,
-  },
-  iconCircleSmall: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'transparent',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    marginLeft: 10,
-  },
-  palmTreeIconSmall: {
-    fontSize: 24,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 24,
-    marginHorizontal: 20,
-    marginTop: 20,
     marginBottom: 30,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
   },
   title: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#2d5a3d',
+    color: '#fff',
     marginBottom: 8,
-    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
-    color: '#2d5a3d',
-    marginBottom: 24,
-    textAlign: 'center',
+    color: '#e0e0e0',
   },
-  pickerContainer: {
-    marginBottom: 20,
-  },
-  inputContainer: {
+  formGroup: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#2d5a3d',
+    fontSize: 16,
+    color: '#fff',
     marginBottom: 8,
+    fontWeight: '500',
   },
-  pickerWrapper: {
-    borderWidth: 1.5,
-    borderColor: '#2d5a3d',
-    borderRadius: 10,
-    backgroundColor: '#f7f7f7',
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: '#4a7c59',
+    borderRadius: 8,
+    backgroundColor: '#fff',
     overflow: 'hidden',
   },
   picker: {
     height: 50,
-    color: '#2d5a3d',
+    color: '#333',
   },
-  textInput: {
-    borderWidth: 1.5,
-    borderColor: '#2d5a3d',
-    borderRadius: 10,
-    backgroundColor: '#f7f7f7',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#2d5a3d',
+  input: {
     height: 50,
+    borderWidth: 1,
+    borderColor: '#4a7c59',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    backgroundColor: '#fff',
+    fontSize: 16,
+    color: '#333',
   },
   submitButton: {
-    backgroundColor: '#FFD700',
-    borderRadius: 15,
-    paddingVertical: 16,
+    backgroundColor: '#4a7c59',
+    padding: 15,
+    borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  submitButtonDisabled: {
-    opacity: 0.6,
   },
   submitButtonText: {
-    color: '#2d5a3d',
-    fontWeight: 'bold',
+    color: '#fff',
     fontSize: 18,
-    letterSpacing: 1,
+    fontWeight: 'bold',
   },
-  cancelButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  cancelButtonText: {
-    color: 'white',
-    fontSize: 14,
-    fontWeight: '600',
+  submitButtonDisabled: {
+    opacity: 0.7,
   },
 });
