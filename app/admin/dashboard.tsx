@@ -1,3 +1,7 @@
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
+import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -8,10 +12,9 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View
 } from 'react-native';
-import { auth } from '../../config/firebase';
+import { auth, db } from '../../config/firebase';
 import { AuthService } from '../../services/authService';
 
 interface DashboardStats {
@@ -41,11 +44,49 @@ export default function AdminDashboard() {
     totalScans: 0
   });
   const [recentUsers, setRecentUsers] = useState<UserData[]>([]);
+  const [usersDb, setUsersDb] = useState<UserData[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<string>('');
+  const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
   }, []);
+
+  // Reload data whenever Dashboard gains focus so it reflects saved role changes
+  useFocusEffect(
+    React.useCallback(() => {
+      loadDashboardData();
+      return undefined;
+    }, [])
+  );
+
+  // Build a deduplicated Users list (most recent per email)
+  const getUniqueUsers = (items: UserData[]) => {
+    const map = new Map<string, UserData>();
+    for (const u of items) {
+      const key = u.email || u.fullName;
+      const prev = map.get(key);
+      if (!prev || (u.createdAt?.getTime?.() ?? 0) > (prev.createdAt?.getTime?.() ?? 0)) {
+        map.set(key, u);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  };
+
+  // Keep persisted totals in sync whenever the screen gains focus or stats change
+  useFocusEffect(
+    React.useCallback(() => {
+      let active = true;
+      const sync = async () => {
+        try {
+          await AsyncStorage.setItem('dashboard_total_scans', String(stats.totalScans));
+          await AsyncStorage.setItem('dashboard_total_users_nonadmin', String(Math.max(0, stats.totalUsers - stats.totalAdmins)));
+        } catch {}
+      };
+      sync();
+      return () => { active = false; };
+    }, [stats.totalScans, stats.totalUsers, stats.totalAdmins])
+  );
 
   const loadDashboardData = async () => {
     try {
@@ -59,30 +100,33 @@ export default function AdminDashboard() {
       setRecentUsers([
         {
           id: '1',
-          email: 'john.doe@example.com',
-          fullName: 'John Doe',
+          email: 'celyn1@example.com',
+          fullName: 'Celyn',
           role: 'user',
           createdAt: new Date('2024-01-15'),
           isActive: true,
-          lastLogin: new Date('2024-01-20')
+          lastLogin: new Date('2024-01-20'),
+          reportStatus: 'unhealthy',
         },
         {
           id: '2',
-          email: 'jane.smith@example.com',
-          fullName: 'Jane Smith',
+          email: 'Cora.line@example.com',
+          fullName: 'Coraline',
           role: 'user',
           createdAt: new Date('2024-01-14'),
           isActive: true,
-          lastLogin: new Date('2024-01-19')
+          lastLogin: new Date('2024-01-19'),
+          reportStatus: 'unhealthy',
         },
         {
           id: '3',
-          email: 'admin@cocoscan.com',
-          fullName: 'Admin User',
+          email: 'francell@gmail.com',
+          fullName: 'Francell',
           role: 'admin',
           createdAt: new Date('2024-01-10'),
           isActive: true,
-          lastLogin: new Date('2024-01-20')
+          lastLogin: new Date('2024-01-20'),
+          reportStatus: 'healthy',
         }
       ]);
 
@@ -90,10 +134,43 @@ export default function AdminDashboard() {
       if (currentUser) {
         setCurrentAdmin(currentUser.displayName || currentUser.email || 'Admin');
       }
+
+      // Load cached users immediately for faster render
+      try {
+        const cached = await AsyncStorage.getItem('users_cache');
+        if (cached) {
+          const arr = JSON.parse(cached) as UserData[];
+          if (Array.isArray(arr)) setUsersDb(arr);
+        }
+      } catch {}
+
+      // Firestore users fetch in background (non-blocking) with a small limit
+      (async () => {
+        try {
+          const qUsers = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(25));
+          const snapUsers = await getDocs(qUsers);
+          const list: UserData[] = snapUsers.docs.map((d) => {
+            const data = d.data() as any;
+            const createdAt: Date = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
+            return {
+              id: data.uid || d.id,
+              email: data.email || '',
+              fullName: data.fullName || data.displayName || data.email || 'User',
+              role: (data.role === 'admin' ? 'admin' : 'user') as 'admin' | 'user',
+              createdAt,
+              isActive: data.isActive !== undefined ? !!data.isActive : true,
+              lastLogin: data.lastLogin?.toDate ? data.lastLogin.toDate() : undefined,
+            };
+          });
+          setUsersDb(list);
+          try { await AsyncStorage.setItem('users_cache', JSON.stringify(list)); } catch {}
+        } catch {}
+      })();
     } catch (error) {
       console.error('Error loading dashboard data:', error);
       Alert.alert('Error', 'Failed to load dashboard data');
     } finally {
+      // End loading sooner; Firestore users fetch continues in background
       setLoading(false);
       setRefreshing(false);
     }
@@ -105,25 +182,13 @@ export default function AdminDashboard() {
   };
 
   const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await AuthService.signOut();
-              router.replace('/admin');
-            } catch (error) {
-              Alert.alert('Error', 'Failed to sign out');
-            }
-          }
-        }
-      ]
-    );
+    try {
+      await AuthService.signOut();
+      // Redirect to app index; it will decide sign-in/signup
+      router.replace('/');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sign out');
+    }
   };
 
   const handleUserManagement = () => {
@@ -178,16 +243,22 @@ export default function AdminDashboard() {
   }
 
   return (
-    <ScrollView 
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.adminName}>{currentAdmin}</Text>
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 110 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+      >
+        {/* Hero */}
+        <View style={styles.hero}>
+          <View>
+            <Text style={styles.heroWelcome}>Welcome back,</Text>
+            <Text style={styles.heroName}>{currentAdmin}</Text>
+          </View>
+          <View style={styles.heroIcons}>
+            <Text style={styles.heroGlyph}>⏰</Text>
+            <Text style={styles.heroGlyph}>◯</Text>
+          </View>
         </View>
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutText}>Sign Out</Text>
@@ -201,70 +272,98 @@ export default function AdminDashboard() {
         {renderStatCard('Total Scans', stats.totalScans, '#F59E0B', '📱')}
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <View style={styles.actionsGrid}>
-          <TouchableOpacity style={styles.actionCard} onPress={handleUserManagement}>
-            <Text style={styles.actionIcon}>👥</Text>
-            <Text style={styles.actionTitle}>User Management</Text>
-            <Text style={styles.actionSubtitle}>Manage users and permissions</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard} onPress={handleAnalytics}>
-            <Text style={styles.actionIcon}>📊</Text>
-            <Text style={styles.actionTitle}>Analytics</Text>
-            <Text style={styles.actionSubtitle}>View usage statistics</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard} onPress={handleSystemSettings}>
-            <Text style={styles.actionIcon}>⚙️</Text>
-            <Text style={styles.actionTitle}>System Settings</Text>
-            <Text style={styles.actionSubtitle}>Configure app settings</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.actionCard} onPress={handleBackup}>
-            <Text style={styles.actionIcon}>💾</Text>
-            <Text style={styles.actionTitle}>Data Backup</Text>
-            <Text style={styles.actionSubtitle}>Backup and restore data</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Recent Users</Text>
-        <View style={styles.usersList}>
-          <FlatList
-            data={recentUsers}
-            renderItem={renderUserItem}
-            keyExtractor={(item) => item.id}
-            scrollEnabled={false}
-            showsVerticalScrollIndicator={false}
-          />
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>System Status</Text>
-        <View style={styles.statusContainer}>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusIcon}>🟢</Text>
-            <Text style={styles.statusText}>Database: Online</Text>
-          </View>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusIcon}>🟢</Text>
-            <Text style={styles.statusText}>Authentication: Active</Text>
-          </View>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusIcon}>🟢</Text>
-            <Text style={styles.statusText}>Storage: Available</Text>
-          </View>
-          <View style={styles.statusItem}>
-            <Text style={styles.statusIcon}>🟡</Text>
-            <Text style={styles.statusText}>Backup: Scheduled</Text>
+        {/* Report History */}
+        <View style={styles.sectionShell}>
+          <View style={styles.historyCard}>
+            <View style={styles.historyHeader}>
+              <Text style={styles.historyTitle}>Report History</Text>
+              <Text style={styles.historyArrow}>→</Text>
+            </View>
+            {recentUsers.slice(0,3).map((u, idx, arr) => (
+              <View key={u.id} style={{ paddingVertical: 10 }}>
+                <View style={styles.historyTopRow}>
+                  <Text style={styles.historyName}>{u.fullName}</Text>
+                  <View style={[styles.statusPill, u.reportStatus === 'healthy' ? styles.pillHealthy : styles.pillUnhealthy]}>
+                    <Text style={styles.pillText}>{u.reportStatus === 'healthy' ? 'Healthy' : 'Unhealthy'}</Text>
+                  </View>
+                </View>
+                <View style={styles.historyMetaRow}>
+                  <View style={styles.metaLeft}>
+                    <View style={styles.metaTag}>
+                      <Text style={styles.metaIcon}>{idx % 2 === 0 ? '☁️' : '🌤️'}</Text>
+                      <Text style={styles.metaText}>{idx % 2 === 0 ? 'cloudy' : 'sunny'}</Text>
+                    </View>
+                    <View style={styles.metaTag}>
+                      <Text style={styles.metaIcon}>🌿</Text>
+                      <Text style={styles.metaText}>{u.role === 'admin' ? 'silt' : (idx % 2 === 0 ? 'clay' : 'sandy')}  </Text>
+                      <Text style={styles.metaPct}>( {idx % 2 === 0 ? '87%' : '95%'} )</Text>
+                    </View>
+                  </View>
+                  <Text style={styles.metaDate}>{u.createdAt.toLocaleDateString()}</Text>
+                </View>
+                {idx < arr.length - 1 && <View style={styles.historyDivider} />}
+              </View>
+            ))}
           </View>
         </View>
+
+        {/* Users */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Users</Text>
+          <View style={styles.usersList}>
+            <FlatList
+              data={recentUsers}
+              renderItem={renderUserItem}
+              keyExtractor={(item) => item.id}
+              scrollEnabled={false}
+              showsVerticalScrollIndicator={false}
+            />
+          </View>
+        </View>
+
+        {/* System Status */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>System Status</Text>
+          <View style={styles.statusContainer}>
+            <View style={styles.statusItem}>
+              <Text style={styles.statusDot}>●</Text>
+              <Text style={styles.statusText}>Database: Online</Text>
+            </View>
+            <View style={styles.statusItem}>
+              <Text style={styles.statusDot}>●</Text>
+              <Text style={styles.statusText}>Authentication: Active</Text>
+            </View>
+            <View style={styles.statusItem}>
+              <Text style={styles.statusDot}>●</Text>
+              <Text style={styles.statusText}>Storage: Available</Text>
+            </View>
+            <View style={styles.statusItem}>
+              <Text style={[styles.statusDot, { color: '#F59E0B' }]}>●</Text>
+              <Text style={styles.statusText}>Backup: Scheduled</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+
+      {/* Bottom dock */}
+      <View style={styles.bottomDock}>
+        <View style={[styles.dockBtn, styles.dockBtnActive]}>
+          <Text style={styles.dockGlyph}>⌂</Text>
+        </View>
+        <View style={styles.dockBtn}>
+          <Text style={styles.dockGlyph}>▦</Text>
+        </View>
+        <View style={styles.dockBtn}>
+          <Text style={styles.dockGlyph}>＋</Text>
+        </View>
+        <View style={styles.dockBtn}>
+          <Text style={styles.dockGlyph}>⋯</Text>
+        </View>
+        <View style={styles.dockBtn}>
+          <Text style={styles.dockGlyph}>👤</Text>
+        </View>
       </View>
-    </ScrollView>
+    </View>
   );
 }
 
@@ -273,6 +372,77 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  hero: {
+    backgroundColor: '#175C35',
+    paddingTop: 28,
+    paddingHorizontal: 20,
+    paddingBottom: 56,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroWelcome: { color: '#E1F6EA', fontSize: 14 },
+  heroName: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
+  heroIcons: { flexDirection: 'row', gap: 14 },
+  heroGlyph: { color: '#0F172A', fontSize: 18 },
+
+  summaryCard: {
+    marginHorizontal: 16,
+    marginTop: -34,
+    backgroundColor: '#175C35',
+    borderRadius: 24,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    borderWidth: 6,
+    borderColor: '#E6F7ED',
+  },
+  summaryRow: { flexDirection: 'row', alignItems: 'center' },
+  summaryItem: { flex: 1, alignItems: 'center' },
+  summaryLabel: { color: '#CDE5D8', marginBottom: 6 },
+  summaryValue: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
+  summaryDivider: { width: 1, height: '100%', backgroundColor: '#CDE5D8', opacity: 0.4 },
+
+  sectionShell: { paddingHorizontal: 16, marginTop: 16 },
+  historyCard: { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#1FAE55', padding: 12 },
+  historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  historyTitle: { fontWeight: '700', color: '#1E293B' },
+  historyArrow: { fontSize: 16, color: '#0F172A' },
+  historyRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#E2E8F0' },
+  historyName: { color: '#0F172A', fontWeight: '600' },
+  historySub: { color: '#64748B', fontSize: 12 },
+  historyStatus: { fontWeight: '600' },
+  historyTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  historyMetaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
+  metaLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  metaTag: { flexDirection: 'row', alignItems: 'center' },
+  metaIcon: { fontSize: 12, marginRight: 6, color: '#0F172A' },
+  metaDot: { fontSize: 10, marginRight: 6 },
+  metaText: { color: '#1F2937', fontSize: 12 },
+  metaPct: { color: '#6B7280', fontSize: 12 },
+  metaDate: { color: '#111827', fontSize: 12 },
+  statusPill: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999 },
+  pillHealthy: { backgroundColor: '#86EFAC' },
+  pillUnhealthy: { backgroundColor: '#FCA5A5' },
+  pillText: { color: '#0F172A', fontSize: 12, fontWeight: '700' },
+  historyDivider: { height: 2, backgroundColor: '#175C35', marginTop: 10, borderRadius: 1 },
+
+  bottomDock: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 12,
+    height: 56,
+    backgroundColor: '#A7F3D0',
+    borderRadius: 28,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  dockBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  dockBtnActive: { backgroundColor: '#22C55E' },
+  dockGlyph: { color: '#0F172A', fontSize: 18, fontWeight: '600' },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
