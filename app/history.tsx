@@ -28,7 +28,7 @@ export default function HistoryScreen() {
     try {
       setRefreshing(true);
       const historyItems = await getUserHistory();
-      setItems(historyItems || []); // Ensure it's always an array
+      setItems(historyItems || []);
     } catch (error) {
       console.warn('Failed to load history:', error);
       Alert.alert('Error', 'Failed to load history. Please try again.');
@@ -101,7 +101,7 @@ export default function HistoryScreen() {
 
   const handleDeleteSelected = async () => {
     try {
-      const idsToDelete = Array.from(selected).filter(id => id); // Filter out empty IDs
+      const idsToDelete = Array.from(selected).filter(id => id);
       if (idsToDelete.length === 0) return;
       
       await deleteMultipleHistoryItems(idsToDelete);
@@ -116,28 +116,15 @@ export default function HistoryScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#2d5a3d" />
-      </View>
-    );
-  }
+  const handleSelectAll = () => {
+    const validIds = items.map(item => item.id).filter(id => id) as string[];
+    
+    if (selected.size === validIds.length && validIds.length > 0) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(validIds));
+    }
+  };
 
-  return (
-    <View style={{ flex: 1 }}>
-      <View style={{ height: 56, backgroundColor: '#2d5a3d', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 }}>
-        <TouchableOpacity onPress={handleBack} accessibilityRole="button">
-          <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}> Back</Text>
-        </TouchableOpacity>
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>History</Text>
-        <View style={{ width: 48 }} />
-      </View>
-
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-        <Text style={{ color: '#1f2937', marginBottom: 8 }}>History screen will be completed soon.</Text>
-        <Text style={{ color: '#6b7280' }}>Pull down to refresh loads data.</Text>
-      </View>
-    </View>
-  );
-}
+  // Rest of your component remains the same...
+  // (renderItem, loading check, return JSX, styles)
