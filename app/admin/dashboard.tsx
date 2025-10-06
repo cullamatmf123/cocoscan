@@ -1,610 +1,287 @@
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, getDocs, orderBy, query, limit } from 'firebase/firestore';
-import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
-import { auth, db } from '../../config/firebase';
+import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth } from '../../config/firebase';
 import { AuthService } from '../../services/authService';
 
-interface DashboardStats {
-  totalUsers: number;
-  totalAdmins: number;
-  activeUsers: number;
-  totalScans: number;
-}
-
-interface UserData {
-  id: string;
-  email: string;
-  fullName: string;
-  role: 'admin' | 'user';
-  createdAt: Date;
-  isActive: boolean;
-  lastLogin?: Date;
-}
-
 export default function AdminDashboard() {
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalUsers: 0,
-    totalAdmins: 0,
-    activeUsers: 0,
-    totalScans: 0
-  });
-  const [recentUsers, setRecentUsers] = useState<UserData[]>([]);
-  const [usersDb, setUsersDb] = useState<UserData[]>([]);
   const [currentAdmin, setCurrentAdmin] = useState<string>('');
+  const [totalReport, setTotalReport] = useState<number>(0);
+  const [totalScans, setTotalScans] = useState<number>(0);
   const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
-    loadDashboardData();
+    const user = auth.currentUser;
+    setCurrentAdmin(user?.displayName || user?.email || 'Admin');
+    // Mocked values; wire real values later
+    setTotalReport(0);
+    setTotalScans(0);
   }, []);
 
-  // Reload data whenever Dashboard gains focus so it reflects saved role changes
-  useFocusEffect(
-    React.useCallback(() => {
-      loadDashboardData();
-      return undefined;
-    }, [])
-  );
-
-  // Build a deduplicated Users list (most recent per email)
-  const getUniqueUsers = (items: UserData[]) => {
-    const map = new Map<string, UserData>();
-    for (const u of items) {
-      const key = u.email || u.fullName;
-      const prev = map.get(key);
-      if (!prev || (u.createdAt?.getTime?.() ?? 0) > (prev.createdAt?.getTime?.() ?? 0)) {
-        map.set(key, u);
-      }
-    }
-    return Array.from(map.values()).sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-  };
-
-  // Keep persisted totals in sync whenever the screen gains focus or stats change
-  useFocusEffect(
-    React.useCallback(() => {
-      let active = true;
-      const sync = async () => {
-        try {
-          await AsyncStorage.setItem('dashboard_total_scans', String(stats.totalScans));
-          await AsyncStorage.setItem('dashboard_total_users_nonadmin', String(Math.max(0, stats.totalUsers - stats.totalAdmins)));
-        } catch {}
-      };
-      sync();
-      return () => { active = false; };
-    }, [stats.totalScans, stats.totalUsers, stats.totalAdmins])
-  );
-
-  const loadDashboardData = async () => {
-    try {
-      setStats({
-        totalUsers: 156,
-        totalAdmins: 3,
-        activeUsers: 89,
-        totalScans: 2847
-      });
-
-      setRecentUsers([
-        {
-          id: '1',
-          email: 'celyn1@example.com',
-          fullName: 'Celyn',
-          role: 'user',
-          createdAt: new Date('2024-01-15'),
-          isActive: true,
-          lastLogin: new Date('2024-01-20'),
-          reportStatus: 'unhealthy',
-        },
-        {
-          id: '2',
-          email: 'Cora.line@example.com',
-          fullName: 'Coraline',
-          role: 'user',
-          createdAt: new Date('2024-01-14'),
-          isActive: true,
-          lastLogin: new Date('2024-01-19'),
-          reportStatus: 'unhealthy',
-        },
-        {
-          id: '3',
-          email: 'francell@gmail.com',
-          fullName: 'Francell',
-          role: 'admin',
-          createdAt: new Date('2024-01-10'),
-          isActive: true,
-          lastLogin: new Date('2024-01-20'),
-          reportStatus: 'healthy',
-        }
-      ]);
-
-      const currentUser = auth.currentUser;
-      if (currentUser) {
-        setCurrentAdmin(currentUser.displayName || currentUser.email || 'Admin');
-      }
-
-      // Load cached users immediately for faster render
-      try {
-        const cached = await AsyncStorage.getItem('users_cache');
-        if (cached) {
-          const arr = JSON.parse(cached) as UserData[];
-          if (Array.isArray(arr)) setUsersDb(arr);
-        }
-      } catch {}
-
-      // Firestore users fetch in background (non-blocking) with a small limit
-      (async () => {
-        try {
-          const qUsers = query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(25));
-          const snapUsers = await getDocs(qUsers);
-          const list: UserData[] = snapUsers.docs.map((d) => {
-            const data = d.data() as any;
-            const createdAt: Date = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
-            return {
-              id: data.uid || d.id,
-              email: data.email || '',
-              fullName: data.fullName || data.displayName || data.email || 'User',
-              role: (data.role === 'admin' ? 'admin' : 'user') as 'admin' | 'user',
-              createdAt,
-              isActive: data.isActive !== undefined ? !!data.isActive : true,
-              lastLogin: data.lastLogin?.toDate ? data.lastLogin.toDate() : undefined,
-            };
-          });
-          setUsersDb(list);
-          try { await AsyncStorage.setItem('users_cache', JSON.stringify(list)); } catch {}
-        } catch {}
-      })();
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      Alert.alert('Error', 'Failed to load dashboard data');
-    } finally {
-      // End loading sooner; Firestore users fetch continues in background
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    loadDashboardData();
-  };
-
+  const goUsers = () => router.push('/admin/user-management');
+  const goAnalytics = () => router.push('/admin/analytics');
+  const goProfile = () => router.push('/admin/profile');
   const handleSignOut = async () => {
     try {
       await AuthService.signOut();
-      // Redirect to app index; it will decide sign-in/signup
       router.replace('/');
-    } catch (error) {
+    } catch (e) {
       Alert.alert('Error', 'Failed to sign out');
     }
   };
 
-  const handleUserManagement = () => {
-    router.push('/admin/user-management');
-  };
-
-  const handleSystemSettings = () => {
-    Alert.alert('System Settings', 'This feature will allow you to configure app settings and preferences.');
-  };
-
-  const handleAnalytics = () => {
-    router.push('/admin/analytics');
-  };
-
-  const handleBackup = () => {
-    Alert.alert('Data Backup', 'This feature will allow you to backup and restore system data.');
-  };
-
-  const renderStatCard = (title: string, value: number, color: string, icon: string) => (
-    <View style={[styles.statCard, { borderLeftColor: color }]}>
-      <View style={styles.statHeader}>
-        <Text style={styles.statIcon}>{icon}</Text>
-        <Text style={styles.statTitle}>{title}</Text>
-      </View>
-      <Text style={[styles.statValue, { color }]}>{value.toLocaleString()}</Text>
-    </View>
-  );
-
-  const renderUserItem = ({ item }: { item: UserData }) => (
-    <View style={styles.userItem}>
-      <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.fullName}</Text>
-        <Text style={styles.userEmail}>{item.email}</Text>
-        <Text style={styles.userRole}>
-          {item.role === 'admin' ? '👑 Admin' : '👤 User'} • 
-          {item.isActive ? ' 🟢 Active' : ' 🔴 Inactive'}
-        </Text>
-      </View>
-      <Text style={styles.userDate}>
-        {item.createdAt.toLocaleDateString()}
-      </Text>
-    </View>
-  );
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#2D5A3D" />
-        <Text style={styles.loadingText}>Loading Dashboard...</Text>
-      </View>
-    );
-  }
-
   return (
     <View style={{ flex: 1 }}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={{ paddingBottom: 110 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
-      >
-        {/* Hero */}
-        <View style={styles.hero}>
-          <View>
-            <Text style={styles.heroWelcome}>Welcome back,</Text>
-            <Text style={styles.heroName}>{currentAdmin}</Text>
+      <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
+      {/* Header banner */}
+      <View style={styles.headerBanner}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerWelcome}>Welcome back,</Text>
+          <Text style={styles.headerName}>{currentAdmin?.split('@')[0]}</Text>
+        </View>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={goAnalytics}
+          >
+            <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={goProfile}
+          >
+            <Ionicons name="person-circle-outline" size={22} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Stats Card */}
+      <View style={styles.statsCardWrapper}>
+        <View style={styles.statsCard}>
+          <View style={styles.statBlock}>
+            <Text style={styles.statLabel}>Total Report</Text>
+            <Text style={styles.statValue}>{totalReport}</Text>
           </View>
-          <View style={styles.heroIcons}>
-            <Text style={styles.heroGlyph}>⏰</Text>
-            <Text style={styles.heroGlyph}>◯</Text>
+          <View style={styles.statDivider} />
+          <View style={styles.statBlock}>
+            <Text style={styles.statLabel}>Total Scans</Text>
+            <Text style={styles.statValue}>{totalScans}</Text>
           </View>
         </View>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
+      </View>
+
+      {/* Report History Row */}
+      <TouchableOpacity style={styles.rowCard} onPress={goAnalytics} activeOpacity={0.8}>
+        <Text style={styles.rowTitle}>Report History</Text>
+        <Text style={styles.rowArrow}></Text>
+      </TouchableOpacity>
+
+      {/* Users Row */}
+      <TouchableOpacity style={styles.sectionHeaderRow} onPress={goUsers} activeOpacity={0.8}>
+        <Text style={styles.sectionTitle}>Users</Text>
+        <Text style={styles.rowArrow}></Text>
+      </TouchableOpacity>
+
+      {/* System Status */}
+      <View style={{ marginHorizontal: 16, marginTop: 12 }}>
+        <Text style={styles.sectionTitle}>System Status</Text>
+        <View style={styles.statusCard}>
+          <View style={styles.statusItem}><Text style={styles.dotGreen}></Text><Text style={styles.statusText}>Database: Online</Text></View>
+          <View style={styles.statusItem}><Text style={styles.dotGreen}></Text><Text style={styles.statusText}>Authentication: Active</Text></View>
+          <View style={styles.statusItem}><Text style={styles.dotGreen}></Text><Text style={styles.statusText}>Storage: Available</Text></View>
+          <View style={styles.statusItem}><Text style={styles.dotAmber}></Text><Text style={styles.statusText}>Backup: Scheduled</Text></View>
+        </View>
+      </View>
+
+      </ScrollView>
+
+      {/* Footer dock */}
+      <View style={styles.bottomDock}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Go to Dashboard"
+          onPress={() => router.push('/admin/dashboard')}
+          style={styles.dockBtn}
+        >
+          <Ionicons name="home-outline" size={22} color="#0F172A" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Go to ReportHistory"
+          onPress={() => router.push('/admin/analytics')}
+          style={styles.dockBtn}
+        >
+          <Ionicons name="time-outline" size={22} color="#0F172A" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="Go to User Management"
+          onPress={() => router.push('/admin/user-management')}
+          style={[styles.dockBtn, styles.dockCircleOutline]}
+        >
+          <Text style={[styles.dockGlyph, styles.dockGlyphLarge]}>＋</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={goProfile}
+          style={styles.dockBtn}
+        >
+          <Ionicons name="person-circle-outline" size={22} color="#0F172A" />
+        </TouchableOpacity>
+        <TouchableOpacity
+          accessibilityRole="button"
+          accessibilityLabel="More options"
+          onPress={() => setShowMore(true)}
+          style={styles.dockBtn}
+        >
+          <Ionicons name="ellipsis-horizontal" size={22} color="#0F172A" />
         </TouchableOpacity>
       </View>
 
-      <View style={styles.statsContainer}>
-        {renderStatCard('Total Users', stats.totalUsers, '#3B82F6', '👥')}
-        {renderStatCard('Admins', stats.totalAdmins, '#EF4444', '👑')}
-        {renderStatCard('Active Users', stats.activeUsers, '#10B981', '🟢')}
-        {renderStatCard('Total Scans', stats.totalScans, '#F59E0B', '📱')}
-      </View>
-
-        {/* Report History */}
-        <View style={styles.sectionShell}>
-          <View style={styles.historyCard}>
-            <View style={styles.historyHeader}>
-              <Text style={styles.historyTitle}>Report History</Text>
-              <Text style={styles.historyArrow}>→</Text>
-            </View>
-            {recentUsers.slice(0,3).map((u, idx, arr) => (
-              <View key={u.id} style={{ paddingVertical: 10 }}>
-                <View style={styles.historyTopRow}>
-                  <Text style={styles.historyName}>{u.fullName}</Text>
-                  <View style={[styles.statusPill, u.reportStatus === 'healthy' ? styles.pillHealthy : styles.pillUnhealthy]}>
-                    <Text style={styles.pillText}>{u.reportStatus === 'healthy' ? 'Healthy' : 'Unhealthy'}</Text>
-                  </View>
-                </View>
-                <View style={styles.historyMetaRow}>
-                  <View style={styles.metaLeft}>
-                    <View style={styles.metaTag}>
-                      <Text style={styles.metaIcon}>{idx % 2 === 0 ? '☁️' : '🌤️'}</Text>
-                      <Text style={styles.metaText}>{idx % 2 === 0 ? 'cloudy' : 'sunny'}</Text>
-                    </View>
-                    <View style={styles.metaTag}>
-                      <Text style={styles.metaIcon}>🌿</Text>
-                      <Text style={styles.metaText}>{u.role === 'admin' ? 'silt' : (idx % 2 === 0 ? 'clay' : 'sandy')}  </Text>
-                      <Text style={styles.metaPct}>( {idx % 2 === 0 ? '87%' : '95%'} )</Text>
-                    </View>
-                  </View>
-                  <Text style={styles.metaDate}>{u.createdAt.toLocaleDateString()}</Text>
-                </View>
-                {idx < arr.length - 1 && <View style={styles.historyDivider} />}
-              </View>
-            ))}
+      {/* More menu */}
+      <Modal
+        transparent
+        visible={showMore}
+        animationType="fade"
+        onRequestClose={() => setShowMore(false)}
+      >
+        <Pressable style={styles.menuBackdrop} onPress={() => setShowMore(false)}><View /></Pressable>
+        <View style={styles.menuContainer} pointerEvents="box-none">
+          <View style={styles.menuCard}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setShowMore(false); Alert.alert('Settings', 'Settings coming soon.'); }}>
+              <Ionicons name="settings-outline" size={18} color="#0F172A" />
+              <Text style={styles.menuText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setShowMore(false); handleSignOut(); }}>
+              <Ionicons name="log-out-outline" size={18} color="#0F172A" />
+              <Text style={styles.menuText}>Sign out</Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* Users */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Users</Text>
-          <View style={styles.usersList}>
-            <FlatList
-              data={recentUsers}
-              renderItem={renderUserItem}
-              keyExtractor={(item) => item.id}
-              scrollEnabled={false}
-              showsVerticalScrollIndicator={false}
-            />
-          </View>
-        </View>
-
-        {/* System Status */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>System Status</Text>
-          <View style={styles.statusContainer}>
-            <View style={styles.statusItem}>
-              <Text style={styles.statusDot}>●</Text>
-              <Text style={styles.statusText}>Database: Online</Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={styles.statusDot}>●</Text>
-              <Text style={styles.statusText}>Authentication: Active</Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={styles.statusDot}>●</Text>
-              <Text style={styles.statusText}>Storage: Available</Text>
-            </View>
-            <View style={styles.statusItem}>
-              <Text style={[styles.statusDot, { color: '#F59E0B' }]}>●</Text>
-              <Text style={styles.statusText}>Backup: Scheduled</Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Bottom dock */}
-      <View style={styles.bottomDock}>
-        <View style={[styles.dockBtn, styles.dockBtnActive]}>
-          <Text style={styles.dockGlyph}>⌂</Text>
-        </View>
-        <View style={styles.dockBtn}>
-          <Text style={styles.dockGlyph}>▦</Text>
-        </View>
-        <View style={styles.dockBtn}>
-          <Text style={styles.dockGlyph}>＋</Text>
-        </View>
-        <View style={styles.dockBtn}>
-          <Text style={styles.dockGlyph}>⋯</Text>
-        </View>
-        <View style={styles.dockBtn}>
-          <Text style={styles.dockGlyph}>👤</Text>
-        </View>
-      </View>
+      </Modal>
     </View>
   );
 }
 
+const GREEN = '#1F6A44';
+const BG = '#EAF1F7';
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: BG,
   },
-  hero: {
-    backgroundColor: '#175C35',
-    paddingTop: 28,
-    paddingHorizontal: 20,
-    paddingBottom: 56,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  heroWelcome: { color: '#E1F6EA', fontSize: 14 },
-  heroName: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
-  heroIcons: { flexDirection: 'row', gap: 14 },
-  heroGlyph: { color: '#0F172A', fontSize: 18 },
-
-  summaryCard: {
-    marginHorizontal: 16,
-    marginTop: -34,
-    backgroundColor: '#175C35',
-    borderRadius: 24,
-    paddingVertical: 18,
+  headerBanner: {
+    backgroundColor: GREEN,
     paddingHorizontal: 16,
-    borderWidth: 6,
-    borderColor: '#E6F7ED',
-  },
-  summaryRow: { flexDirection: 'row', alignItems: 'center' },
-  summaryItem: { flex: 1, alignItems: 'center' },
-  summaryLabel: { color: '#CDE5D8', marginBottom: 6 },
-  summaryValue: { color: '#FFFFFF', fontSize: 22, fontWeight: '700' },
-  summaryDivider: { width: 1, height: '100%', backgroundColor: '#CDE5D8', opacity: 0.4 },
-
-  sectionShell: { paddingHorizontal: 16, marginTop: 16 },
-  historyCard: { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#1FAE55', padding: 12 },
-  historyHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  historyTitle: { fontWeight: '700', color: '#1E293B' },
-  historyArrow: { fontSize: 16, color: '#0F172A' },
-  historyRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#E2E8F0' },
-  historyName: { color: '#0F172A', fontWeight: '600' },
-  historySub: { color: '#64748B', fontSize: 12 },
-  historyStatus: { fontWeight: '600' },
-  historyTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  historyMetaRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 },
-  metaLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  metaTag: { flexDirection: 'row', alignItems: 'center' },
-  metaIcon: { fontSize: 12, marginRight: 6, color: '#0F172A' },
-  metaDot: { fontSize: 10, marginRight: 6 },
-  metaText: { color: '#1F2937', fontSize: 12 },
-  metaPct: { color: '#6B7280', fontSize: 12 },
-  metaDate: { color: '#111827', fontSize: 12 },
-  statusPill: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999 },
-  pillHealthy: { backgroundColor: '#86EFAC' },
-  pillUnhealthy: { backgroundColor: '#FCA5A5' },
-  pillText: { color: '#0F172A', fontSize: 12, fontWeight: '700' },
-  historyDivider: { height: 2, backgroundColor: '#175C35', marginTop: 10, borderRadius: 1 },
-
-  bottomDock: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 12,
-    height: 56,
-    backgroundColor: '#A7F3D0',
-    borderRadius: 28,
+    paddingTop: 44,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    alignItems: 'flex-start',
   },
-  dockBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  dockBtnActive: { backgroundColor: '#22C55E' },
-  dockGlyph: { color: '#0F172A', fontSize: 18, fontWeight: '600' },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F8FAFC',
+  headerWelcome: {
+    color: '#EAFBF1',
+    fontSize: 14,
+    marginBottom: 6,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-  },
-  welcomeText: {
-    fontSize: 16,
-    color: '#64748B',
-  },
-  adminName: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#2D5A3D',
-  },
-  signOutButton: {
-    backgroundColor: '#EF4444',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  signOutText: {
+  headerName: {
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+    textTransform: 'lowercase',
   },
-  statsContainer: {
+  headerIcons: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    padding: 16,
-    gap: 12,
+    gap: 16,
+    alignItems: 'center',
+    paddingTop: 2,
+    paddingLeft: 8,
   },
-  statCard: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderRadius: 12,
-    borderLeftWidth: 4,
+  statsCardWrapper: {
+    marginTop: -8,
+    paddingHorizontal: 16,
+  },
+  statsCard: {
+    backgroundColor: GREEN,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
+    borderWidth: 3,
+    borderColor: '#E8F1EA',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
-  statHeader: {
-    flexDirection: 'row',
+  statBlock: {
+    flex: 1,
     alignItems: 'center',
+  },
+  statDivider: {
+    width: 1,
+    height: '100%',
+    backgroundColor: 'rgba(255,255,255,0.35)',
+  },
+  statLabel: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
     marginBottom: 8,
   },
-  statIcon: {
-    fontSize: 20,
-    marginRight: 8,
-  },
-  statTitle: {
-    fontSize: 14,
-    color: '#64748B',
-    fontWeight: '500',
-  },
   statValue: {
-    fontSize: 24,
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '800',
   },
-  section: {
-    margin: 16,
-    marginTop: 8,
+  rowCard: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#9EE6BE',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  rowTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  rowArrow: {
+    fontSize: 18,
+    color: '#1E293B',
+  },
+  sectionHeaderRow: {
+    marginHorizontal: 16,
+    marginTop: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
     color: '#1E293B',
-    marginBottom: 16,
   },
-  actionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  actionCard: {
-    flex: 1,
-    minWidth: '45%',
+  statusCard: {
     backgroundColor: '#FFFFFF',
-    padding: 20,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  actionIcon: {
-    fontSize: 32,
-    marginBottom: 8,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E293B',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  actionSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    textAlign: 'center',
-  },
-  usersList: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  userItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-  },
-  userInfo: {
-    flex: 1,
-  },
-  userName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1E293B',
-  },
-  userEmail: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 2,
-  },
-  userRole: {
-    fontSize: 12,
-    color: '#64748B',
-    marginTop: 4,
-  },
-  userDate: {
-    fontSize: 12,
-    color: '#94A3B8',
-  },
-  statusContainer: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
+    marginTop: 12,
+    borderRadius: 14,
     padding: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -615,14 +292,34 @@ const styles = StyleSheet.create({
   statusItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-  },
-  statusIcon: {
-    fontSize: 16,
-    marginRight: 12,
+    paddingVertical: 6,
   },
   statusText: {
-    fontSize: 14,
     color: '#1E293B',
+    fontSize: 14,
+    marginLeft: 8,
   },
+  dotGreen: {
+    color: '#22C55E',
+    fontSize: 22,
+    lineHeight: 16,
+  },
+  dotAmber: {
+    color: '#F59E0B',
+    fontSize: 22,
+    lineHeight: 16,
+  },
+  bottomDock: {
+    position: 'absolute', left: 16, right: 16, bottom: 12, height: 56,
+    backgroundColor: '#A7F3D0', borderRadius: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around'
+  },
+  dockBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  dockCircleOutline: { borderWidth: 2, borderColor: '#0F172A' },
+  dockGlyph: { color: '#0F172A', fontSize: 18, fontWeight: '600' },
+  dockGlyphLarge: { fontSize: 26 },
+  menuBackdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.1)' },
+  menuContainer: { position: 'absolute', left: 0, right: 0, bottom: 80, alignItems: 'flex-end', paddingHorizontal: 16 },
+  menuCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
+  menuText: { color: '#0F172A', fontWeight: '700' },
 });

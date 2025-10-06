@@ -216,8 +216,8 @@ export default function UserManagementScreen() {
           />
         </View>
         <TouchableOpacity style={styles.addBtn} onPress={onAddUser}>
-          <Ionicons name="person-add-outline" size={18} color="#ffffff" />
-          <Text style={styles.addBtnText}>Add User</Text>
+          <Ionicons name="search-outline" size={18} color="#ffffff" />
+          <Text style={styles.addBtnText}>Search User</Text>
         </TouchableOpacity>
       </View>
 
