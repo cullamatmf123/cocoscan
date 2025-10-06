@@ -47,7 +47,7 @@ export default function ProfileScreen() {
         <View style={styles.sheet}>
 
           {/* Help us Grow button */}
-          <TouchableOpacity style={styles.helpBtn} onPress={() => console.log('Help us Grow')} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.helpBtn} onPress={() => router.push('/feedback')} activeOpacity={0.85}>
             <Ionicons name="chatbubble-ellipses-outline" size={18} color="#FFFFFF" />
             <Text style={styles.helpBtnText}>Help us Grow</Text>
           </TouchableOpacity>

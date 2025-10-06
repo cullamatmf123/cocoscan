@@ -100,7 +100,7 @@ export default function ResultScreen() {
     });
   };
 
-  const handleTreatmentPress = () => {
+  const handlePreventionPress = () => {
     router.push({
       pathname: '/about',
       params: {
@@ -215,9 +215,9 @@ export default function ResultScreen() {
             <TouchableOpacity
               style={[styles.secondaryBtn, styles.btnShadow]}
               activeOpacity={0.9}
-              onPress={handleTreatmentPress}
+              onPress={handlePreventionPress}
             >
-              <Text style={styles.secondaryBtnText}>Treatment & Control</Text>
+              <Text style={styles.secondaryBtnText}>Prevention & Control</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
