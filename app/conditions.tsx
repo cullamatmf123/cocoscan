@@ -2,8 +2,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native';
-import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
-import { db, auth } from '../config/firebase';
+import { addHistoryItem } from '../services/historyService';
 
 export default function ConditionsScreen() {
   const router = useRouter();
@@ -18,12 +17,14 @@ export default function ConditionsScreen() {
   // Extract all parameters from the navigation
   const {
     imageUri,
+    photoBase64,
     prediction = 'Unknown',
     confidence = '0',
     details = '',
     recommendations = 'No recommendations available'
   } = params as {
     imageUri?: string;
+    photoBase64?: string;
     prediction?: string;
     confidence?: string;
     details?: string;
@@ -32,35 +33,35 @@ export default function ConditionsScreen() {
 
   const weatherOptions = [
     { label: 'Select weather condition', value: '' },
-    { label: 'Sunny', value: 'sunny' },
-    { label: 'Partly Cloudy', value: 'partly_cloudy' },
-    { label: 'Cloudy', value: 'cloudy' },
-    { label: 'Overcast', value: 'overcast' },
-    { label: 'Light Rain', value: 'light_rain' },
-    { label: 'Heavy Rain', value: 'heavy_rain' },
-    { label: 'Windy', value: 'windy' },
-    { label: 'Foggy', value: 'foggy' },
+    { label: 'Sunny', value: 'Sunny' },
+    { label: 'Partly Cloudy', value: 'Partly Cloudy' },
+    { label: 'Cloudy', value: 'Cloudy' },
+    { label: 'Overcast', value: 'Overcast' },
+    { label: 'Light Rain', value: 'Light Rain' },
+    { label: 'Heavy Rain', value: 'Heavy Rain' },
+    { label: 'Windy', value: 'Windy' },
+    { label: 'Foggy', value: 'Foggy' },
   ];
 
   const soilOptions = [
     { label: 'Select soil type', value: '' },
-    { label: 'Sandy', value: 'sandy' },
-    { label: 'Clay', value: 'clay' },
-    { label: 'Loamy', value: 'loamy' },
-    { label: 'Peaty', value: 'peaty' },
-    { label: 'Chalky', value: 'chalky' },
-    { label: 'Silty', value: 'silty' },
-    { label: 'Rocky', value: 'rocky' },
+    { label: 'Sandy', value: 'Sandy' },
+    { label: 'Clay', value: 'Clay' },
+    { label: 'Loamy', value: 'Loamy' },
+    { label: 'Peaty', value: 'Peaty' },
+    { label: 'Chalky', value: 'Chalky' },
+    { label: 'Silty', value: 'Silty' },
+    { label: 'Rocky', value: 'Rocky' },
   ];
 
   const lightOptions = [
     { label: 'Select light condition', value: '' },
-    { label: 'Direct Sunlight', value: 'direct_sunlight' },
-    { label: 'Bright Shade', value: 'bright_shade' },
-    { label: 'Partial Shade', value: 'partial_shade' },
-    { label: 'Full Shade', value: 'full_shade' },
-    { label: 'Artificial Light', value: 'artificial_light' },
-    { label: 'Low Light', value: 'low_light' },
+    { label: 'Direct Sunlight', value: 'Direct Sunlight' },
+    { label: 'Bright Shade', value: 'Bright Shade' },
+    { label: 'Partial Shade', value: 'Partial Shade' },
+    { label: 'Full Shade', value: 'Full Shade' },
+    { label: 'Artificial Light', value: 'Artificial Light' },
+    { label: 'Low Light', value: 'Low Light' },
   ];
 
   const validateInputs = () => {
@@ -87,7 +88,7 @@ export default function ConditionsScreen() {
   const handleSubmit = async () => {
     if (!validateInputs()) return;
 
-    if (!imageUri) {
+    if (!imageUri && !photoBase64) {
       Alert.alert('Error', 'No image data available. Please go back and take a photo again.');
       return;
     }
@@ -95,40 +96,33 @@ export default function ConditionsScreen() {
     setIsSubmitting(true);
     
     try {
-      const user = auth.currentUser;
-      if (!user) {
-        throw new Error('User not authenticated');
-      }
-
-      // Create a new document in the 'scans' collection
-      const scanRef = doc(collection(db, 'scans'));
-      const scanData = {
-        userId: user.uid,
-        imageUri,
+      // Create enhanced details with environmental conditions
+      const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Temperature: ${temperature}°C\n• Humidity: ${humidity}%\n• Light: ${lightCondition}`;
+      
+      // Create history item using the historyService
+      const historyItem = await addHistoryItem({
+        imageUri: imageUri || undefined,
+        photoBase64: photoBase64 || undefined,
         prediction,
-        confidence: parseFloat(confidence),
-        details,
+        confidence,
+        details: enhancedDetails,
         recommendations,
-        conditions: {
-          weather,
-          soil,
-          temperature: parseFloat(temperature),
-          humidity: parseFloat(humidity),
-          lightCondition
-        },
-        status: 'pending',
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      };
+        weather,
+        soil
+      });
 
-      await setDoc(scanRef, scanData);
-
-      // Navigate to result page with the scan ID
+      // Navigate to result page with all the data
       router.push({
         pathname: '/result',
         params: {
-          scanId: scanRef.id,
-          ...params,
+          id: historyItem.id,
+          fromHistory: '0', // Indicates this is a new scan, not from history
+          imageUri: imageUri || undefined,
+          photoBase64: photoBase64 || undefined,
+          prediction,
+          confidence,
+          details: enhancedDetails,
+          recommendations,
           weather,
           soil,
           temperature,
@@ -138,7 +132,7 @@ export default function ConditionsScreen() {
       });
 
     } catch (error) {
-      console.error('Error saving scan:', error);
+      console.error('Error saving scan to history:', error);
       Alert.alert('Error', 'Failed to save scan data. Please try again.');
     } finally {
       setIsSubmitting(false);
@@ -251,7 +245,7 @@ export default function ConditionsScreen() {
           {isSubmitting ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.submitButtonText}>Submit Conditions</Text>
+            <Text style={styles.submitButtonText}>Analyze Conditions</Text>
           )}
         </TouchableOpacity>
       </ScrollView>
