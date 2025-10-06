@@ -1,15 +1,15 @@
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    FlatList,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { auth } from '../../config/firebase';
 import { AuthService } from '../../services/authService';
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
   };
 
   const handleUserManagement = () => {
-    Alert.alert('User Management', 'This feature will allow you to manage users, view details, and modify permissions.');
+    router.push('/admin/user-management');
   };
 
   const handleSystemSettings = () => {
@@ -135,7 +135,7 @@ export default function AdminDashboard() {
   };
 
   const handleAnalytics = () => {
-    Alert.alert('Analytics', 'This feature will show detailed analytics and usage reports.');
+    router.push('/admin/analytics');
   };
 
   const handleBackup = () => {
