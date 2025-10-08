@@ -36,6 +36,16 @@ export default function PreventionControlScreen() {
         <Text style={styles.bullet}>• Install sand or small stones in the crown of young palms to deter boring.</Text>
 
         <Text style={[styles.sectionHeading, { marginBottom: 6 }]}>Control</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.controlRow}
+        >
+          <Image source={require('../assets/images/design/control.jpg')} style={styles.controlImage} resizeMode="contain" />
+          <Image source={require('../assets/images/design/control(2).jpg')} style={styles.controlImage} resizeMode="contain" />
+          <Image source={require('../assets/images/design/control(3).jpg')} style={styles.controlImage} resizeMode="contain" />
+          <Image source={require('../assets/images/design/control(5).jpg')} style={styles.controlImage} resizeMode="contain" />
+        </ScrollView>
         <Text style={styles.bullet}>• Manual removal of adults from boreholes and traps placed in breeding sites.</Text>
         <Text style={styles.bullet}>• Use pheromone traps (ethyl 4-methyl octanoate) to monitor and mass-trap adults.</Text>
         <Text style={styles.bullet}>• Apply recommended biological agents where available (e.g., Oryctes nudivirus strains effective in your region).</Text>
@@ -79,7 +89,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
   },
-  contentWrap: { padding: 16, paddingBottom: 24 },
+  contentWrap: { padding: 16, paddingBottom: 120 },
   title: { fontSize: 22, fontWeight: '800', color: '#111827', marginTop: 8, marginBottom: 8 },
   sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12, marginBottom: -4, lineHeight: 18 },
   bullet: { fontSize: 14, color: '#374151', lineHeight: 20 },
@@ -91,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     paddingVertical: 6,
     paddingHorizontal: 6,
-    marginTop: -6,
+    marginTop: 4,
     marginBottom: 10,
   },
   preventionImage: {
@@ -103,10 +113,13 @@ const styles = StyleSheet.create({
     marginTop: 0,
     marginBottom: 0,
   },
+  controlRow: { flexDirection: 'row', gap: 10, paddingRight: 4, marginBottom: 8 },
+  controlImage: { width: 220, height: 140, borderRadius: 10, backgroundColor: '#ffffff' },
   footerBar: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF',
     borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 24,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    width: '100%', flexWrap: 'nowrap', zIndex: 10,
   },
   footerItem: { flex: 1, alignItems: 'center' },
 });

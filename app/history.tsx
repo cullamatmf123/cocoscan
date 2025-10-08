@@ -1,4 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import React, { useCallback, useState } from 'react';
 import {
   Alert,
@@ -170,7 +171,7 @@ export default function HistoryScreen() {
         keyExtractor={(it) => it.id || Math.random().toString(36)}
         renderItem={renderItem}
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        contentContainerStyle={{ padding: 16 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadHistory} />}
         ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#6b7280' }}>No history yet.</Text>}
       />
@@ -187,6 +188,22 @@ export default function HistoryScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Footer navigation */}
+      <View style={styles.footerBar}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -204,4 +221,22 @@ const styles = StyleSheet.create({
   checkActive: { backgroundColor: '#2d5a3d', borderColor: '#2d5a3d' },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', alignItems: 'center', justifyContent: 'center' },
   modalCard: { backgroundColor: '#fff', padding: 16, borderRadius: 10, width: '80%' },
+  footerBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    flexWrap: 'nowrap',
+    zIndex: 10,
+  },
+  footerItem: { flex: 1, alignItems: 'center' },
 });
