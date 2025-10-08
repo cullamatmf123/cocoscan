@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -86,24 +86,20 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* Bottom navigation */}
-      <View style={styles.bottomWrap} pointerEvents="box-none">
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/home')}>
-            <Ionicons name="home-outline" size={26} color="#475569" />
-          </TouchableOpacity>
-          <View style={styles.navSpacer} />
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-            <Ionicons name="person-outline" size={26} color="#475569" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Center floating camera button */}
-        <View style={styles.fabContainer} pointerEvents="box-none">
-          <TouchableOpacity style={styles.fab} onPress={() => router.replace('/camera')}>
-            <Ionicons name="camera" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+      {/* Footer navigation */}
+      <View style={styles.footerBar}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -214,52 +210,22 @@ const styles = StyleSheet.create({
   badgeLabelActive: { color: '#FFFFFF' },
   countBadge: { position: 'absolute', top: 8, right: 10, backgroundColor: '#E2E8F0', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 },
   countText: { fontSize: 12, fontWeight: '800', color: '#111827' },
-  bottomWrap: {
+  footerBar: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
-    paddingBottom: 8,
-  },
-  bottomNav: {
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    height: 60,
-    width: '90%',
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  navItem: { padding: 8 },
-  navSpacer: { width: 84 },
-  fabContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
     alignItems: 'center',
   },
-  fab: {
-    position: 'absolute',
-    top: -28,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#2d5a3d',
+  footerItem: {
+    flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
   },
 });

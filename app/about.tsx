@@ -1,248 +1,133 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import React, { useState } from 'react';
-import { ImageBackground, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { router } from 'expo-router';
 
 export default function AboutScreen() {
-  const params = useLocalSearchParams<{ tab?: string }>();
-  const initialTab =
-    params?.tab === 'prevention' ? 'prevention' : params?.tab === 'pesticide' ? 'pesticide' : 'overview';
-  const [tab, setTab] = useState<'overview' | 'prevention' | 'pesticide'>(initialTab);
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Image header */}
-      <ImageBackground
-        source={require('../assets/images/design/CRB.jpg')}
-        style={styles.hero}
-        imageStyle={styles.heroImage}
-        resizeMode="cover"
-      >
-        <View style={styles.heroOverlay} />
-        
-        <View style={styles.heroContent}>
-          <Text style={styles.heroKicker}>Coconut Rhinoceros Beetle</Text>
-          <Text style={styles.heroTitle}>Oryctes rhinoceros</Text>
-        </View>
-      </ImageBackground>
+      {/* Simple header */}
+      <View style={styles.headerBar}>
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
+      </View>
 
-      {/* White content sheet with tabs */}
-      <ScrollView contentContainerStyle={styles.sheetContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.tabsRow}>
-          <TouchableOpacity style={styles.tabBtn} onPress={() => setTab('overview')}>
-            <Text style={[styles.tabText, tab === 'overview' && styles.tabTextActive]}>Overview</Text>
-            {tab === 'overview' && <View style={styles.tabUnderline} />}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabBtn} onPress={() => setTab('prevention')}>
-            <Text style={[styles.tabText, tab === 'prevention' && styles.tabTextActive]}>Prevention & Control</Text>
-            {tab === 'prevention' && <View style={styles.tabUnderline} />}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.tabBtn} onPress={() => setTab('pesticide')}>
-            <Text style={[styles.tabText, tab === 'pesticide' && styles.tabTextActive]}>Pesticide Recommendation</Text>
-            {tab === 'pesticide' && <View style={styles.tabUnderline} />}
-          </TouchableOpacity>
-        </View>
+      {/* Content */}
+      <ScrollView contentContainerStyle={styles.contentWrap} showsVerticalScrollIndicator={false}>
+        {/* Title */}
+        <Text style={styles.title}>Coconut Rhinoceros Beetle</Text>
+        <Text style={styles.subtitle}>Scientific Name: <Text style={styles.italic}>Oryctes Rhinoceros</Text></Text>
 
-        {tab === 'overview' && (
-          <View>
-            <Text style={styles.section}>Overview</Text>
-            <Text style={styles.paragraph}>
-              The coconut rhinoceros beetle (CRB) bores into the crown of coconut and oil palm to feed on sap,
-              damaging developing fronds and reducing yield. Severe or repeated attacks can stunt palms and, in
-              young plantings, cause mortality.
-            </Text>
+        {/* Photos Slider */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.photoRow}
+        >
+          <Image source={require('../assets/images/design/homepage.png')} style={styles.photo} resizeMode="cover" />
+          <Image source={require('../assets/images/design/CRB.jpg')} style={styles.photo} resizeMode="cover" />
+          <Image source={require('../assets/images/design/crb(2).png')} style={styles.photo} resizeMode="cover" />
+          <Image source={require('../assets/images/design/crb(3).png')} style={styles.photo} resizeMode="cover" />
+          <Image source={require('../assets/images/design/crb(4).png')} style={styles.photo} resizeMode="cover" />
+        </ScrollView>
+        <Text style={styles.photoCount}>5 photos</Text>
 
-            <Text style={styles.section}>Key Signs</Text>
-            <Text style={styles.bullet}>• V-shaped cuts on newly opened fronds</Text>
-            <Text style={styles.bullet}>• Holes with coarse frass at the crown or leaf bases</Text>
-            <Text style={styles.bullet}>• Shortened or broken spear leaves</Text>
+        {/* Overview */}
+        <Text style={styles.sectionHeading}>Overview</Text>
+        <Text style={styles.paragraph}>
+          The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest that primarily attacks coconut
+          palms and other palm species by boring into the crown to feed on sap, damaging young fronds and inhibiting
+          leaf and flower development. Native to South and Southeast Asia, this beetle has spread to many tropical
+          regions. Its rapid reproduction and adaptability make it a major threat to coconut productivity.
+        </Text>
 
-            <Text style={styles.section}>Lifecycle & Behavior</Text>
-            <Text style={styles.paragraph}>
-              Adults are strong fliers. Breeding occurs in decomposing plant matter like rotting logs, mulch piles,
-              or unmanaged farm residues. Larvae develop in these substrates before emerging as adults that fly to
-              palms to feed.
-            </Text>
-          </View>
-        )}
+        {/* Signs */}
+        <Text style={styles.sectionHeading}>Signs:</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.signsRow}
+        >
+          <Image source={require('../assets/images/design/v-cut-sign.jpg')} style={styles.signImage} resizeMode="cover" />
+          <Image source={require('../assets/images/design/sign(2).png')} style={styles.signImage} resizeMode="cover" />
+          <Image source={require('../assets/images/design/v-cut(2).jpg')} style={styles.signImage} resizeMode="cover" />
+          <Image source={require('../assets/images/design/sign(3).jpg')} style={styles.signImage} resizeMode="cover" />
+        </ScrollView>
+        <Text style={styles.bullet}>• V-shaped cuts or holes on young, unopened fronds</Text>
+        <Text style={styles.bullet}>• Boreholes visible on the crown or trunk</Text>
+        <Text style={styles.bullet}>• Frass (fibrous debris) around leaf bases and at bore entry</Text>
+        <Text style={styles.bullet}>• Notched or missing tissues along leaflet margins</Text>
+        <Text style={styles.bullet}>• Damaged or broken spear leaf</Text>
 
-        {tab === 'prevention' && (
-          <View>
-            <Text style={styles.section}>Prevention & Control</Text>
-            <Text style={styles.bullet}>• Sanitation: Remove or treat breeding sites; manage residues properly.</Text>
-            <Text style={styles.bullet}>• Monitoring: Use pheromone traps to detect and reduce adult populations.</Text>
-            <Text style={styles.bullet}>• Biological control: Apply Metarhizium anisopliae in breeding substrates.</Text>
-            <Text style={styles.bullet}>• Inspection: Regularly check crowns; destroy detected adults safely.</Text>
-          </View>
-        )}
+        {/* Symptoms */}
+        <Text style={styles.sectionHeading}>Symptoms:</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.signsRow}
+        >
+          <Image source={require('../assets/images/design/Symptoms(2).jpg')} style={styles.signImage} resizeMode="cover" />
+          <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
+          <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
+          <Image source={require('../assets/images/design/Symptoms(4).jpg')} style={styles.signImage} resizeMode="cover" />
+        </ScrollView>
+        <Text style={styles.bullet}>• Distorted or stunted emerging fronds; reduced canopy density</Text>
+        <Text style={styles.bullet}>• Declining vigor and reduced nut yield over time</Text>
+        <Text style={styles.bullet}>• Secondary infections in damaged crown tissue</Text>
+        <Text style={styles.bullet}>• Severe, repeated attacks may lead to palm death (especially young palms)</Text>
 
-        {tab === 'pesticide' && (
-          <View>
-            <Text style={styles.section}>Pesticide Recommendation</Text>
-            <Text style={styles.paragraph}>
-              Select approved insecticides according to local regulations and label instructions. Prioritize
-              integrated pest management (IPM) and target applications based on monitoring and thresholds. Consult
-              your local agriculture authority for current recommendations.
-            </Text>
-          </View>
-        )}
+        <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* Bottom navigation */}
-      <View style={styles.bottomWrap} pointerEvents="box-none">
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/home')}>
-            <Ionicons name="home-outline" size={26} color="#475569" />
-          </TouchableOpacity>
-          <View style={styles.navSpacer} />
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-            <Ionicons name="person-outline" size={26} color="#475569" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Center floating camera button */}
-        <View style={styles.fabContainer} pointerEvents="box-none">
-          <TouchableOpacity style={styles.fab} onPress={() => router.replace('/camera')}>
-            <Ionicons name="camera" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+      {/* Footer navigation (black icons) */}
+      <View style={styles.footerBar}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#ffffff' },
-  hero: {
-    height: 220,
-    width: '100%',
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-    overflow: 'hidden',
-  },
-  heroImage: {
-    borderBottomLeftRadius: 22,
-    borderBottomRightRadius: 22,
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject as any,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-  },
-  heroHeaderRow: {
-    position: 'absolute',
-    top: 8,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 12,
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  heroBackBtn: {
-    padding: 8,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-    borderRadius: 999,
-  },
-  heroBackText: { color: '#fff', fontSize: 16, fontWeight: '800' },
-  heroContent: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  headerBar: {
+    paddingTop: 48,
     paddingHorizontal: 16,
-    paddingBottom: 16,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
   },
-  heroKicker: {
-    color: '#E5F2E9',
-    fontSize: 12,
-    fontWeight: '700',
+  brandTitle: {
+    color: '#0F3D1E',
+    fontSize: 20,
+    fontWeight: '900',
     letterSpacing: 1,
   },
-  heroTitle: {
-    color: '#FFFFFF',
-    fontSize: 26,
-    fontWeight: '900',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 6,
-  },
-  sheetContent: {
-    padding: 16,
-    paddingTop: 18,
-    paddingBottom: 120,
-  },
-  tabsRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 16,
-    marginBottom: 8,
-    flexWrap: 'wrap',
-  },
-  tabBtn: {
-    alignItems: 'center',
-  },
-  tabText: {
-    color: '#6b7280',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  tabTextActive: {
-    color: '#22c55e',
-  },
-  tabUnderline: {
-    height: 3,
-    backgroundColor: '#22c55e',
-    borderRadius: 999,
-    width: '60%',
-    marginTop: 2,
-  },
-  section: { fontSize: 16, fontWeight: '800', color: '#2d5a3d', marginTop: 8, marginBottom: 6 },
+  contentWrap: { padding: 16, paddingBottom: 24 },
+  title: { fontSize: 22, fontWeight: '800', color: '#111827', marginTop: 8 },
+  subtitle: { fontSize: 12, color: '#6B7280', fontStyle: 'italic', marginTop: 2 },
+  italic: { fontStyle: 'italic' },
+  photoRow: { flexDirection: 'row', gap: 10, marginTop: 12, paddingRight: 4 },
+  photo: { width: 220, height: 110, borderRadius: 12 },
+  signsRow: { flexDirection: 'row', gap: 10, marginTop: 10, marginBottom: 10, paddingRight: 4 },
+  signImage: { width: 180, height: 110, borderRadius: 12 },
+  photoCount: { alignSelf: 'flex-end', color: '#6B7280', fontSize: 12, marginTop: 4 },
+  sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12, marginBottom: 6 },
   paragraph: { fontSize: 14, color: '#374151', lineHeight: 20 },
   bullet: { fontSize: 14, color: '#374151', lineHeight: 20 },
-  bottomWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    paddingBottom: 8,
+  footerBar: {
+    position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF',
+    borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 24,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  bottomNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    height: 60,
-    width: '90%',
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
-  navItem: { padding: 8 },
-  navIcon: { fontSize: 20, color: '#1f2937' },
-  navSpacer: { width: 84 },
-  fabContainer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  fab: {
-    position: 'absolute',
-    top: -28,
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#2d5a3d',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#ffffff',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  fabIcon: { fontSize: 26, color: '#ffffff', textAlign: 'center', marginTop: -2 },
+  footerItem: { flex: 1, alignItems: 'center' },
 });

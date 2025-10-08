@@ -1,6 +1,7 @@
+import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, ImageBackground, Modal, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { AuthService } from '../services/authService';
 
 export default function HomeScreen() {
@@ -25,17 +26,14 @@ export default function HomeScreen() {
       return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
     };
 
-    // Subscribe to auth state changes
     const unsubscribe = AuthService.onAuthStateChanged((user) => {
       if (user) {
         setDisplayName(computeName(user.email, user.displayName));
       } else {
-        // If no user is logged in, redirect to signin
         router.replace('/signin');
       }
     });
 
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
@@ -49,32 +47,27 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      {/* Green header at the top (swapped from image background) */}
-      <View style={styles.hero}>
-        <View style={styles.heroContent}>
-          {/* Header moved inside hero */}
-          <View style={styles.headerRow}>
-            <TouchableOpacity 
-              style={styles.profileButton}
-              onPress={handleProfilePress}
-              accessibilityLabel="Open profile"
-            >
-              <View style={styles.defaultProfileIcon} />
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.menuButton}
-              onPress={handleMenuPress}
-              accessibilityLabel="Open menu"
-            >
-              <View style={styles.menuLine} />
-              <View style={styles.menuLine} />
-              <View style={styles.menuLine} />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.heroTitle}>Hi, {displayName || 'User'}</Text>
-          <Text style={styles.heroSubtitle}>Dashboard</Text>
-        </View>
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+
+      {/* App Bar */}
+      <View style={styles.appBar}>
+        <TouchableOpacity
+          style={styles.hamburger}
+          onPress={handleMenuPress}
+          accessibilityLabel="Open menu"
+        >
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+        </TouchableOpacity>
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
+        <TouchableOpacity
+          style={styles.profileButton}
+          onPress={handleProfilePress}
+          accessibilityLabel="Open profile"
+        >
+          <View style={styles.defaultProfileIcon} />
+        </TouchableOpacity>
       </View>
 
       {/* Menu Modal */}
@@ -106,44 +99,130 @@ export default function HomeScreen() {
         </View>
       </Modal>
 
-      {/* Content section now uses the coconut tree image as background */}
-      <ImageBackground
-        source={require('../assets/images/design/dwarf-coconut-tree.webp')}
-        style={styles.contentBg}
-        imageStyle={styles.contentBgImage}
-        resizeMode="cover"
-      >
-        <View style={styles.contentOverlay} />
-        <View style={styles.content}>
-          <View style={styles.brandGroup} accessibilityRole="header" accessibilityLabel="CocoScan Welcome">
-            {/* Top line: COCOSCAN */}
-            <View style={styles.brandStack}>
-              <Text style={styles.brandTopOuter}>COCOSCAN</Text>
-              <Text style={styles.brandTopInner}>COCOSCAN</Text>
-            </View>
-            {/* Bottom line: Welcome! */}
-            <View style={[styles.brandStack, { marginTop: 2 }]}>
-              <Text style={styles.brandBottomOuter}>Welcome!</Text>
-              <Text style={styles.brandBottomInner}>Welcome!</Text>
-            </View>
-          </View>
-          <Text style={styles.subtitle}>Detect Oryctes Rhinoceros in Dwarf Coconut Trees.</Text>
-          
-          <TouchableOpacity 
-            style={styles.scanButton}
-            onPress={handleStartScanning}
-          >
-            <Text style={styles.scanButtonText}>Start Scanning</Text>
-          </TouchableOpacity>
+      {/* Content */}
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Search */}
+        <View style={styles.searchBar}>
+          <View style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search"
+            placeholderTextColor="#6B7280"
+          />
+        </View>
 
-          <TouchableOpacity
-            style={styles.historyButton}
-            onPress={handleHistoryPress}
-          >
-            <Text style={styles.historyButtonText}>History</Text>
+        {/* Greeting */}
+        <View style={styles.greetBox}>
+          <Text style={styles.greetTitle}>Hi, {displayName || 'User'}</Text>
+          <Text style={styles.greetSubtitle}>Dashboard</Text>
+        </View>
+
+        {/* What is Oryctes Rhinoceros? */}
+        <Text style={styles.sectionTitle}>What is Oryctes Rhinoceros?</Text>
+        <TouchableOpacity
+          style={styles.heroButton}
+          activeOpacity={0.9}
+          onPress={() => router.push('/about')}
+          accessibilityLabel="Learn more about Oryctes Rhinoceros"
+        >
+          <Image
+            source={require('../assets/images/design/homepage.png')}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
+        </TouchableOpacity>
+
+        {/* Info Cards */}
+        <View style={styles.cardRow}>
+          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9} onPress={() => router.push('/prevention-control')}>
+            <View style={styles.cardIconWrapper}>
+              <Image
+                source={require('../assets/images/design/image.png')}
+                style={styles.cardIconImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.cardTitle}>Prevention & Control</Text>
+          </TouchableOpacity>
+          <View style={{ width: 12 }} />
+          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9}>
+            <View style={styles.cardIconWrapper}>
+              <Image
+                source={require('../assets/images/design/pesticide.png')}
+                style={styles.cardIconImage}
+                resizeMode="contain"
+              />
+            </View>
+            <Text style={styles.cardTitle}>Pesticide Recommendations</Text>
           </TouchableOpacity>
         </View>
-      </ImageBackground>
+
+        {/* Pest Problem? */}
+        <Text style={styles.sectionTitle}>Pest Problem?</Text>
+        <View style={styles.processCard}>
+          <View style={styles.processRow}>
+            <View style={styles.processStep}>
+              <Image
+                source={require('../assets/images/design/capture.png')}
+                style={styles.stepImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.stepText}>Take a photo / Scan image</Text>
+            </View>
+            <Text style={styles.processArrow}></Text>
+            <View style={styles.processStep}>
+              <Image
+                source={require('../assets/images/design/identify.png')}
+                style={styles.stepImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.stepText}>Pest Detection</Text>
+            </View>
+            <Text style={styles.processArrow}></Text>
+            <View style={styles.processStep}>
+              <Image
+                source={require('../assets/images/design/result.png')}
+                style={styles.stepImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.stepText}>Result</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.scanButton} onPress={handleStartScanning}>
+            <Text style={styles.scanButtonText}>Start Scanning</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* History header */}
+        <TouchableOpacity style={styles.historyHeader} onPress={handleHistoryPress}>
+          <Text style={styles.historyTitle}>History</Text>
+          <Text style={styles.chevron}>›</Text>
+        </TouchableOpacity>
+
+        {/* History placeholders */}
+        <View style={styles.historyGrid}>
+          <View style={styles.historyTile} />
+          <View style={styles.historyTile} />
+        </View>
+
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* Footer navigation */}
+      <View style={styles.footerBar}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={handleStartScanning} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={handleHistoryPress} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={handleProfilePress} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -151,61 +230,19 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#2D5A3D',
+    backgroundColor: '#FFFFFF',
   },
-  hero: {
-    height: 210,
-    width: '100%',
-    borderRadius: 0,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 0,
-  },
-  heroImage: {
-    borderRadius: 0,
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-  },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject as any,
-    backgroundColor: 'transparent',
-  },
-  heroEdge: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 2,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-  },
-  heroContent: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  appBar: {
+    paddingTop: 48,
     paddingHorizontal: 16,
-    paddingBottom: 16,
-  },
-  headerRow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
+    paddingBottom: 12,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 24,
+    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
   },
-  heroTitle: {
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  heroSubtitle: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 2,
+  hamburger: {
+    padding: 8,
   },
   menuButton: {
     padding: 10,
@@ -215,6 +252,13 @@ const styles = StyleSheet.create({
     width: 25,
     height: 3,
     backgroundColor: '#FFFFFF',
+    marginVertical: 2,
+    borderRadius: 2,
+  },
+  menuLineDark: {
+    width: 24,
+    height: 3,
+    backgroundColor: '#0F3D1E',
     marginVertical: 2,
     borderRadius: 2,
   },
@@ -260,125 +304,237 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FFD700',
+    backgroundColor: '#C9E4CA',
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+  },
+  brandTitle: {
+    color: '#0F3D1E',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  searchBar: {
+    marginTop: 8,
+    marginBottom: 16,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    height: 44,
+    flexDirection: 'row',
     alignItems: 'center',
-    padding: 20,
-    paddingBottom: 100,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  contentBg: {
+  searchIcon: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#9CA3AF',
+    marginRight: 8,
+  },
+  searchInput: {
     flex: 1,
-    width: '100%',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    fontSize: 16,
+    color: '#111827',
+  },
+  greetBox: {
+    marginBottom: 8,
+  },
+  greetTitle: {
+    color: '#0F3D1E',
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  greetSubtitle: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  sectionTitle: {
+    marginTop: 8,
+    marginBottom: 8,
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  imageRow: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  imageTile: {
+    flex: 1,
+    height: 110,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 12,
+  },
+  heroButton: {
+    marginBottom: 12,
+    borderRadius: 12,
     overflow: 'hidden',
   },
-  contentOverlay: {
-    ...StyleSheet.absoluteFillObject as any,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+  heroImage: {
+    width: '100%',
+    height: 110,
   },
-  contentBgImage: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+  cardRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  welcomeText: {
+  infoCard: {
+    flex: 1,
+    backgroundColor: '#195A2B',
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  cardIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#EAF7EB',
+    marginBottom: 12,
+  },
+  cardIconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+    overflow: 'hidden',
+  },
+  cardIconImage: {
+    width: 22,
+    height: 22,
+  },
+  cardTitle: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  processCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 3,
+  },
+  processRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  processStep: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  stepIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#111827',
+    marginBottom: 6,
+  },
+  stepImage: {
+    width: 44,
+    height: 44,
+    marginBottom: 6,
+  },
+  stepText: {
+    color: '#111827',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  processArrow: {
+    marginHorizontal: 6,
+    color: '#111827',
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#E0E0E0',
-    marginBottom: 40,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  brandGroup: {
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  brandStack: {
-    position: 'relative',
-    alignItems: 'center',
-  },
-  brandTopOuter: {
-    position: 'absolute',
-    color: '#869053',
-    fontSize: 16,
     fontWeight: '900',
-    textAlign: 'center',
-    textShadowColor: '#869053',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 4,
-    letterSpacing: 1,
-  },
-  brandTopInner: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '900',
-    textAlign: 'center',
-    letterSpacing: 1,
-  },
-  brandBottomOuter: {
-    position: 'absolute',
-    color: '#869053',
-    fontSize: 40,
-    fontWeight: '900',
-    textAlign: 'center',
-    textShadowColor: '#869053',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
-    letterSpacing: 0.5,
-  },
-  brandBottomInner: {
-    color: '#FFFFFF',
-    fontSize: 40,
-    fontWeight: '900',
-    textAlign: 'center',
-    letterSpacing: 0.5,
   },
   scanButton: {
-    backgroundColor: '#FFD700',
-    borderRadius: 30,
-    paddingVertical: 18,
-    paddingHorizontal: 60,
-    width: 280,
+    backgroundColor: '#3F7A4A',
+    borderRadius: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    alignSelf: 'center',
+    minWidth: 220,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 2,
   },
   scanButtonText: {
-    color: '#2D5A3D',
-    fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  historyButton: {
-    backgroundColor: '#2D5A3D',
-    borderColor: '#FFFFFF',
-    borderWidth: 2,
-    borderRadius: 30,
-    paddingVertical: 18,
-    paddingHorizontal: 60,
-    width: 280,
-    marginTop: 16,
-  },
-  historyButtonText: {
     color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
     textAlign: 'center',
+  },
+  historyHeader: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  historyTitle: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  chevron: {
+    color: '#111827',
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  historyGrid: {
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  historyTile: {
+    flex: 1,
+    height: 120,
+    borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#9FE3A9',
+    backgroundColor: '#FFFFFF',
+    marginRight: 12,
+  },
+  footerBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  footerItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  footerIconText: {
+    fontSize: 24,
+    color: '#111827',
   },
 });
