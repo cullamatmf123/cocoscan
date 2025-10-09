@@ -145,7 +145,7 @@ export default function HomeScreen() {
             <Text style={styles.cardTitle}>Prevention & Control</Text>
           </TouchableOpacity>
           <View style={{ width: 12 }} />
-          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9}>
+          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9} onPress={() => router.push('/pesticides')}>
             <View style={styles.cardIconWrapper}>
               <Image
                 source={require('../assets/images/design/pesticide.png')}
@@ -169,7 +169,7 @@ export default function HomeScreen() {
               />
               <Text style={styles.stepText}>Take a photo / Scan image</Text>
             </View>
-            <Text style={styles.processArrow}></Text>
+            <Text style={styles.processArrow}>{'>'}</Text>
             <View style={styles.processStep}>
               <Image
                 source={require('../assets/images/design/identify.png')}
@@ -178,7 +178,7 @@ export default function HomeScreen() {
               />
               <Text style={styles.stepText}>Pest Detection</Text>
             </View>
-            <Text style={styles.processArrow}></Text>
+            <Text style={styles.processArrow}>{'>'}</Text>
             <View style={styles.processStep}>
               <Image
                 source={require('../assets/images/design/result.png')}
