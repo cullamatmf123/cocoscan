@@ -156,18 +156,33 @@ export default function ConditionsScreen() {
       'hardwareBackPress',
       backAction
     );
-
     return () => backHandler.remove();
   }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
+      {/* Header */}
+      <View style={styles.headerBar}>
+        <TouchableOpacity
+          style={styles.hamburger}
+          onPress={() => router.replace('/home')}
+          accessibilityLabel="Go to home"
+        >
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+        </TouchableOpacity>
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
+        {/* spacer for symmetry */}
+        <View style={{ width: 40 }} />
+      </View>
+
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Environmental Conditions</Text>
           <Text style={styles.subtitle}>Provide details about the current conditions</Text>
         </View>
-
+        <View style={styles.formCard}>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Weather Condition</Text>
           <View style={styles.pickerContainer}>
@@ -248,6 +263,7 @@ export default function ConditionsScreen() {
             <Text style={styles.submitButtonText}>Analyze Conditions</Text>
           )}
         </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -256,11 +272,47 @@ export default function ConditionsScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#2d5a3d',
+    backgroundColor: '#FFFFFF',
   },
   container: {
     flex: 1,
     padding: 20,
+  },
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 2,
+  },
+  headerBar: {
+    height: 56,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 8,
+  },
+  hamburger: { padding: 8 },
+  menuLineDark: {
+    width: 24,
+    height: 3,
+    backgroundColor: '#0F3D1E',
+    marginVertical: 2,
+    borderRadius: 2,
+  },
+  brandTitle: {
+    color: '#0F3D1E',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
   header: {
     marginBottom: 30,
@@ -268,19 +320,19 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#0F3D1E',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#e0e0e0',
+    color: '#374151',
   },
   formGroup: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    color: '#fff',
+    color: '#111827',
     marginBottom: 8,
     fontWeight: '500',
   },

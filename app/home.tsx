@@ -2,11 +2,13 @@ import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Image, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { HistoryItem, getUserHistory } from '../services/historyService';
 import { AuthService } from '../services/authService';
 
 export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
+  const [recentHistory, setRecentHistory] = useState<HistoryItem[]>([]);
 
   const handleStartScanning = () => {
     router.push('/camera');
@@ -29,6 +31,15 @@ export default function HomeScreen() {
     const unsubscribe = AuthService.onAuthStateChanged((user) => {
       if (user) {
         setDisplayName(computeName(user.email, user.displayName));
+        // Load recent history preview
+        (async () => {
+          try {
+            const items = await getUserHistory();
+            setRecentHistory((items || []).slice(0, 3));
+          } catch (e) {
+            setRecentHistory([]);
+          }
+        })();
       } else {
         router.replace('/signin');
       }
@@ -101,15 +112,17 @@ export default function HomeScreen() {
 
       {/* Content */}
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Search */}
-        <View style={styles.searchBar}>
-          <View style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search"
-            placeholderTextColor="#6B7280"
-          />
-        </View>
+        {/* Search (temporarily hidden) */}
+        {false && (
+          <View style={styles.searchBar}>
+            <View style={styles.searchIcon} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search"
+              placeholderTextColor="#6B7280"
+            />
+          </View>
+        )}
 
         {/* Greeting */}
         <View style={styles.greetBox}>
@@ -199,11 +212,32 @@ export default function HomeScreen() {
           <Text style={styles.chevron}>›</Text>
         </TouchableOpacity>
 
-        {/* History placeholders */}
-        <View style={styles.historyGrid}>
-          <View style={styles.historyTile} />
-          <View style={styles.historyTile} />
-        </View>
+        {/* Recent History list (max 3 items) */}
+        {recentHistory.length === 0 ? (
+          <Text style={styles.historyEmpty}>No recent history.</Text>
+        ) : (
+          <View style={{ marginTop: 8 }}>
+            {recentHistory.slice(0, 3).map((item) => (
+              <TouchableOpacity
+                key={item.id || Math.random().toString(36)}
+                style={styles.historyItem}
+                onPress={() => router.push('/history')}
+                activeOpacity={0.85}
+                accessibilityLabel={`Open history item ${item.prediction || 'Unknown'}`}
+              >
+                {item.imageUri ? (
+                  <Image source={{ uri: item.imageUri }} style={styles.historyThumb} />
+                ) : (
+                  <View style={[styles.historyThumb, styles.historyThumbFallback]} />
+                )}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.historyItemTitle}>{item.prediction || 'Unknown'}</Text>
+                  <Text style={styles.historyItemSub}>{new Date(item.timestamp || Date.now()).toLocaleString()}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -502,19 +536,16 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
   },
-  historyGrid: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  historyTile: {
-    flex: 1,
-    height: 120,
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#9FE3A9',
-    backgroundColor: '#FFFFFF',
-    marginRight: 12,
-  },
+  historyGrid: { flexDirection: 'row', marginTop: 8 },
+  historyTile: { flex: 1, height: 120, borderRadius: 16, borderWidth: 2, borderColor: '#9FE3A9', backgroundColor: '#FFFFFF', marginRight: 12 },
+  historyEmpty: { color: '#6B7280', marginTop: 8 },
+  historyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 10, marginBottom: 8 },
+  historyThumbRow: { flexDirection: 'row', marginTop: 8, alignItems: 'center' },
+  historyThumb: { width: 54, height: 54, borderRadius: 12, backgroundColor: '#F3F4F6', marginRight: 12 },
+  historyThumbSpacing: { marginRight: 12 },
+  historyThumbFallback: { alignItems: 'center', justifyContent: 'center' },
+  historyItemTitle: { color: '#111827', fontWeight: '800' },
+  historyItemSub: { color: '#6B7280', fontSize: 12 },
   footerBar: {
     position: 'absolute',
     left: 0,

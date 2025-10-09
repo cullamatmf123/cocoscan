@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Dimensions } from 'react-native';
+import { Alert, Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SCREEN = Dimensions.get('window');
 
@@ -66,8 +66,7 @@ export default function PreventionControlScreen() {
             resizeMode="contain"
           />
           <Text style={styles.imageCaption}>
-            Figure 1. Collection of CRB (Oryctes rhinoceros) larvae from a rotting palm trunk in Samoa. Insert (top left)
-            shows the adult beetle.
+            Figure 1. Image from BIISCPrevention of Spreading of CRB (Oryctes rhinoceros)
           </Text>
         </View>
         <Text style={styles.bullet}>• Remove and destroy breeding sites (rotting logs, compost heaps, decaying organic matter).</Text>

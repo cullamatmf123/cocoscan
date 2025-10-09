@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
@@ -102,9 +103,8 @@ export default function ResultScreen() {
 
   const handlePreventionPress = () => {
     router.push({
-      pathname: '/about',
+      pathname: '/prevention-control',
       params: {
-        tab: 'prevention',
         imageUri,
         photoBase64,
         prediction,
@@ -132,35 +132,32 @@ export default function ResultScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <View style={styles.headerBar}>
-        <View style={styles.logoRow}>
-          <Text style={{ fontSize: 22, marginRight: 8 }}>🌴</Text>
-          <Text style={styles.headerTitle}>COCOSCAN</Text>
-        </View>
-        <TouchableOpacity 
-          onPress={() => router.replace('/home')} 
-          accessibilityRole="button" 
-          accessibilityLabel="Close and return to home"
+        <TouchableOpacity
+          style={styles.hamburger}
+          onPress={() => router.replace('/home')}
+          accessibilityLabel="Open menu"
         >
-          <Text style={styles.closeBtn}>✕</Text>
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
         </TouchableOpacity>
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
+        {/* spacer to balance layout */}
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Scan Result</Text>
-          
-          {/* Image */}
+          <Text style={styles.cardTitle}>Result</Text>
+
+          {/* Single image */}
           <View style={styles.imageFrame}>
             {imageUri ? (
               <Image
                 source={{ uri: imageUri }}
                 style={styles.image}
                 resizeMode="cover"
-                onError={(e) => {
-                  console.log('Image loading error:', e.nativeEvent.error);
-                  if (!photoBase64) Alert.alert('Error', 'Failed to load image');
-                }}
               />
             ) : photoBase64 ? (
               <Image
@@ -169,80 +166,114 @@ export default function ResultScreen() {
                 resizeMode="cover"
               />
             ) : (
-              <View style={styles.imagePlaceholder}>
-                <Text>No image available</Text>
-              </View>
+              <View style={styles.imagePlaceholder} />
             )}
           </View>
 
           {/* Info chips */}
-<View style={styles.chipsRow}>
-  <View style={[
-    styles.chip, 
-    prediction?.toLowerCase() === 'healthy' ? styles.chipHealthy : styles.chipWarn
-  ]}>
-    <Text style={styles.chipText}>
-      AI: {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'} ({confidence}%)
-    </Text>
-  </View>
-  <View style={styles.chip}>
-    <Text style={styles.chipText}>🌤️ {weather}</Text>
-  </View>
-  <View style={styles.chip}>
-    <Text style={styles.chipText}>☀️ {lightCondition}</Text>
-  </View>
-  <View style={styles.chip}>
-    <Text style={styles.chipText}>🌡️ {temperature}°C</Text>
-  </View>
-  <View style={styles.chip}>
-    <Text style={styles.chipText}>💧 {humidity}%</Text>
-  </View>
-  <View style={styles.chip}>
-    <Text style={styles.chipText}>🌱 {soil}</Text>
-  </View>
-</View>
-
-          {/* Buttons */}
-          <View style={styles.buttonsCol}>
-            <TouchableOpacity
-              style={[styles.primaryBtn, styles.btnShadow]}
-              activeOpacity={0.9}
-              onPress={handleAboutPress}
-            >
-              <Text style={styles.primaryBtnText}>About Plant</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.secondaryBtn, styles.btnShadow]}
-              activeOpacity={0.9}
-              onPress={handlePreventionPress}
-            >
-              <Text style={styles.secondaryBtnText}>Prevention & Control</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[styles.ghostBtn]} 
-              activeOpacity={0.9}
-              onPress={handlePesticidePress}
-            >
-              <Text style={styles.ghostBtnText}>Pesticide Recommendation</Text>
-            </TouchableOpacity>
+          <View style={styles.chipsRow}>
+            <View style={[styles.chip, prediction?.toLowerCase() === 'healthy' ? styles.chipHealthy : styles.chipWarn]}>
+              <Text style={styles.chipText}>AI: {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'} ({confidence}%)</Text>
+            </View>
+            <View style={styles.chip}><Text style={styles.chipText}>🌤️ {weather}</Text></View>
+            <View style={styles.chip}><Text style={styles.chipText}>🌡️ {temperature}°C</Text></View>
+            <View style={styles.chip}><Text style={styles.chipText}>💧 {humidity}%</Text></View>
+            <View style={styles.chip}><Text style={styles.chipText}>🌱 {soil}</Text></View>
           </View>
+
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Signs and Symptoms</Text>
+              <TouchableOpacity onPress={handleAboutPress} accessibilityLabel="Open About for more details" activeOpacity={0.8}>
+                <Text style={styles.sectionChevron}>›</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Signs</Text>
+            <Text style={styles.sectionText}>
+              Infestation by the coconut rhinoceros beetle causes visible signs such as V-shaped or diamond-shaped cuts on coconut fronds and triangular cuts on palm leaves. The spindle or central shoot may appear cut or knocked over, indicating beetle activity and feeding damage. These marks serve as direct evidence of infestation.
+            </Text>
+            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 8 }]}>Symptoms</Text>
+            <Text style={styles.sectionText}>
+              Affected trees may show yellowing and withering of young leaves, stunted growth, and reduced nut production. Continuous damage weakens the tree, making it less productive and more vulnerable to other stresses.
+            </Text>
+          </View>
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Prevention & Control</Text>
+              <TouchableOpacity onPress={handlePreventionPress} accessibilityLabel="Open Prevention & Control details" activeOpacity={0.8}>
+                <Text style={styles.sectionChevron}>›</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
+            <View style={{ gap: 6 }}>
+              <Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text>
+              <Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text>
+              <Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text>
+              <Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text>
+              <Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text>
+            </View>
+
+            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
+            <View style={{ gap: 6 }}>
+              <Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text>
+              <Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text>
+              <Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text>
+              <Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text>
+              <Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text>
+            </View>
+          </View>
+
+          {/* Recommended Pesticides (images + names only) */}
+          <View style={styles.sectionCard}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>Recommended Pesticides</Text>
+              <TouchableOpacity onPress={() => router.push('/pesticides')} accessibilityLabel="Open full pesticide recommendations" activeOpacity={0.8}>
+                <Text style={styles.sectionChevron}>›</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+              <View style={styles.recTile}>
+                <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.recImage} />
+                <Text style={styles.recCaption}>Lambda-cyhalothrin (Karate)</Text>
+              </View>
+              <View style={styles.recTile}>
+                <Image source={require('../assets/images/design/imidacloprid.png')} style={styles.recImage} />
+                <Text style={styles.recCaption}>Imidacloprid</Text>
+              </View>
+              <View style={styles.recTile}>
+                <Image source={require('../assets/images/design/Emamectin-Benzoate.webp')} style={styles.recImage} />
+                <Text style={styles.recCaption}>Emamectin Benzoate</Text>
+              </View>
+              <View style={styles.recTile}>
+                <Image source={require('../assets/images/design/chloros-chlorantraniliprole.webp')} style={styles.recImage} />
+                <Text style={styles.recCaption}>Chlorantraniliprole</Text>
+              </View>
+            </ScrollView>
+          </View>
+
+          
         </View>
 
-        {/* Footer actions */}
-        <View style={styles.footerRow}>
-          <TouchableOpacity 
-            style={styles.footerBtn} 
-            onPress={() => router.replace('/camera')}
-          >
-            <Text style={styles.footerBtnText}>Scan Again</Text>
+        {/* Scan Again button (kept) */}
+        <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 56 }}>
+          <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/camera')} accessibilityLabel="Scan Again">
+            <Text style={styles.scanAgainText}>Scan Again</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.footerBtn, styles.footerBtnAlt]} 
-            onPress={() => router.replace('/home')}
-          >
-            <Text style={[styles.footerBtnText, styles.footerBtnTextAlt]}>Home</Text>
+        </View>
+
+        {/* Footer navigation */}
+        <View style={styles.footerBar}>
+          <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+            <Feather name="home" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
+            <Feather name="camera" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
+            <Feather name="clock" size={24} color="#000" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
+            <Feather name="user" size={24} color="#000" />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -266,27 +297,25 @@ const styles = StyleSheet.create({
   },
   headerBar: {
     height: 56,
-    backgroundColor: '#2d5a3d',
+    backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
   },
-  logoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  hamburger: { padding: 8 },
+  menuLineDark: {
+    width: 24,
+    height: 3,
+    backgroundColor: '#0F3D1E',
+    marginVertical: 2,
+    borderRadius: 2,
   },
-  headerTitle: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 18,
+  brandTitle: {
+    color: '#0F3D1E',
+    fontSize: 20,
+    fontWeight: '900',
     letterSpacing: 1,
-  },
-  closeBtn: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-    padding: 4,
   },
   card: {
     backgroundColor: '#fff',
@@ -306,14 +335,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     textAlign: 'center',
   },
-  imageFrame: {
-    width: '100%',
-    height: 240,
-    backgroundColor: '#f0f2f0',
-    borderRadius: 12,
-    overflow: 'hidden',
-    marginBottom: 16,
-  },
+  imageStrip: { flexDirection: 'row', gap: 8, marginBottom: 12 },
+  stripItem: { flex: 1, height: 120, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f0f2f0' },
+  stripItemMiddle: { marginHorizontal: 2 },
+  imageFrame: { width: '100%', height: 240, backgroundColor: '#f0f2f0', borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
   image: {
     width: '100%',
     height: '100%',
@@ -324,6 +349,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#f0f0f0',
   },
+  stripImage: { width: '100%', height: '100%' },
   chipsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -347,9 +373,7 @@ const styles = StyleSheet.create({
   chipWarn: {
     backgroundColor: '#FFF1F0',
   },
-  buttonsCol: {
-    gap: 12,
-  },
+  buttonsCol: { gap: 12 },
   btnShadow: {
     shadowColor: '#000',
     shadowOpacity: 0.12,
@@ -392,29 +416,35 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
-  footerRow: {
+  resultTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 4 },
+  scientificName: { fontSize: 12, fontStyle: 'italic', color: '#374151', marginBottom: 10 },
+  sectionCard: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 12, marginBottom: 10 },
+  sectionTitle: { fontWeight: '800', color: '#111827', marginBottom: 6 },
+  sectionText: { color: '#111827', fontSize: 13, lineHeight: 18 },
+  bullet: { color: '#111827', fontSize: 13, lineHeight: 18 },
+  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  sectionChevron: { fontSize: 22, fontWeight: '900', color: '#111827', paddingHorizontal: 6 },
+  scanAgainBtn: { backgroundColor: '#2d5a3d', paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
+  scanAgainText: { color: '#ffffff', fontWeight: '800', fontSize: 14 },
+  recTile: { width: 160, marginRight: 10 },
+  recImage: { width: 160, height: 100, borderRadius: 10, backgroundColor: '#F3F4F6' },
+  recCaption: { fontSize: 12, color: '#111827', marginTop: 6 },
+  footerBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
-  },
-  footerBtn: {
-    flex: 1,
-    backgroundColor: '#2d5a3d',
-    paddingVertical: 14,
-    borderRadius: 10,
+    justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
+    flexWrap: 'nowrap',
+    zIndex: 10,
   },
-  footerBtnAlt: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-  },
-  footerBtnText: {
-    color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 14,
-  },
-  footerBtnTextAlt: {
-    color: '#1f2937',
-  },
+  footerItem: { flex: 1, alignItems: 'center' },
 });
