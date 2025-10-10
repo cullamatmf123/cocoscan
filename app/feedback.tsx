@@ -1,12 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View, Modal, TextInput, ScrollView } from 'react-native';
+import { 
+  SafeAreaView, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View, 
+  Modal, 
+  TextInput, 
+  ScrollView,
+  Alert,
+  ActivityIndicator
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { db } from '../config/firebase';
+import { AuthService } from '../services/authService';
 
 export default function FeedbackScreen() {
   const [visible, setVisible] = useState(false);
   const [rating, setRating] = useState<number>(0);
   const [message, setMessage] = useState<string>('');
+  const [submitting, setSubmitting] = useState<boolean>(false);
 
   const handlePress = () => {
     setVisible(true);
@@ -16,18 +32,84 @@ export default function FeedbackScreen() {
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
     if (visible) {
-      timer = setTimeout(() => setVisible(false), 1500);
+      timer = setTimeout(() => setVisible(false), 2000);
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
   }, [visible]);
 
-  const submit = () => {
-    // Here you could send to Firestore or API
-    setVisible(true);
-    setMessage('');
-    setRating(0);
+  const submitFeedback = async () => {
+    // Validation
+    if (rating === 0) {
+      Alert.alert('Rating Required', 'Please select a star rating before submitting.');
+      return;
+    }
+
+    if (message.trim().length < 10) {
+      Alert.alert('Feedback Required', 'Please provide at least 10 characters of feedback.');
+      return;
+    }
+
+    const auth = getAuth();
+    const user = auth.currentUser;
+
+    if (!user) {
+      Alert.alert('Authentication Required', 'Please sign in to submit feedback.');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      // Create feedback document
+      const feedbackData = {
+        userId: user.uid,
+        userEmail: user.email,
+        rating: rating,
+        message: message.trim(),
+        timestamp: Timestamp.now(),
+        status: 'new', // new, reviewed, resolved
+        deviceInfo: {
+          platform: 'mobile',
+          userAgent: 'CocoScan App'
+        }
+      };
+
+      // Add to Firestore
+      const docRef = await addDoc(collection(db, 'feedback'), feedbackData);
+      
+      console.log('Feedback submitted successfully:', docRef.id);
+      
+      // Show success message
+      setVisible(true);
+      
+      // Reset form
+      setMessage('');
+      setRating(0);
+      
+      // Navigate back after a delay
+      setTimeout(() => {
+        router.back();
+      }, 2000);
+
+    } catch (error: any) {
+      console.error('Error submitting feedback:', error);
+      
+      let errorMessage = 'Failed to submit feedback. ';
+      
+      if (error.code === 'permission-denied') {
+        errorMessage += 'You do not have permission to submit feedback.';
+      } else if (error.code === 'unavailable') {
+        errorMessage += 'Service is currently unavailable. Please try again later.';
+      } else {
+        errorMessage += 'Please check your internet connection and try again.';
+      }
+      
+      Alert.alert('Submission Error', errorMessage);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -39,8 +121,18 @@ export default function FeedbackScreen() {
 
           <View style={styles.starsRow}>
             {[1,2,3,4,5].map(i => (
-              <TouchableOpacity key={i} onPress={() => setRating(i)} accessibilityRole="button" accessibilityLabel={`Rate ${i} star${i>1?'s':''}`}>
-                <Ionicons name={i <= rating ? 'star' : 'star-outline'} size={28} color={i <= rating ? '#F59E0B' : '#94A3B8'} />
+              <TouchableOpacity 
+                key={i} 
+                onPress={() => setRating(i)} 
+                accessibilityRole="button" 
+                accessibilityLabel={`Rate ${i} star${i>1?'s':''}`}
+                disabled={submitting}
+              >
+                <Ionicons 
+                  name={i <= rating ? 'star' : 'star-outline'} 
+                  size={28} 
+                  color={i <= rating ? '#F59E0B' : '#94A3B8'} 
+                />
               </TouchableOpacity>
             ))}
           </View>
@@ -49,18 +141,40 @@ export default function FeedbackScreen() {
           <TextInput
             style={styles.input}
             multiline
-            placeholder="Your feedback..."
+            placeholder="Your feedback... (minimum 10 characters)"
             placeholderTextColor="#9CA3AF"
             value={message}
             onChangeText={setMessage}
+            editable={!submitting}
+            maxLength={500}
           />
+          
+          <Text style={styles.charCount}>
+            {message.length}/500 characters
+          </Text>
 
-          <TouchableOpacity style={styles.submitBtn} onPress={submit} activeOpacity={0.9}>
-            <Text style={styles.submitText}>Share my feedback</Text>
+          <TouchableOpacity 
+            style={[styles.submitBtn, submitting && styles.submitBtnDisabled]} 
+            onPress={submitFeedback} 
+            activeOpacity={0.9}
+            disabled={submitting}
+          >
+            {submitting ? (
+              <View style={styles.submittingContainer}>
+                <ActivityIndicator size="small" color="#ffffff" />
+                <Text style={styles.submitText}>Submitting...</Text>
+              </View>
+            ) : (
+              <Text style={styles.submitText}>Share my feedback</Text>
+            )}
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.secondary} onPress={() => router.back()}>
+        <TouchableOpacity 
+          style={styles.secondary} 
+          onPress={() => router.back()}
+          disabled={submitting}
+        >
           <Text style={styles.secondaryText}>Back</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -73,7 +187,7 @@ export default function FeedbackScreen() {
       >
         <View style={styles.noteBackdrop}>
           <View style={styles.noteCard}>
-            <Ionicons name="sparkles-outline" size={20} color="#065F46" />
+            <Ionicons name="checkmark-circle" size={24} color="#065F46" />
             <Text style={styles.noteText}>Thanks for your feedback! 🌱</Text>
           </View>
         </View>
@@ -113,6 +227,12 @@ const styles = StyleSheet.create({
     color: '#111827',
     textAlignVertical: 'top',
   },
+  charCount: {
+    color: '#9CA3AF',
+    fontSize: 12,
+    textAlign: 'right',
+    marginTop: 4,
+  },
   submitBtn: {
     marginTop: 12,
     alignSelf: 'center',
@@ -120,6 +240,14 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 999,
+  },
+  submitBtnDisabled: {
+    backgroundColor: '#94A3B8',
+  },
+  submittingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   submitText: { color: '#ffffff', fontWeight: '800' },
   secondary: { marginTop: 14, paddingVertical: 8, paddingHorizontal: 12 },

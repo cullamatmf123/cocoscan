@@ -1,11 +1,26 @@
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { 
+  SafeAreaView, 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  TouchableOpacity, 
+  View, 
+  Image,
+  Alert,
+  ActivityIndicator
+} from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getAuth, updateProfile } from 'firebase/auth';
 import { AuthService } from '../services/authService';
 
 export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState<string>('');
+  const [image, setImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState<boolean>(false);
 
   useEffect(() => {
     const computeName = (email?: string | null, fallback?: string | null) => {
@@ -16,14 +31,160 @@ export default function ProfileScreen() {
       const base = noTrailingDigits || handle;
       return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
     };
+    
     const current = AuthService.getCurrentUser();
     setDisplayName(computeName(current?.email ?? null, current?.displayName ?? null));
+    if (current?.photoURL) {
+      setImage(current.photoURL);
+    }
 
     const unsub = AuthService.onAuthStateChanged((u) => {
       setDisplayName(computeName(u?.email ?? null, u?.displayName ?? null));
+      if (u?.photoURL) {
+        setImage(u.photoURL);
+      }
     });
     return () => unsub && unsub();
   }, []);
+
+  const pickImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'We need access to your photos to upload a profile picture.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.7,
+        base64: false,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const selectedImage = result.assets[0];
+        console.log('Selected image:', {
+          uri: selectedImage.uri,
+          width: selectedImage.width,
+          height: selectedImage.height,
+          fileSize: selectedImage.fileSize
+        });
+        
+        // Check file size (limit to 5MB)
+        if (selectedImage.fileSize && selectedImage.fileSize > 5 * 1024 * 1024) {
+          Alert.alert('File Too Large', 'Please select an image smaller than 5MB.');
+          return;
+        }
+        
+        setImage(selectedImage.uri);
+        await uploadImage(selectedImage.uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to select image. Please try again.');
+    }
+  };
+
+  const uploadImage = async (uri: string) => {
+    setUploading(true);
+    try {
+      console.log('Starting image upload process...');
+      
+      // Get current user
+      const auth = getAuth();
+      const user = auth.currentUser;
+      
+      if (!user) {
+        console.error('No authenticated user found');
+        throw new Error('User not authenticated. Please sign in again.');
+      }
+
+      console.log('User authenticated:', user.uid);
+
+      // Create blob from image URI
+      console.log('Fetching image from URI...');
+      const response = await fetch(uri);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      console.log('Image blob created:', {
+        size: blob.size,
+        type: blob.type
+      });
+
+      // Initialize Firebase Storage
+      const storage = getStorage();
+      const timestamp = Date.now();
+      const storageRef = ref(storage, `profilePictures/${user.uid}_${timestamp}.jpg`);
+      
+      console.log('Uploading to Firebase Storage...');
+      
+      // Upload with metadata
+      const metadata = {
+        contentType: 'image/jpeg',
+        customMetadata: {
+          uploadedBy: user.uid,
+          uploadedAt: new Date().toISOString()
+        }
+      };
+      
+      const uploadTask = await uploadBytes(storageRef, blob, metadata);
+      console.log('Upload completed successfully');
+      
+      // Get download URL
+      console.log('Getting download URL...');
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+      console.log('Download URL obtained:', downloadURL);
+      
+      // Update user profile
+      console.log('Updating user profile...');
+      await updateProfile(user, { 
+        photoURL: downloadURL 
+      });
+      
+      // Update local state
+      setImage(downloadURL);
+      console.log('Profile updated successfully');
+      
+      Alert.alert('Success', 'Profile picture updated successfully!');
+      
+    } catch (error: any) {
+      console.error('Detailed upload error:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        stack: error.stack
+      });
+      
+      let errorMessage = 'Failed to upload image. ';
+      
+      if (error.code === 'storage/unauthorized') {
+        errorMessage += 'You do not have permission to upload files.';
+      } else if (error.code === 'storage/canceled') {
+        errorMessage += 'Upload was canceled.';
+      } else if (error.code === 'storage/unknown') {
+        errorMessage += 'An unknown error occurred. Please check your internet connection and try again.';
+      } else if (error.message.includes('fetch')) {
+        errorMessage += 'Could not read the selected image.';
+      } else {
+        errorMessage += 'Please try again.';
+      }
+      
+      Alert.alert('Upload Error', errorMessage);
+      
+      // Reset image to previous state if upload failed
+      const currentUser = AuthService.getCurrentUser();
+      setImage(currentUser?.photoURL || null);
+      
+    } finally {
+      setUploading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -32,11 +193,31 @@ export default function ProfileScreen() {
         <View style={styles.headerBgWave} />
         <View style={styles.headerContent}>
           <View style={styles.avatarHero}>
-            <Ionicons name="person-circle" size={80} color="#94A3B8" />
+            <TouchableOpacity onPress={pickImage} disabled={uploading}>
+              {uploading ? (
+                <View style={styles.uploadingContainer}>
+                  <ActivityIndicator size="large" color="#4CAF84" />
+                  <Text style={styles.uploadingText}>Uploading...</Text>
+                </View>
+              ) : image ? (
+                <Image
+                  source={{ uri: image }}
+                  style={styles.profileImage}
+                />
+              ) : (
+                <Ionicons name="person-circle" size={96} color="#94A3B8" />
+              )}
+            </TouchableOpacity>
           </View>
           <Text style={styles.nameHero}>{displayName || 'User'}</Text>
-          <Text style={[styles.emailText, { color: '#E5F2E9' }]}>{AuthService.getCurrentUser()?.email || 'user@example.com'}</Text>
-          <TouchableOpacity style={styles.editBtn} onPress={() => console.log('Edit Farm Info')} activeOpacity={0.8}>
+          <Text style={[styles.emailText, { color: '#E5F2E9' }]}>
+            {AuthService.getCurrentUser()?.email || 'user@example.com'}
+          </Text>
+          <TouchableOpacity 
+            style={styles.editBtn} 
+            onPress={() => console.log('Edit Farm Info')} 
+            activeOpacity={0.8}
+          >
             <Ionicons name="create-outline" size={18} color="#1F3D2A" />
             <Text style={styles.editBtnText}>Edit Farm Info</Text>
           </TouchableOpacity>
@@ -45,9 +226,12 @@ export default function ProfileScreen() {
 
       <ScrollView contentContainerStyle={{ paddingBottom: 160 }}>
         <View style={styles.sheet}>
-
           {/* Help us Grow button */}
-          <TouchableOpacity style={styles.helpBtn} onPress={() => router.push('/feedback')} activeOpacity={0.85}>
+          <TouchableOpacity 
+            style={styles.helpBtn} 
+            onPress={() => router.push('/feedback')} 
+            activeOpacity={0.85}
+          >
             <Ionicons name="chatbubble-ellipses-outline" size={18} color="#FFFFFF" />
             <Text style={styles.helpBtnText}>Help us Grow</Text>
           </TouchableOpacity>
@@ -79,25 +263,21 @@ export default function ProfileScreen() {
               <Text style={styles.recentEmptyText}>No diagnoses yet</Text>
             </View>
           </View>
-
-          
-
-          
         </View>
       </ScrollView>
 
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')}>
           <Feather name="home" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')}>
           <Feather name="camera" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')}>
           <Feather name="clock" size={24} color="#000" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')}>
           <Feather name="user" size={24} color="#000" />
         </TouchableOpacity>
       </View>
@@ -106,8 +286,16 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#2D5A3D' },
-  headerWrap: { height: 260, overflow: 'hidden', marginBottom: 0, zIndex: 1 },
+  safe: { 
+    flex: 1, 
+    backgroundColor: '#2D5A3D' 
+  },
+  headerWrap: { 
+    height: 260, 
+    overflow: 'hidden', 
+    marginBottom: 0, 
+    zIndex: 1 
+  },
   headerBgPrimary: {
     ...StyleSheet.absoluteFillObject as any,
     backgroundColor: '#2D5A3D',
@@ -115,8 +303,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 34,
   },
   headerBgWave: {
-    position: 'absolute', left: -40, right: -40, top: 110, height: 180,
-    backgroundColor: '#2F6A46', borderTopLeftRadius: 120, borderTopRightRadius: 120,
+    position: 'absolute', 
+    left: -40, 
+    right: -40, 
+    top: 110, 
+    height: 180,
+    backgroundColor: '#2F6A46', 
+    borderTopLeftRadius: 120, 
+    borderTopRightRadius: 120,
     transform: [{ scaleX: 1.2 }],
   },
   headerContent: {
@@ -127,24 +321,60 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  headerTitle: {
-    position: 'absolute',
-    left: 16,
-    bottom: 36,
-    color: '#FFFFFF',
-    fontSize: 28,
-    fontWeight: '900',
-    lineHeight: 30,
+  profileImage: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
   },
-  
-  
+  uploadingContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#E2E8F0',
+  },
+  uploadingText: {
+    marginTop: 4,
+    fontSize: 10,
+    color: '#4CAF84',
+    fontWeight: '600',
+  },
+  nameHero: { 
+    fontSize: 18, 
+    fontWeight: '900', 
+    color: '#1F3D2A' 
+  },
+  emailText: { 
+    color: '#6B7280', 
+    marginTop: 4, 
+    fontWeight: '600', 
+    textAlign: 'center' 
+  },
+  editBtn: { 
+    marginTop: 12, 
+    alignSelf: 'center', 
+    flexDirection: 'row', 
+    gap: 8, 
+    backgroundColor: '#ffffff', 
+    borderRadius: 999, 
+    paddingHorizontal: 16, 
+    paddingVertical: 10, 
+    borderWidth: 1, 
+    borderColor: '#E5EFE8' 
+  },
+  editBtnText: { 
+    color: '#1F3D2A', 
+    fontWeight: '900' 
+  },
   sheet: {
     marginTop: 8,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    borderRadius: 24,
     marginHorizontal: 12,
     padding: 16,
     paddingBottom: 24,
@@ -155,66 +385,100 @@ const styles = StyleSheet.create({
     zIndex: 2,
     elevation: 4,
   },
-  topCard: { backgroundColor: '#fff', borderRadius: 16, padding: 14, shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 6, alignItems: 'center' },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  avatar: { width: 64, height: 64, borderRadius: 32, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#E2E8F0', marginRight: 12, overflow: 'hidden' },
-  info: { flex: 1 },
-  name: { fontSize: 18, fontWeight: '900', color: '#111827' },
-  phone: { color: '#2563eb', fontWeight: '800', marginTop: 2 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  ratingValue: { color: '#111827', fontWeight: '800', marginRight: 4 },
-  topCardHeader: { alignItems: 'center', gap: 6, marginTop: 4, marginBottom: 6 },
-  avatarHero: { width: 96, height: 96, borderRadius: 48, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#E2E8F0' },
-  nameHero: { fontSize: 18, fontWeight: '900', color: '#1F3D2A' },
-  locationPill: { marginTop: 10, alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#EAF4EC', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
-  locationText: { color: '#1F3D2A', fontWeight: '800' },
-  emailText: { color: '#6B7280', marginTop: 4, fontWeight: '600', textAlign: 'center' },
-  editBtn: { marginTop: 12, alignSelf: 'center', flexDirection: 'row', gap: 8, backgroundColor: '#ffffff', borderRadius: 999, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: '#E5EFE8' },
-  editBtnText: { color: '#1F3D2A', fontWeight: '900' },
-  levelCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 12, marginTop: 12 },
-  levelHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  levelLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  levelBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#EAF7EF', alignItems: 'center', justifyContent: 'center' },
-  levelTitle: { fontSize: 14, fontWeight: '900', color: '#1F3D2A' },
-  levelStats: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  levelStatItem: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F3F4F6', borderRadius: 999, paddingHorizontal: 8, paddingVertical: 4 },
-  levelStatText: { fontSize: 12, fontWeight: '900', color: '#111827' },
-  sectionHeader: { marginTop: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  sectionHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#1F3D2A' },
-  actionLink: { color: '#2563eb', fontWeight: '800' },
-  tilesRow: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 10 },
-  detailCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 12 },
-  cardShadow: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  tilesGroup: { backgroundColor: '#F1F8F4', borderRadius: 16, padding: 14 },
-  tile: { width: '31%', aspectRatio: 1, backgroundColor: '#EFF6F1', borderRadius: 12, alignItems: 'center', justifyContent: 'center', padding: 8, borderWidth: 1, borderColor: '#E5EFE8' },
-  tileText: { marginTop: 6, fontSize: 11, color: '#1f2937', textAlign: 'center', fontWeight: '800' },
-  metricsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12, marginTop: 12 },
-  metricCard: { flex: 1, borderRadius: 16, paddingVertical: 16, paddingHorizontal: 12, alignItems: 'flex-start' },
-  metricChat: { backgroundColor: '#eaf1ff', borderWidth: 1, borderColor: '#d7e4ff' },
-  metricDiag: { backgroundColor: '#eaf8ee', borderWidth: 1, borderColor: '#cfeedd' },
-  metricValue: { marginTop: 4, fontSize: 22, fontWeight: '900' },
-  metricLabel: { marginTop: 2, fontSize: 12, color: '#1f2937', fontWeight: '700' },
-  helpBtn: { marginTop: 12, alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#4CAF84', borderRadius: 999, paddingVertical: 12, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  helpBtnText: { color: '#FFFFFF', fontWeight: '900', fontSize: 14 },
-  recentCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 12, marginTop: 12 },
-  recentHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 },
-  recentHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  recentTitle: { fontSize: 14, fontWeight: '900', color: '#1F3D2A' },
-  recentEmptyWrap: { alignItems: 'center', justifyContent: 'center', paddingVertical: 20 },
-  recentEmptyText: { color: '#6B7280', fontSize: 13, fontWeight: '700' },
-  badgeGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  badgeTile: { width: '30.5%', backgroundColor: '#F8FAFC', borderRadius: 14, alignItems: 'center', paddingVertical: 14, position: 'relative', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
-  badgeTileActive: { backgroundColor: '#2D5A3D' },
-  badgeLabelActive: { color: '#FFFFFF' },
-  countBadge: { position: 'absolute', top: 8, right: 10, backgroundColor: '#E2E8F0', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2 },
-  countText: { fontSize: 12, fontWeight: '800', color: '#111827' },
+  helpBtn: { 
+    marginTop: 12, 
+    alignSelf: 'stretch', 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    gap: 8, 
+    backgroundColor: '#4CAF84', 
+    borderRadius: 999, 
+    paddingVertical: 12, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.1, 
+    shadowRadius: 8, 
+    shadowOffset: { width: 0, height: 4 }, 
+    elevation: 3 
+  },
+  helpBtnText: { 
+    color: '#FFFFFF', 
+    fontWeight: '900', 
+    fontSize: 14 
+  },
+  metricsRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    gap: 12, 
+    marginTop: 12 
+  },
+  metricCard: { 
+    flex: 1, 
+    borderRadius: 16, 
+    paddingVertical: 16, 
+    paddingHorizontal: 12, 
+    alignItems: 'flex-start' 
+  },
+  metricChat: { 
+    backgroundColor: '#eaf1ff', 
+    borderWidth: 1, 
+    borderColor: '#d7e4ff' 
+  },
+  metricDiag: { 
+    backgroundColor: '#eaf8ee', 
+    borderWidth: 1, 
+    borderColor: '#cfeedd' 
+  },
+  metricValue: { 
+    marginTop: 4, 
+    fontSize: 22, 
+    fontWeight: '900' 
+  },
+  metricLabel: { 
+    marginTop: 2, 
+    fontSize: 12, 
+    color: '#1f2937', 
+    fontWeight: '700' 
+  },
+  recentCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    marginTop: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB'
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12
+  },
+  recentHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8
+  },
+  recentTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1F3D2A'
+  },
+  recentEmptyWrap: {
+    paddingVertical: 20,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  recentEmptyText: {
+    color: '#6B7280',
+    fontSize: 12,
+    fontWeight: '600'
+  },
   footerBar: {
     position: 'absolute',
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
@@ -227,5 +491,22 @@ const styles = StyleSheet.create({
   footerItem: {
     flex: 1,
     alignItems: 'center',
+  },
+  cardShadow: { 
+    shadowColor: '#000', 
+    shadowOpacity: 0.06, 
+    shadowRadius: 8, 
+    shadowOffset: { width: 0, height: 4 }, 
+    elevation: 2 
+  },
+  avatarHero: { 
+    width: 102, 
+    height: 102, 
+    borderRadius: 51, 
+    backgroundColor: '#F1F5F9', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 3, 
+    borderColor: '#E2E8F0' 
   },
 });
