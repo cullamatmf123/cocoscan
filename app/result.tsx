@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface ResultParams {
@@ -24,6 +24,7 @@ export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as Partial<ResultParams>;
   const savedRef = useRef(false);
+  const [tab, setTab] = useState<'status' | 'pest'>('status');
 
   const {
     id,
@@ -170,86 +171,142 @@ export default function ResultScreen() {
             )}
           </View>
 
-          {/* Info chips */}
-          <View style={styles.chipsRow}>
-            <View style={[styles.chip, prediction?.toLowerCase() === 'healthy' ? styles.chipHealthy : styles.chipWarn]}>
-              <Text style={styles.chipText}>AI: {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'} ({confidence}%)</Text>
-            </View>
-            <View style={styles.chip}><Text style={styles.chipText}>🌤️ {weather}</Text></View>
-            <View style={styles.chip}><Text style={styles.chipText}>🌡️ {temperature}°C</Text></View>
-            <View style={styles.chip}><Text style={styles.chipText}>💧 {humidity}%</Text></View>
-            <View style={styles.chip}><Text style={styles.chipText}>🌱 {soil}</Text></View>
+          {/* Tabs */}
+          <View style={styles.tabRow}>
+            <TouchableOpacity style={styles.tabItem} onPress={() => setTab('status')}>
+              <Text style={tab === 'status' ? styles.tabTextActive : styles.tabText}>Status</Text>
+              {tab === 'status' && <View style={styles.tabUnderline} />}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.tabItem} onPress={() => setTab('pest')}>
+              <Text style={tab === 'pest' ? styles.tabTextActive : styles.tabText}>Pest Info</Text>
+              {tab === 'pest' && <View style={styles.tabUnderline} />}
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Signs and Symptoms</Text>
-              <TouchableOpacity onPress={handleAboutPress} accessibilityLabel="Open About for more details" activeOpacity={0.8}>
-                <Text style={styles.sectionChevron}>›</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Signs</Text>
-            <Text style={styles.sectionText}>
-              Infestation by the coconut rhinoceros beetle causes visible signs such as V-shaped or diamond-shaped cuts on coconut fronds and triangular cuts on palm leaves. The spindle or central shoot may appear cut or knocked over, indicating beetle activity and feeding damage. These marks serve as direct evidence of infestation.
-            </Text>
-            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 8 }]}>Symptoms</Text>
-            <Text style={styles.sectionText}>
-              Affected trees may show yellowing and withering of young leaves, stunted growth, and reduced nut production. Continuous damage weakens the tree, making it less productive and more vulnerable to other stresses.
-            </Text>
-          </View>
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Prevention & Control</Text>
-              <TouchableOpacity onPress={handlePreventionPress} accessibilityLabel="Open Prevention & Control details" activeOpacity={0.8}>
-                <Text style={styles.sectionChevron}>›</Text>
-              </TouchableOpacity>
-            </View>
-            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
-            <View style={{ gap: 6 }}>
-              <Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text>
-              <Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text>
-              <Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text>
-              <Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text>
-              <Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text>
-            </View>
+          {/* Status tab content */}
+          {tab === 'status' && (
+            <>
+              {/* Date header */}
+              <Text style={styles.statusDateHeader}>{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: '2-digit' })}</Text>
 
-            <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
-            <View style={{ gap: 6 }}>
-              <Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text>
-              <Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text>
-              <Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text>
-              <Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text>
-              <Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text>
-            </View>
-          </View>
+              {/* Status card */}
+              <View style={styles.statusCard}>
+                {/* Thumb */}
+                <View style={{ marginRight: 10 }}>
+                  {imageUri ? (
+                    <Image source={{ uri: imageUri }} style={styles.statusThumb} />
+                  ) : photoBase64 ? (
+                    <Image source={{ uri: `data:image/jpeg;base64,${photoBase64}` }} style={styles.statusThumb} />
+                  ) : (
+                    <View style={[styles.statusThumb, { backgroundColor: '#E5E7EB' }]} />)
+                  }
+                </View>
+                {/* Right content */}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.statusTitle}>AI : {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'}</Text>
+                  <View style={styles.statusChipsRow}>
+                    <Text style={styles.statusChipText}>🌤️ {weather || 'Not specified'}</Text>
+                    <Text style={styles.statusChipText}>🌡️ {temperature || 'Not specified'}°C</Text>
+                    <Text style={styles.statusChipText}>💧 {humidity || 'Not specified'}%</Text>
+                  </View>
+                  <Text style={styles.statusChipText}>🌱 {soil || 'Not specified'}</Text>
+                </View>
+              </View>
 
-          {/* Recommended Pesticides (images + names only) */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeaderRow}>
-              <Text style={styles.sectionTitle}>Recommended Pesticides</Text>
-              <TouchableOpacity onPress={() => router.push('/pesticides')} accessibilityLabel="Open full pesticide recommendations" activeOpacity={0.8}>
-                <Text style={styles.sectionChevron}>›</Text>
-              </TouchableOpacity>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
-              <View style={styles.recTile}>
-                <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.recImage} />
-                <Text style={styles.recCaption}>Lambda-cyhalothrin (Karate)</Text>
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitle}>Prevention & Control</Text>
+                  <TouchableOpacity onPress={handlePreventionPress} accessibilityLabel="Open Prevention & Control details" activeOpacity={0.8}>
+                    <Text style={styles.sectionChevron}>›</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
+                <View style={{ gap: 6 }}>
+                  <Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text>
+                  <Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text>
+                  <Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text>
+                  <Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text>
+                  <Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text>
+                </View>
+                <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
+                <View style={{ gap: 6 }}>
+                  <Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text>
+                  <Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text>
+                  <Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text>
+                  <Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text>
+                  <Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text>
+                </View>
               </View>
-              <View style={styles.recTile}>
-                <Image source={require('../assets/images/design/imidacloprid.png')} style={styles.recImage} />
-                <Text style={styles.recCaption}>Imidacloprid</Text>
+
+              {/* Recommended Pesticides (images + names only) */}
+              <View style={styles.sectionCard}>
+                <View style={styles.sectionHeaderRow}>
+                  <Text style={styles.sectionTitle}>Recommended Pesticides</Text>
+                  <TouchableOpacity onPress={() => router.push('/pesticides')} accessibilityLabel="Open full pesticide recommendations" activeOpacity={0.8}>
+                    <Text style={styles.sectionChevron}>›</Text>
+                  </TouchableOpacity>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+                  <View style={styles.recTile}>
+                    <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.recImage} />
+                    <Text style={styles.recCaption}>Lambda-cyhalothrin (Karate)</Text>
+                  </View>
+                  <View style={styles.recTile}>
+                    <Image source={require('../assets/images/design/imidacloprid.png')} style={styles.recImage} />
+                    <Text style={styles.recCaption}>Imidacloprid</Text>
+                  </View>
+                  <View style={styles.recTile}>
+                    <Image source={require('../assets/images/design/Emamectin-Benzoate.webp')} style={styles.recImage} />
+                    <Text style={styles.recCaption}>Emamectin Benzoate</Text>
+                  </View>
+                  <View style={styles.recTile}>
+                    <Image source={require('../assets/images/design/chloros-chlorantraniliprole.webp')} style={styles.recImage} />
+                    <Text style={styles.recCaption}>Chlorantraniliprole</Text>
+                  </View>
+                </ScrollView>
               </View>
-              <View style={styles.recTile}>
-                <Image source={require('../assets/images/design/Emamectin-Benzoate.webp')} style={styles.recImage} />
-                <Text style={styles.recCaption}>Emamectin Benzoate</Text>
+            </>
+          )}
+
+          {/* Pest Info tab content */}
+          {tab === 'pest' && (
+            <>
+              <View style={styles.greenCardAlt}>
+                <Text style={styles.greenDescTitle}>Coconut Rhinoceros Beetle</Text>
+                <Text style={styles.greenDescSub}>Oryctes Rhinoceros</Text>
+                <Text style={styles.greenDescText}>
+                  A destructive coconut pest beetle that bores into the crowns and trunks of palm trees,
+                  causing severe damage and reduced yield.
+                </Text>
               </View>
-              <View style={styles.recTile}>
-                <Image source={require('../assets/images/design/chloros-chlorantraniliprole.webp')} style={styles.recImage} />
-                <Text style={styles.recCaption}>Chlorantraniliprole</Text>
+              
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <View style={[styles.greenCard, { flex: 1 }]}> 
+                  <Text style={styles.greenListTitle}>Signs</Text>
+                  <Text style={styles.greenListItem}>• V-shaped cuts on fronds</Text>
+                  <Text style={styles.greenListItem}>• Triangular leaf notches</Text>
+                  <Text style={styles.greenListItem}>• Bore holes in crown</Text>
+                </View>
+                <View style={[styles.greenCard, { flex: 1 }]}> 
+                  <Text style={styles.greenListTitle}>Symptoms</Text>
+                  <Text style={styles.greenListItem}>• Stunted or deformed fronds</Text>
+                  <Text style={styles.greenListItem}>• Yellowing of emerging leaf</Text>
+                  <Text style={styles.greenListItem}>• Possible death from repeated attack</Text>
+                </View>
               </View>
-            </ScrollView>
-          </View>
+              <View style={[styles.sectionHeaderRow, { marginTop: 10 }]}>
+                <Text style={styles.sectionTitle}>Images</Text>
+                <TouchableOpacity onPress={handleAboutPress} accessibilityLabel="View more images" activeOpacity={0.8}>
+                  <Text style={styles.sectionChevron}>›</Text>
+                </TouchableOpacity>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+                <Image source={require('../assets/images/design/CRB.jpg')} style={styles.pestImg} />
+                <Image source={require('../assets/images/design/crb(2).png')} style={styles.pestImg} />
+                <Image source={require('../assets/images/design/crb(3).png')} style={styles.pestImg} />
+              </ScrollView>
+            </>
+          )}
 
           
         </View>
@@ -317,6 +374,17 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     letterSpacing: 1,
   },
+  tabRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
+  tabItem: { flex: 1, alignItems: 'center', paddingVertical: 6 },
+  tabText: { color: '#6B7280', fontWeight: '700' },
+  tabTextActive: { color: '#0F3D1E', fontWeight: '900' },
+  tabUnderline: { height: 3, backgroundColor: '#0F3D1E', width: 40, borderRadius: 2, marginTop: 4 },
+  statusDateHeader: { color: '#111827', fontWeight: '900', marginBottom: 8, marginTop: 4 },
+  statusCard: { backgroundColor: '#CFE6D2', borderRadius: 12, padding: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  statusThumb: { width: 56, height: 56, borderRadius: 8 },
+  statusTitle: { color: '#0F3D1E', fontWeight: '900', marginBottom: 6 },
+  statusChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 2 },
+  statusChipText: { color: '#0F3D1E', fontSize: 12 },
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
@@ -373,6 +441,17 @@ const styles = StyleSheet.create({
   chipWarn: {
     backgroundColor: '#FFF1F0',
   },
+  greenCardAlt: { backgroundColor: '#DFF3E2', borderRadius: 12, padding: 12, marginBottom: 10 },
+  greenDescTitle: { color: '#0F3D1E', fontWeight: '900', fontSize: 16 },
+  greenDescSub: { color: '#0F3D1E', fontStyle: 'italic', marginTop: 2 },
+  greenDescText: { color: '#0F3D1E', fontSize: 12, lineHeight: 18, marginTop: 8 },
+  greenCard: { backgroundColor: '#DFF3E2', borderRadius: 10, padding: 12, marginBottom: 10 },
+  greenTitle: { color: '#0F3D1E', fontWeight: '900', fontSize: 14 },
+  greenSub: { color: '#0F3D1E', fontStyle: 'italic', fontSize: 12 },
+  greenSmall: { color: '#0F3D1E', fontSize: 11, marginTop: 4 },
+  greenListTitle: { color: '#0F3D1E', fontWeight: '900', marginBottom: 4 },
+  greenListItem: { color: '#0F3D1E', fontSize: 12, lineHeight: 18 },
+  pestImg: { width: 140, height: 90, borderRadius: 10, marginRight: 8, backgroundColor: '#F3F4F6' },
   buttonsCol: { gap: 12 },
   btnShadow: {
     shadowColor: '#000',
@@ -418,7 +497,7 @@ const styles = StyleSheet.create({
   },
   resultTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 4 },
   scientificName: { fontSize: 12, fontStyle: 'italic', color: '#374151', marginBottom: 10 },
-  sectionCard: { backgroundColor: '#F3F4F6', borderRadius: 10, padding: 12, marginBottom: 10 },
+  sectionCard: { backgroundColor: '#DFF3E2', borderRadius: 10, padding: 12, marginBottom: 10 },
   sectionTitle: { fontWeight: '800', color: '#111827', marginBottom: 6 },
   sectionText: { color: '#111827', fontSize: 13, lineHeight: 18 },
   bullet: { color: '#111827', fontSize: 13, lineHeight: 18 },

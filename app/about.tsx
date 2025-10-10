@@ -18,18 +18,22 @@ export default function AboutScreen() {
         <Text style={styles.subtitle}>Scientific Name: <Text style={styles.italic}>Oryctes Rhinoceros</Text></Text>
 
         {/* Photos Slider */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.photoRow}
-        >
-          <Image source={require('../assets/images/design/homepage.png')} style={styles.photo} resizeMode="cover" />
-          <Image source={require('../assets/images/design/CRB.jpg')} style={styles.photo} resizeMode="cover" />
-          <Image source={require('../assets/images/design/crb(2).png')} style={styles.photo} resizeMode="cover" />
-          <Image source={require('../assets/images/design/crb(3).png')} style={styles.photo} resizeMode="cover" />
-          <Image source={require('../assets/images/design/crb(4).png')} style={styles.photo} resizeMode="cover" />
-        </ScrollView>
-        <Text style={styles.photoCount}>5 photos</Text>
+        <View style={styles.photoStripWrap}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.photoRow}
+          >
+            <Image source={require('../assets/images/design/homepage.png')} style={styles.photo} resizeMode="cover" />
+            <Image source={require('../assets/images/design/CRB.jpg')} style={styles.photo} resizeMode="cover" />
+            <Image source={require('../assets/images/design/crb(2).png')} style={styles.photo} resizeMode="cover" />
+            <Image source={require('../assets/images/design/crb(3).png')} style={styles.photo} resizeMode="cover" />
+            <Image source={require('../assets/images/design/crb(4).png')} style={styles.photo} resizeMode="cover" />
+          </ScrollView>
+          <View style={styles.photosCountChip}>
+            <Text style={styles.photosCountText}>5 photos</Text>
+          </View>
+        </View>
 
         {/* Overview */}
         <Text style={styles.sectionHeading}>Overview</Text>
@@ -42,16 +46,21 @@ export default function AboutScreen() {
 
         {/* Signs */}
         <Text style={styles.sectionHeading}>Signs:</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.signsRow}
-        >
-          <Image source={require('../assets/images/design/v-cut-sign.jpg')} style={styles.signImage} resizeMode="cover" />
-          <Image source={require('../assets/images/design/sign(2).png')} style={styles.signImage} resizeMode="cover" />
-          <Image source={require('../assets/images/design/v-cut(2).jpg')} style={styles.signImage} resizeMode="cover" />
-          <Image source={require('../assets/images/design/sign(3).jpg')} style={styles.signImage} resizeMode="cover" />
-        </ScrollView>
+        <View style={styles.photoStripWrap}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.signsRow}
+          >
+            <Image source={require('../assets/images/design/v-cut-sign.jpg')} style={styles.signImage} resizeMode="cover" />
+            <Image source={require('../assets/images/design/sign(2).png')} style={styles.signImage} resizeMode="cover" />
+            <Image source={require('../assets/images/design/v-cut(2).jpg')} style={styles.signImage} resizeMode="cover" />
+            <Image source={require('../assets/images/design/sign(3).jpg')} style={styles.signImage} resizeMode="cover" />
+          </ScrollView>
+          <View style={styles.photosCountChip}>
+            <Text style={styles.photosCountText}>4 photos</Text>
+          </View>
+        </View>
         <Text style={styles.bullet}>• V-shaped cuts or holes on young, unopened fronds</Text>
         <Text style={styles.bullet}>• Boreholes visible on the crown or trunk</Text>
         <Text style={styles.bullet}>• Frass (fibrous debris) around leaf bases and at bore entry</Text>
@@ -60,16 +69,21 @@ export default function AboutScreen() {
 
         {/* Symptoms */}
         <Text style={styles.sectionHeading}>Symptoms:</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.signsRow}
-        >
-          <Image source={require('../assets/images/design/Symptoms(2).jpg')} style={styles.signImage} resizeMode="cover" />
-          <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
-          <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
-          <Image source={require('../assets/images/design/Symptoms(4).jpg')} style={styles.signImage} resizeMode="cover" />
-        </ScrollView>
+        <View style={styles.photoStripWrap}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.signsRow}
+          >
+            <Image source={require('../assets/images/design/Symptoms(2).jpg')} style={styles.signImage} resizeMode="cover" />
+            <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
+            <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
+            <Image source={require('../assets/images/design/Symptoms(4).jpg')} style={styles.signImage} resizeMode="cover" />
+          </ScrollView>
+          <View style={styles.photosCountChip}>
+            <Text style={styles.photosCountText}>4 photos</Text>
+          </View>
+        </View>
         <Text style={styles.bullet}>• Distorted or stunted emerging fronds; reduced canopy density</Text>
         <Text style={styles.bullet}>• Declining vigor and reduced nut yield over time</Text>
         <Text style={styles.bullet}>• Secondary infections in damaged crown tissue</Text>
@@ -118,9 +132,20 @@ const styles = StyleSheet.create({
   italic: { fontStyle: 'italic' },
   photoRow: { flexDirection: 'row', gap: 10, marginTop: 12, paddingRight: 4 },
   photo: { width: 220, height: 110, borderRadius: 12 },
+  photoStripWrap: { position: 'relative' },
   signsRow: { flexDirection: 'row', gap: 10, marginTop: 10, marginBottom: 10, paddingRight: 4 },
   signImage: { width: 180, height: 110, borderRadius: 12 },
   photoCount: { alignSelf: 'flex-end', color: '#6B7280', fontSize: 12, marginTop: 4 },
+  photosCountChip: {
+    position: 'absolute',
+    right: 6,
+    bottom: 6,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  photosCountText: { color: '#6B7280', fontSize: 12, fontWeight: '600' },
   sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12, marginBottom: 6 },
   paragraph: { fontSize: 14, color: '#374151', lineHeight: 20 },
   bullet: { fontSize: 14, color: '#374151', lineHeight: 20 },

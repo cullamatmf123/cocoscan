@@ -1,22 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { 
-  SafeAreaView, 
-  StyleSheet, 
-  Text, 
-  TouchableOpacity, 
-  View, 
-  Modal, 
-  TextInput, 
-  ScrollView,
-  Alert,
-  ActivityIndicator
-} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { addDoc, collection, Timestamp } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { db } from '../config/firebase';
-import { AuthService } from '../services/authService';
 
 export default function FeedbackScreen() {
   const [visible, setVisible] = useState(false);
@@ -42,7 +41,7 @@ export default function FeedbackScreen() {
   const submitFeedback = async () => {
     // Validation
     if (rating === 0) {
-      Alert.alert('Rating Required', 'Please select a star rating before submitting.');
+      Alert.alert('Rating Required', 'Please select a rating before submitting.');
       return;
     }
 
@@ -120,19 +119,22 @@ export default function FeedbackScreen() {
           <Text style={styles.subtitle}>How would you rate your overall experience?</Text>
 
           <View style={styles.starsRow}>
-            {[1,2,3,4,5].map(i => (
-              <TouchableOpacity 
-                key={i} 
-                onPress={() => setRating(i)} 
-                accessibilityRole="button" 
-                accessibilityLabel={`Rate ${i} star${i>1?'s':''}`}
+            {['👎','😕','😐','👍','🤩'].map((emoji, idx) => (
+              <TouchableOpacity
+                key={idx}
+                onPress={() => setRating(idx + 1)}
+                accessibilityRole="button"
+                accessibilityLabel={`Rate ${idx + 1} out of 5`}
                 disabled={submitting}
               >
-                <Ionicons 
-                  name={i <= rating ? 'star' : 'star-outline'} 
-                  size={28} 
-                  color={i <= rating ? '#F59E0B' : '#94A3B8'} 
-                />
+                <Text
+                  style={[
+                    styles.emoji,
+                    idx + 1 === rating ? styles.emojiActive : styles.emojiInactive,
+                  ]}
+                >
+                  {emoji}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -141,7 +143,7 @@ export default function FeedbackScreen() {
           <TextInput
             style={styles.input}
             multiline
-            placeholder="Your feedback... (minimum 10 characters)"
+            placeholder="Write your feedback here..."
             placeholderTextColor="#9CA3AF"
             value={message}
             onChangeText={setMessage}
@@ -165,7 +167,7 @@ export default function FeedbackScreen() {
                 <Text style={styles.submitText}>Submitting...</Text>
               </View>
             ) : (
-              <Text style={styles.submitText}>Share my feedback</Text>
+              <Text style={styles.submitText}>Submit Feedback</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -197,7 +199,7 @@ export default function FeedbackScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#2d5a3d' },
+  safe: { flex: 1, backgroundColor: '#FFFFFF' },
   container: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', padding: 16 },
   card: {
     width: '100%',
@@ -215,7 +217,17 @@ const styles = StyleSheet.create({
   },
   title: { color: '#111827', fontSize: 22, fontWeight: '900', marginBottom: 8 },
   subtitle: { color: '#1f2937', textAlign: 'center', fontWeight: '700', marginBottom: 8 },
-  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: 6, marginVertical: 8 },
+  starsRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginVertical: 8 },
+  emoji: {
+    fontSize: 30,
+    textAlign: 'center',
+  },
+  emojiInactive: {
+    opacity: 0.45,
+  },
+  emojiActive: {
+    opacity: 1,
+  },
   helper: { color: '#1f2937', textAlign: 'center', marginTop: 8, marginBottom: 8 },
   input: {
     minHeight: 110,
@@ -250,8 +262,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   submitText: { color: '#ffffff', fontWeight: '800' },
-  secondary: { marginTop: 14, paddingVertical: 8, paddingHorizontal: 12 },
-  secondaryText: { color: '#E5F2E9', fontWeight: '800' },
+  secondary: { 
+    marginTop: 14, 
+    alignSelf: 'center',
+    paddingVertical: 8, 
+    paddingHorizontal: 12,
+  },
+  secondaryText: { color: '#2d5a3d', fontWeight: '800' },
   noteBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.15)', alignItems: 'center', justifyContent: 'center' },
   noteCard: {
     backgroundColor: '#ECFDF5',

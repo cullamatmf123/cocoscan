@@ -86,21 +86,14 @@ export default function ConditionsScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!validateInputs()) return;
+    // Always navigate to Result with whatever inputs are provided
+    const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Temperature: ${temperature || 'N/A'}°C\n• Humidity: ${humidity || 'N/A'}%\n• Light: ${lightCondition || 'N/A'}`;
 
-    if (!imageUri && !photoBase64) {
-      Alert.alert('Error', 'No image data available. Please go back and take a photo again.');
-      return;
-    }
-
-    setIsSubmitting(true);
-    
-    try {
-      // Create enhanced details with environmental conditions
-      const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Temperature: ${temperature}°C\n• Humidity: ${humidity}%\n• Light: ${lightCondition}`;
-      
-      // Create history item using the historyService
-      const historyItem = await addHistoryItem({
+    const isHealthy = (prediction || '').toLowerCase().includes('healthy');
+    router.push({
+      pathname: isHealthy ? '/no-result' : '/result',
+      params: {
+        fromHistory: '0',
         imageUri: imageUri || undefined,
         photoBase64: photoBase64 || undefined,
         prediction,
@@ -108,35 +101,12 @@ export default function ConditionsScreen() {
         details: enhancedDetails,
         recommendations,
         weather,
-        soil
-      });
-
-      // Navigate to result page with all the data
-      router.push({
-        pathname: '/result',
-        params: {
-          id: historyItem.id,
-          fromHistory: '0', // Indicates this is a new scan, not from history
-          imageUri: imageUri || undefined,
-          photoBase64: photoBase64 || undefined,
-          prediction,
-          confidence,
-          details: enhancedDetails,
-          recommendations,
-          weather,
-          soil,
-          temperature,
-          humidity,
-          lightCondition
-        }
-      });
-
-    } catch (error) {
-      console.error('Error saving scan to history:', error);
-      Alert.alert('Error', 'Failed to save scan data. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
+        soil,
+        temperature,
+        humidity,
+        lightCondition,
+      },
+    });
   };
 
   useEffect(() => {

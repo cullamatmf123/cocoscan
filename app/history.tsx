@@ -1,7 +1,8 @@
-import { router, useFocusEffect } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -11,7 +12,6 @@ import {
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
 } from 'react-native';
 import { HistoryItem, deleteMultipleHistoryItems, getUserHistory } from '../services/historyService';
 
@@ -54,8 +54,9 @@ export default function HistoryScreen() {
       return;
     }
     
+    const isHealthy = (item.prediction || '').toLowerCase().includes('healthy');
     router.push({
-      pathname: '/result',
+      pathname: isHealthy ? '/no-result' : '/result',
       params: {
         id: item.id || '',
         fromHistory: '1',
@@ -126,22 +127,67 @@ export default function HistoryScreen() {
     }
   };
   
-  const renderItem = ({ item }: { item: HistoryItem }) => (
-    <TouchableOpacity style={styles.card} onPress={() => handleOpen(item)} activeOpacity={0.8}>
-      {item.imageUri ? (
-        <Image source={{ uri: item.imageUri }} style={styles.thumb} />
-      ) : (
-        <View style={[styles.thumb, styles.thumbFallback]} />
-      )}
-      <View style={{ flex: 1 }}>
-        <Text style={styles.itemTitle}>{item.prediction || 'Unknown'}</Text>
-        <Text style={styles.itemSub}>{new Date(item.timestamp || Date.now()).toLocaleString()}</Text>
+  const formatDateHeader = (ts?: Date | number | string) => {
+    const d = new Date((ts as any) || Date.now());
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: '2-digit' });
+  };
+
+  const isSameDay = (a?: Date | number | string, b?: Date | number | string) => {
+    const da = new Date((a as any) || 0), db = new Date((b as any) || 0);
+    return da.getFullYear() === db.getFullYear() && da.getMonth() === db.getMonth() && da.getDate() === db.getDate();
+  };
+
+  const formatTime = (ts?: Date | number | string) => {
+    const d = new Date((ts as any) || Date.now());
+    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const renderItem = ({ item, index }: { item: HistoryItem; index: number }) => {
+    const prev = items[index - 1];
+    const showHeader = index === 0 || !isSameDay(prev?.timestamp, item.timestamp);
+    const getSubtitle = () => {
+      const pred = (item.prediction || '').toLowerCase();
+      if (pred.includes('healthy')) return 'No Oryctes Rhinoceros detected';
+      if (pred.includes('pest') || pred.includes('detected')) return 'Oryctes Rhinoceros detected';
+      return item.details || ' ';
+    };
+    return (
+      <View>
+        {showHeader && (
+          <View style={styles.dateHeaderRow}>
+            <Text style={styles.dateHeader}>{formatDateHeader(item.timestamp)}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+              {deleteMode && (
+                <TouchableOpacity onPress={handleSelectAll} accessibilityLabel="Select all">
+                  <Text style={styles.dateHeaderActionText}>Select All</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={handleToggleDelete} accessibilityLabel="Toggle delete mode">
+                <Feather name="trash-2" size={16} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        <TouchableOpacity style={styles.card} onPress={() => handleOpen(item)} activeOpacity={0.85}>
+          {item.imageUri ? (
+            <Image source={{ uri: item.imageUri }} style={styles.thumb} />
+          ) : (
+            <View style={[styles.thumb, styles.thumbFallback]} />
+          )}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.itemTitle}>{item.prediction || 'Unknown'}</Text>
+            <Text style={styles.itemSub}>{getSubtitle()}</Text>
+          </View>
+          <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+          {deleteMode && (
+            <View style={[styles.check, selected.has(item.id || '') && styles.checkActive]}>
+              {selected.has(item.id || '') && <Feather name="check" size={12} color="#FFFFFF" />}
+            </View>
+          )}
+        </TouchableOpacity>
       </View>
-      {deleteMode && (
-        <View style={[styles.check, selected.has(item.id || '') && styles.checkActive]} />
-      )}
-    </TouchableOpacity>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -153,25 +199,25 @@ export default function HistoryScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleBack} accessibilityRole="button">
-          <Text style={styles.headerBtnText}> Back</Text>
+      {/* App Bar (white) */}
+      <View style={styles.appBar}>
+        <TouchableOpacity style={styles.hamburger} onPress={() => router.replace('/home')} accessibilityLabel="Open menu">
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>History</Text>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <TouchableOpacity onPress={handleSelectAll}><Text style={styles.headerBtnText}>Select all</Text></TouchableOpacity>
-          <TouchableOpacity onPress={handleToggleDelete}><Text style={styles.headerBtnText}>{deleteMode ? 'Done' : 'Delete'}</Text></TouchableOpacity>
-        </View>
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
+        <View style={styles.appBarSpacer} />
       </View>
+      <Text style={styles.pageHeading}>History</Text>
 
       {/* List */}
       <FlatList
         data={items}
         keyExtractor={(it) => it.id || Math.random().toString(36)}
         renderItem={renderItem}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        contentContainerStyle={{ padding: 16, paddingBottom: 120, backgroundColor: '#FFFFFF' }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadHistory} />}
         ListEmptyComponent={<Text style={{ textAlign: 'center', color: '#6b7280' }}>No history yet.</Text>}
       />
@@ -209,16 +255,42 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { height: 56, backgroundColor: '#2d5a3d', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16 },
-  headerTitle: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
-  headerBtnText: { color: '#fff', fontWeight: '700' },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, backgroundColor: '#fff', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#E5E7EB' },
-  thumb: { width: 48, height: 48, borderRadius: 8, marginRight: 4, backgroundColor: '#F3F4F6' },
+  appBar: { paddingTop: 48, paddingHorizontal: 16, paddingBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF' },
+  hamburger: { padding: 8 },
+  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  brandTitle: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', letterSpacing: 1 },
+  appBarSpacer: { width: 34, height: 34 },
+  pageHeading: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', marginBottom: 8, textAlign: 'center', alignSelf: 'center' },
+  dateHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, marginBottom: 8 },
+  dateHeader: { color: '#111827', fontWeight: '900' },
+  dateHeaderActionText: { color: '#6B7280', fontSize: 16, fontWeight: '700' },
+  card: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14,
+    borderWidth: 1, borderColor: '#E5E7EB',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 1,
+  },
+  thumb: { width: 72, height: 72, borderRadius: 10, marginRight: 8, backgroundColor: '#F3F4F6' },
   thumbFallback: { alignItems: 'center', justifyContent: 'center' },
-  itemTitle: { color: '#111827', fontWeight: '900' },
-  itemSub: { color: '#6b7280', fontSize: 12 },
-  check: { width: 18, height: 18, borderRadius: 4, borderWidth: 2, borderColor: '#9CA3AF' },
-  checkActive: { backgroundColor: '#2d5a3d', borderColor: '#2d5a3d' },
+  itemTitle: { color: '#111827', fontWeight: '900', fontSize: 16 },
+  itemSub: { color: '#6b7280', fontSize: 13, fontStyle: 'italic' },
+  cardRight: { alignItems: 'center', justifyContent: 'space-between' },
+  actionFab: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#16A34A', alignItems: 'center', justifyContent: 'center', marginLeft: 8 },
+  timeText: { color: '#6B7280', fontSize: 12, fontWeight: '700' },
+  check: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#9CA3AF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkActive: {
+    backgroundColor: '#2d5a3d',
+    borderColor: '#2d5a3d',
+    borderWidth: 0,
+  },
   modalBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)', alignItems: 'center', justifyContent: 'center' },
   modalCard: { backgroundColor: '#fff', padding: 16, borderRadius: 10, width: '80%' },
   footerBar: {
