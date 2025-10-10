@@ -1,12 +1,21 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Alert, Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SCREEN = Dimensions.get('window');
 
 export default function PreventionControlScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const contentRef = useRef<ScrollView>(null);
+  const handlePesticidePress = (name: string) => {
+    Alert.alert(name, 'Details will be available soon.');
+  };
+  const handleTabPress = (index: number) => {
+    setActiveTab(index);
+    contentRef.current?.scrollTo({ x: SCREEN.width * index, animated: true });
+  };
   return (
     <SafeAreaView style={styles.safe}>
       {/* App Bar */}
@@ -57,38 +66,121 @@ export default function PreventionControlScreen() {
       <ScrollView contentContainerStyle={styles.contentWrap} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Prevention & Control</Text>
 
-        <Text style={styles.sectionHeading}>Prevention</Text>
-
-        <View style={styles.imageBg}>
-          <Image
-            source={require('../assets/images/design/prevention-online.png')}
-            style={styles.preventionImage}
-            resizeMode="contain"
-          />
-          <Text style={styles.imageCaption}>
-            Figure 1. Image from BIISCPrevention of Spreading of CRB (Oryctes rhinoceros)
-          </Text>
+        <Text style={[styles.sectionHeading, { marginBottom: 8 }]}>Prevention</Text>
+        <View style={styles.tabsRow}>
+          <TouchableOpacity
+            onPress={() => handleTabPress(0)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            style={activeTab === 0 ? styles.tabItemActive : styles.tabItem}
+          >
+            <Text style={activeTab === 0 ? styles.tabTextActive : styles.tabText}>Sanitation & Habitat Management</Text>
+            {activeTab === 0 && <View style={styles.tabUnderline} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleTabPress(1)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            style={activeTab === 1 ? styles.tabItemActive : styles.tabItem}
+          >
+            <Text style={activeTab === 1 ? styles.tabTextActive : styles.tabText}>Monitoring & Early Detection</Text>
+            {activeTab === 1 && <View style={styles.tabUnderline} />}
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => handleTabPress(2)}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            style={activeTab === 2 ? styles.tabItemActive : styles.tabItem}
+          >
+            <Text style={activeTab === 2 ? styles.tabTextActive : styles.tabText}>Preventing Spread</Text>
+            {activeTab === 2 && <View style={styles.tabUnderline} />}
+          </TouchableOpacity>
         </View>
-        <Text style={styles.bullet}>• Remove and destroy breeding sites (rotting logs, compost heaps, decaying organic matter).</Text>
-        <Text style={styles.bullet}>• Maintain field sanitation; avoid leaving palm residues after pruning or felling.</Text>
-        <Text style={styles.bullet}>• Use clean planting materials; inspect nursery stock for damage.</Text>
-        <Text style={styles.bullet}>• Install sand or small stones in the crown of young palms to deter boring.</Text>
 
-        <Text style={[styles.sectionHeading, { marginBottom: 6 }]}>Control</Text>
         <ScrollView
+          ref={contentRef}
           horizontal
+          pagingEnabled
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.controlRow}
+          onMomentumScrollEnd={(e) => {
+            const idx = Math.round(e.nativeEvent.contentOffset.x / SCREEN.width);
+            setActiveTab(idx);
+          }}
         >
-          <Image source={require('../assets/images/design/control.jpg')} style={styles.controlImage} resizeMode="contain" />
-          <Image source={require('../assets/images/design/control(2).jpg')} style={styles.controlImage} resizeMode="contain" />
-          <Image source={require('../assets/images/design/control(3).jpg')} style={styles.controlImage} resizeMode="contain" />
-          <Image source={require('../assets/images/design/control(5).jpg')} style={styles.controlImage} resizeMode="contain" />
+          {/* Page 0: Sanitation & Habitat Management */}
+          <View style={{ width: SCREEN.width }}>
+            <Text style={styles.infoHeading}>Remove breeding sites</Text>
+            <Text style={styles.infoBody}>Chop up and destroy decaying logs, stumps, dead leaves, and dead standing palms—prime CRB larval habitats.</Text>
+
+            <Text style={styles.infoHeading}>Compost properly</Text>
+            <Text style={styles.infoBody}>Turn piles regularly so they don’t harbor larvae; spread thin layers to make breeding unsuitable.</Text>
+
+            <Text style={styles.infoHeading}>Cover stumps</Text>
+            <Text style={styles.infoBody}>When removal isn’t possible, plant vines or ground cover over stumps to deter egg‑laying.</Text>
+
+            <Text style={styles.infoHeading}>Inspect green waste</Text>
+            <Text style={styles.infoBody}>Check mulch or compost for CRB adults or larvae before use to avoid moving infestations.</Text>
+
+            <View style={styles.recBox}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.recRow}
+              >
+                <TouchableOpacity
+                  style={styles.recCard}
+                  onPress={() => handlePesticidePress('Imidacloprid')}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Imidacloprid"
+                >
+                  <Image source={require('../assets/images/design/Imidacloprid(2).jpg')} style={styles.recImage} resizeMode="cover" />
+                  <Text style={styles.recCaption}>Imidacloprid</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.recCard}
+                  onPress={() => handlePesticidePress('Emamectin benzoate')}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Emamectin benzoate"
+                >
+                  <Image source={require('../assets/images/design/Emamectin-Benzoate.webp')} style={styles.recImage} resizeMode="cover" />
+                  <Text style={styles.recCaption}>Emamectin benzoate</Text>
+                </TouchableOpacity>
+              </ScrollView>
+            </View>
+          </View>
+
+          {/* Page 1: Monitoring & Early Detection */}
+          <View style={{ width: SCREEN.width }}>
+            <Text style={styles.infoHeading}>Regular inspections</Text>
+            <Text style={styles.infoBody}>Frequently inspect coconut palms and other susceptible trees for damage such as crown holes, chewed fronds, or frayed new leaves.</Text>
+
+            <Text style={styles.infoHeading}>Use pheromone traps</Text>
+            <Text style={styles.infoBody}>Set up pheromone traps to monitor adult beetle activity and capture them, providing early warning of infestations.</Text>
+
+            <Text style={styles.infoHeading}>Community cooperation</Text>
+            <Text style={styles.infoBody}>Coordinate with neighbors and the local community on trap placement and sanitation drives for collective prevention.</Text>
+          </View>
+
+          {/* Page 2: Preventing Spread */}
+          <View style={{ width: SCREEN.width }}>
+            <Text style={styles.infoHeading}>Block movement</Text>
+            <Text style={styles.infoBody}>Implement measures like blockading and cutting around infested zones to prevent spread to new areas.</Text>
+
+            <Text style={styles.infoHeading}>Be vigilant with host material</Text>
+            <Text style={styles.infoBody}>Do not transport CRB host material such as mulch, compost, or green waste from infested areas to new ones.</Text>
+
+            <Text style={styles.infoHeading}>Sterilize tools</Text>
+            <Text style={styles.infoBody}>After treating palms or handling infested material, sterilize tools with diluted bleach to avoid transferring disease.</Text>
+          </View>
         </ScrollView>
-        <Text style={styles.bullet}>• Manual removal of adults from boreholes and traps placed in breeding sites.</Text>
-        <Text style={styles.bullet}>• Use pheromone traps (ethyl 4-methyl octanoate) to monitor and mass-trap adults.</Text>
-        <Text style={styles.bullet}>• Apply recommended biological agents where available (e.g., Oryctes nudivirus strains effective in your region).</Text>
-        <Text style={styles.bullet}>• Targeted insecticide treatments following local guidelines and safety regulations.</Text>
+        <Text style={styles.bullet}>• Manually remove adults from crowns and breeding sites.</Text>
+        <Text style={styles.bullet}>• Deploy pheromone traps (ethyl 4-methyl octanoate) for monitoring and mass-trapping.</Text>
+        <Text style={styles.bullet}>• Apply biocontrols where available (e.g., OrNV, Metarhizium).</Text>
+        <Text style={styles.bullet}>• Use insecticides only as directed by local guidelines.</Text>
+        <Text style={styles.bullet}>• Adopt IPM: combine cultural, biological, and chemical methods.</Text>
+        <Text style={styles.bullet}>• Monitor after treatment to ensure populations stay low.</Text>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -182,4 +274,34 @@ const styles = StyleSheet.create({
     width: '100%', flexWrap: 'nowrap', zIndex: 10,
   },
   footerItem: { flex: 1, alignItems: 'center' },
+  // Recommended box styles
+  recBox: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 6,
+    marginBottom: 10,
+  },
+  recTitle: { fontSize: 16, fontWeight: '800', color: '#0F3D1E', marginBottom: 8 },
+  recRow: { flexDirection: 'row', gap: 10, paddingRight: 6 },
+  recCard: { width: 220 },
+  recImage: { width: '100%', height: 120, borderRadius: 10, backgroundColor: '#F3F4F6' },
+  recCaption: { marginTop: 6, color: '#374151', fontSize: 14 },
+  // Tabs styles
+  tabsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 14,
+    paddingVertical: 6,
+    marginBottom: 6,
+  },
+  tabItem: { paddingBottom: 2 },
+  tabItemActive: { paddingBottom: 2 },
+  tabText: { color: '#6B7280', fontSize: 14, fontWeight: '600' },
+  tabTextActive: { color: '#16A34A', fontSize: 14, fontWeight: '800' },
+  tabUnderline: { height: 3, backgroundColor: '#16A34A', borderRadius: 2, marginTop: 2, width: 22 },
+  infoHeading: { color: '#065F46', fontSize: 16, fontWeight: '800', marginTop: 8, marginBottom: 2 },
+  infoBody: { color: '#374151', fontSize: 14, lineHeight: 20, marginBottom: 6 },
 });
