@@ -3,11 +3,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import React from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../config/firebase';
 
 export default function AdminProfileScreen() {
-  const [loading, setLoading] = React.useState(true);
   const [showFarmInfo, setShowFarmInfo] = React.useState(false);
   const [profile, setProfile] = React.useState<{
     uid: string;
@@ -26,8 +25,6 @@ export default function AdminProfileScreen() {
   }, []);
 
   const load = React.useCallback(async () => {
-    try {
-      setLoading(true);
       const u = auth.currentUser;
       if (!u) {
         setProfile(null);
@@ -61,9 +58,6 @@ export default function AdminProfileScreen() {
           photoURL: u.photoURL || null,
         });
       }
-    } finally {
-      setLoading(false);
-    }
   }, []);
 
   React.useEffect(() => { load(); }, [load]);
@@ -135,19 +129,29 @@ export default function AdminProfileScreen() {
         </View>
       </View>
 
-      {loading ? (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-          <ActivityIndicator />
-        </View>
-      ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
           {/* Hero content moved into header; keep body focused on details */}
 
           {/* Level and stats removed per request */}
 
           {/* Details card removed per request */}
-        </ScrollView>
-      )}
+
+          <View style={[styles.card, styles.shadow, { marginTop: 8 }]}>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#1F3D2A', marginBottom: 6 }}>User Feedback</Text>
+            <Text style={{ color: '#475569', marginBottom: 12 }}>
+              Collection of feedback submitted by users. Review and manage entries.
+            </Text>
+            <TouchableOpacity
+              style={[styles.primaryBtn, { alignSelf: 'flex-start' }]}
+              accessibilityRole="button"
+              accessibilityLabel="Go to Admin User Feedback list"
+              onPress={() => router.push('/admin/feedback')}
+            >
+              <Ionicons name="chatbubbles-outline" size={16} color="#14532D" />
+              <Text style={styles.primaryBtnText}>View Feedback</Text>
+            </TouchableOpacity>
+          </View>
+      </ScrollView>
 
       {/* Bottom dock */}
       <View style={styles.bottomDock}>

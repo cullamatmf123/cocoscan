@@ -1,4 +1,4 @@
-﻿import { Feather, Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { getAuth, updateProfile } from 'firebase/auth';
