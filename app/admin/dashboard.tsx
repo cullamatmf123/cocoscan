@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   }, []);
 
   const goUsers = () => router.push('/admin/user-management');
-  const goAnalytics = () => router.push('/admin/report-history');
+  const goAnalytics = () => router.push('/admin/history');
   const goProfile = () => router.push('/admin/profile');
   const handleSignOut = async () => {
     try {
@@ -106,8 +106,8 @@ export default function AdminDashboard() {
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Go to Report History"
-          onPress={() => router.push('/admin/report-history')}
+          accessibilityLabel="Go to History"
+          onPress={() => router.push('/admin/history')}
           style={styles.dockBtn}
         >
           <Ionicons name="time-outline" size={22} color="#0F172A" />

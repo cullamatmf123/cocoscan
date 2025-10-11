@@ -227,8 +227,8 @@ export default function ReportHistoryScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Go to Report History"
-          onPress={() => router.push({ pathname: '/admin/report-history', params: { totalScans: String(totalScans), totalUsers: String(totalUsers) } })}
+          accessibilityLabel="Go to History"
+          onPress={() => router.push({ pathname: '/admin/history', params: { totalScans: String(totalScans), totalUsers: String(totalUsers) } })}
           style={styles.dockBtn}
         >
           <Ionicons name="time-outline" size={22} color="#0F172A" />
