@@ -16,9 +16,12 @@ export default function ReportHistoryScreen() {
   const [history, setHistory] = useState<Array<{
     id: string;
     fullName: string;
-    role: 'admin' | 'user';
+    userId: string;
     createdAt: Date;
-    reportStatus: 'healthy' | 'unhealthy';
+    prediction?: string;
+    confidence?: string;
+    weather?: string;
+    soil?: string;
   }>>([]);
   const [showMore, setShowMore] = useState(false);
 
@@ -102,41 +105,40 @@ export default function ReportHistoryScreen() {
             if (!Number.isNaN(u)) setTotalUsers(u);
           }
 
-          // Load report history from Firestore 'scans' (new source of truth)
+          // Load scan history from Firestore 'scanHistory' collection
           try {
-            const q = query(collection(db, 'scans'), orderBy('createdAt', 'desc'));
+            const q = query(collection(db, 'scanHistory'), orderBy('timestamp', 'desc'));
             const snap = await getDocs(q);
-            const items = snap.docs.map((d, idx) => {
+            const items = snap.docs.map((d) => {
               const data = d.data() as any;
-              const createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : new Date();
-              const fullName = data.userName || data.userEmail || 'User';
-              const email = data.userEmail || '';
-              const status = (data.status === 'healthy' || data.status === 'unhealthy')
-                ? data.status
-                : (String(data.prediction).toLowerCase() === 'healthy' ? 'healthy' : 'unhealthy');
+              const createdAt = data.timestamp?.toDate ? data.timestamp.toDate() : new Date();
+              const userId = data.userId || 'Unknown';
+              const prediction = data.prediction || 'Unknown';
+              const confidence = data.confidence || 'N/A';
+              const weather = data.weather || 'N/A';
+              const soil = data.soil || 'N/A';
+              
               return {
                 id: d.id,
-                fullName,
-                role: data.role ?? 'user',
+                fullName: userId,
+                userId: userId,
                 createdAt,
-                reportStatus: status as 'healthy' | 'unhealthy',
-                email,
+                prediction,
+                confidence,
+                weather,
+                soil,
               };
             });
             if (active) setHistory(items);
 
-            // Persist unified history for Dashboard (top 3 there)
-            try {
-              const toStore = items.map(item => ({
-                id: item.id,
-                fullName: item.fullName,
-                email: item.email,
-                reportStatus: item.reportStatus,
-                createdAt: item.createdAt.toISOString(),
-              }));
-              await AsyncStorage.setItem('report_history', JSON.stringify(toStore));
-            } catch {}
-          } catch {}
+            // Update total scans count based on actual data
+            if (active) {
+              setTotalScans(items.length);
+              await AsyncStorage.setItem('dashboard_total_scans', String(items.length));
+            }
+          } catch (err) {
+            console.error('Error fetching scan history:', err);
+          }
         } catch {}
       };
       refresh();
@@ -159,58 +161,59 @@ export default function ReportHistoryScreen() {
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-        <View style={{ paddingHorizontal: 0, marginBottom: 8 }}>
-          <Text style={styles.sectionTitle}>Report History</Text>
-        </View>
-        <View style={styles.row}>
-          <View style={[styles.card, styles.shadow]}>
-            <View style={styles.cardIcon}><Ionicons name="people-outline" size={18} color="#2D5A3D" /></View>
-            <Text style={styles.kpiValue}>{totalUsers}</Text>
-            <Text style={styles.kpiLabel}>Total Users</Text>
-          </View>
-          <View style={[styles.card, styles.shadow]}>
-            <View style={styles.cardIcon}><Ionicons name="time-outline" size={18} color="#2D5A3D" /></View>
-            <Text style={styles.kpiValue}>{totalScans}</Text>
-            <Text style={styles.kpiLabel}>Total Scans</Text>
-          </View>
-        </View>
-
-        <View style={[styles.panel, styles.shadow]}>
-          <Text style={styles.panelTitle}>Usage</Text>
-          <Text style={styles.panelText}>Add charts and breakdowns here.</Text>
-        </View>
-
+        {/* All History List */}
         <View style={[styles.panel, styles.shadow]}> 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={styles.panelTitle}>Report History</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <Text style={styles.panelTitle}>All Scan Records ({history.length})</Text>
           </View>
-          {history.slice(0,3).map((u, idx) => (
-            <View key={u.id} style={{ paddingVertical: 10 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Text style={{ fontWeight: '900', color: '#1F3D2A' }}>{u.fullName}</Text>
-                <View style={[styles.pill, u.reportStatus === 'healthy' ? styles.pillHealthy : styles.pillUnhealthy]}>
-                  <Text style={styles.pillText}>{u.reportStatus === 'healthy' ? 'Healthy' : 'Unhealthy'}</Text>
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 12, marginRight: 6, color: '#0F172A' }}>{idx % 2 === 0 ? '☁️' : '🌤️'}</Text>
-                    <Text style={{ color: '#1F2937', fontSize: 12 }}>{idx % 2 === 0 ? 'cloudy' : 'sunny'}</Text>
-                  </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ fontSize: 12, marginRight: 6, color: '#0F172A' }}>🌿</Text>
-                    <Text style={{ color: '#1F2937', fontSize: 12 }}>{u.role === 'admin' ? 'silt' : (idx % 2 === 0 ? 'clay' : 'sandy')}  </Text>
-                    <Text style={{ color: '#6B7280', fontSize: 12 }}>( {idx % 2 === 0 ? '87%' : '95%'} )</Text>
-                  </View>
-                </View>
-                <Text style={{ color: '#111827', fontSize: 12 }}>{u.createdAt.toLocaleDateString()}</Text>
-              </View>
-              {idx < Math.min(3, history.length) - 1 && <View style={{ height: 1, backgroundColor: '#175C35', marginTop: 10 }} />}
+          
+          {history.length === 0 ? (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <Ionicons name="document-outline" size={48} color="#CBD5E1" />
+              <Text style={{ color: '#64748B', fontWeight: '700', marginTop: 8 }}>No scan history yet</Text>
+              <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>User scans will appear here</Text>
             </View>
-          ))}
-          {history.length === 0 && (
-            <Text style={{ color: '#64748B', fontWeight: '700' }}>No report history yet.</Text>
+          ) : (
+            history.map((scan, idx) => (
+              <View key={scan.id} style={styles.historyItem}>
+                {/* User and Prediction */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                    <View style={styles.userAvatar}>
+                      <Ionicons name="person" size={16} color="#FFFFFF" />
+                    </View>
+                    <View style={{ marginLeft: 10, flex: 1 }}>
+                      <Text style={styles.userId} numberOfLines={1}>{scan.userId}</Text>
+                      <Text style={styles.scanDate}>{scan.createdAt.toLocaleDateString()} • {scan.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                    </View>
+                  </View>
+                  <View style={[styles.pill, scan.prediction?.toLowerCase().includes('healthy') ? styles.pillHealthy : styles.pillUnhealthy]}>
+                    <Text style={styles.pillText}>{scan.prediction || 'Unknown'}</Text>
+                  </View>
+                </View>
+
+                {/* Scan Details */}
+                <View style={styles.scanDetails}>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="cloud-outline" size={14} color="#64748B" />
+                    <Text style={styles.detailLabel}>Weather:</Text>
+                    <Text style={styles.detailValue}>{scan.weather || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="leaf-outline" size={14} color="#64748B" />
+                    <Text style={styles.detailLabel}>Soil:</Text>
+                    <Text style={styles.detailValue}>{scan.soil || 'N/A'}</Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Ionicons name="analytics-outline" size={14} color="#64748B" />
+                    <Text style={styles.detailLabel}>Confidence:</Text>
+                    <Text style={styles.detailValue}>{scan.confidence || 'N/A'}</Text>
+                  </View>
+                </View>
+
+                {idx < history.length - 1 && <View style={styles.divider} />}
+              </View>
+            ))
           )}
         </View>
       </ScrollView>
@@ -325,4 +328,55 @@ const styles = StyleSheet.create({
   menuCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
   menuItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
   menuText: { color: '#0F172A', fontWeight: '700' },
+  
+  // History Item Styles
+  historyItem: {
+    paddingVertical: 12,
+  },
+  userAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#175C35',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  userId: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F3D2A',
+  },
+  scanDate: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  scanDetails: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 8,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  detailLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    marginLeft: 6,
+    marginRight: 4,
+    fontWeight: '600',
+  },
+  detailValue: {
+    fontSize: 12,
+    color: '#1F3D2A',
+    fontWeight: '700',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginTop: 12,
+  },
 });

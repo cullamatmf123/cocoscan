@@ -2,22 +2,57 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { auth } from '../../config/firebase';
+import { collection, getDocs } from 'firebase/firestore';
+import { auth, db } from '../../config/firebase';
 import { AuthService } from '../../services/authService';
 
 export default function AdminDashboard() {
   const [currentAdmin, setCurrentAdmin] = useState<string>('');
   const [totalReport, setTotalReport] = useState<number>(0);
   const [totalScans, setTotalScans] = useState<number>(0);
+  const [totalHistory, setTotalHistory] = useState<number>(0);
   const [showMore, setShowMore] = useState(false);
 
   useEffect(() => {
     const user = auth.currentUser;
     setCurrentAdmin(user?.displayName || user?.email || 'Admin');
-    // Mocked values; wire real values later
-    setTotalReport(0);
-    setTotalScans(0);
+    fetchUserCount();
+    fetchFeedbackCount();
+    fetchHistoryCount();
   }, []);
+
+  const fetchUserCount = async () => {
+    try {
+      const usersCollection = collection(db, 'users');
+      const snapshot = await getDocs(usersCollection);
+      setTotalReport(snapshot.size);
+    } catch (error) {
+      console.error('Error fetching user count:', error);
+      setTotalReport(0);
+    }
+  };
+
+  const fetchFeedbackCount = async () => {
+    try {
+      const feedbackCollection = collection(db, 'feedback');
+      const snapshot = await getDocs(feedbackCollection);
+      setTotalScans(snapshot.size);
+    } catch (error) {
+      console.error('Error fetching feedback count:', error);
+      setTotalScans(0);
+    }
+  };
+
+  const fetchHistoryCount = async () => {
+    try {
+      const historyCollection = collection(db, 'scanHistory');
+      const snapshot = await getDocs(historyCollection);
+      setTotalHistory(snapshot.size);
+    } catch (error) {
+      console.error('Error fetching history count:', error);
+      setTotalHistory(0);
+    }
+  };
 
   const goUsers = () => router.push('/admin/user-management');
   const goAnalytics = () => router.push('/admin/history');
@@ -58,38 +93,46 @@ export default function AdminDashboard() {
       <View style={styles.statsCardWrapper}>
         <View style={styles.statsCard}>
           <View style={styles.statBlock}>
-            <Text style={styles.statLabel}>Total Report</Text>
+            <Text style={styles.statLabel}>Active User</Text>
             <Text style={styles.statValue}>{totalReport}</Text>
           </View>
+          
           <View style={styles.statDivider} />
-          <View style={styles.statBlock}>
-            <Text style={styles.statLabel}>Total Scans</Text>
+          
+          <TouchableOpacity 
+            style={styles.statBlock} 
+            onPress={() => router.push('/admin/feedback')}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.statLabel}> User Feedback</Text>
             <Text style={styles.statValue}>{totalScans}</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Report History Row */}
-      <TouchableOpacity style={styles.rowCard} onPress={goAnalytics} activeOpacity={0.8}>
-        <Text style={styles.rowTitle}>Report History</Text>
-        <Ionicons name="chevron-forward" size={20} color="#1E293B" />
-      </TouchableOpacity>
-
-      {/* Users Row */}
-      <TouchableOpacity style={styles.sectionHeaderRow} onPress={goUsers} activeOpacity={0.8}>
-        <Text style={styles.sectionTitle}>Users</Text>
-        <Ionicons name="chevron-forward" size={20} color="#1E293B" />
-      </TouchableOpacity>
-
-      {/* System Status */}
-      <View style={{ marginHorizontal: 16, marginTop: 12 }}>
-        <Text style={styles.sectionTitle}>System Status</Text>
-        <View style={styles.statusCard}>
-          <View style={styles.statusItem}><Text style={styles.dotGreen}></Text><Text style={styles.statusText}>Database: Online</Text></View>
-          <View style={styles.statusItem}><Text style={styles.dotGreen}></Text><Text style={styles.statusText}>Authentication: Active</Text></View>
-          <View style={styles.statusItem}><Text style={styles.dotGreen}></Text><Text style={styles.statusText}>Storage: Available</Text></View>
-          <View style={styles.statusItem}><Text style={styles.dotAmber}></Text><Text style={styles.statusText}>Backup: Scheduled</Text></View>
-        </View>
+      {/* Second Stats Card */}
+      <View style={[styles.statsCardWrapper, { marginTop: 12 }]}>
+        <TouchableOpacity 
+          style={[styles.statsCard, { backgroundColor: '#2C3E50' }]}
+          onPress={() => router.push('/admin/history')}
+          activeOpacity={0.9}
+        >
+          <View style={styles.statBlock}>
+            <Text style={styles.statLabel}>User History</Text>
+            <Text style={styles.statValue}>{totalHistory}</Text>
+          </View>
+          
+          <View style={[styles.statDivider, { backgroundColor: 'rgba(255,255,255,0.35)' }]} />
+          
+          <TouchableOpacity 
+            style={styles.statBlock} 
+            onPress={goUsers}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.statLabel}>User Management</Text>
+            <Text style={styles.statValue}></Text>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </View>
 
       </ScrollView>
@@ -215,14 +258,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
     elevation: 3,
   },
   statBlock: {
     flex: 1,
     alignItems: 'center',
+    paddingVertical: 8,
   },
   statDivider: {
     width: 1,

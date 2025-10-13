@@ -1,22 +1,8 @@
-  const goAnalyticsSameAsDashboard = async () => {
-    try {
-      const dash = await AsyncStorage.getItem('dashboard_total_scans');
-      const dashNum = dash !== null ? parseInt(dash, 10) : NaN;
-      if (!Number.isNaN(dashNum)) {
-        router.push({ pathname: '/admin/history', params: { totalScans: String(dashNum) } });
-        return;
-      }
-      // Fallback: keep existing behavior
-      router.push('/admin/history');
-    } catch {
-      router.push('/admin/history');
-    }
-  };
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { collection, doc, getDocs, orderBy, query, setDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, orderBy, query, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, FlatList, Modal, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../config/firebase';
@@ -37,6 +23,21 @@ export default function UserManagementScreen() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [filter, setFilter] = useState('');
   const [showMore, setShowMore] = useState(false);
+
+  const goAnalyticsSameAsDashboard = async () => {
+    try {
+      const dash = await AsyncStorage.getItem('dashboard_total_scans');
+      const dashNum = dash !== null ? parseInt(dash, 10) : NaN;
+      if (!Number.isNaN(dashNum)) {
+        router.push({ pathname: '/admin/history', params: { totalScans: String(dashNum) } });
+        return;
+      }
+      // Fallback: keep existing behavior
+      router.push('/admin/history');
+    } catch {
+      router.push('/admin/history');
+    }
+  };
 
   // Load users from Firestore on mount
   useEffect(() => {
@@ -96,8 +97,45 @@ export default function UserManagementScreen() {
     [users, filter]
   );
 
-  const updateUser = (id: string, patch: Partial<AdminUser>) => {
+  const updateUser = async (id: string, patch: Partial<AdminUser>) => {
+    // Update local state immediately for better UX
     setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...patch } : u)));
+    
+    // Update in Firestore
+    try {
+      const ref = doc(collection(db, 'users'), id);
+      const updateData: any = {
+        updatedAt: Timestamp.now(),
+      };
+      
+      if (patch.role !== undefined) {
+        updateData.role = patch.role;
+      }
+      if (patch.active !== undefined) {
+        updateData.isActive = patch.active;
+      }
+      if (patch.canScan !== undefined) {
+        updateData.canScan = patch.canScan;
+      }
+      
+      await updateDoc(ref, updateData);
+      
+      // Show success message for role changes
+      if (patch.role !== undefined) {
+        Alert.alert('Success', `User role updated to ${patch.role}`);
+      }
+    } catch (error) {
+      console.error('Error updating user:', error);
+      Alert.alert('Error', 'Failed to update user. Please try again.');
+      
+      // Revert local state on error
+      const revertPatch: Partial<AdminUser> = {};
+      if (patch.role !== undefined) revertPatch.role = patch.role === 'admin' ? 'user' : 'admin';
+      if (patch.active !== undefined) revertPatch.active = !patch.active;
+      if (patch.canScan !== undefined) revertPatch.canScan = !patch.canScan;
+      
+      setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...revertPatch } : u)));
+    }
   };
 
   const onSave = async () => {
@@ -113,13 +151,15 @@ export default function UserManagementScreen() {
             role: u.role,
             isActive: u.active,
             canScan: u.canScan,
-            updatedAt: new Date(),
+            updatedAt: Timestamp.now(),
+            createdAt: Timestamp.now(), // Will be ignored if document exists
           }, { merge: true });
         })
       );
-      Alert.alert('Saved', 'User permissions updated successfully.');
+      Alert.alert('Saved', 'All user permissions updated successfully.');
     } catch (e) {
-      Alert.alert('Error', 'Failed to save user changes.');
+      console.error('Error saving users:', e);
+      Alert.alert('Error', 'Failed to save user changes. Please try again.');
     }
   };
 
@@ -175,7 +215,7 @@ export default function UserManagementScreen() {
             try {
               // Soft delete: mark inactive instead of removing doc to keep audit
               const ref = doc(collection(db, 'users'), item.id);
-              await updateDoc(ref, { isActive: false, updatedAt: new Date() });
+              await updateDoc(ref, { isActive: false, updatedAt: Timestamp.now() });
               setUsers(prev => prev.filter(u => u.id !== item.id));
             } catch {}
           } },
@@ -234,7 +274,7 @@ export default function UserManagementScreen() {
                 text: 'Delete', style: 'destructive', onPress: async () => {
                   try {
                     await Promise.all(
-                      users.map(u => updateDoc(doc(collection(db, 'users'), u.id), { isActive: false, updatedAt: new Date() }))
+                      users.map(u => updateDoc(doc(collection(db, 'users'), u.id), { isActive: false, updatedAt: Timestamp.now() }))
                     );
                     setUsers([]);
                     Alert.alert('Done', 'All users marked inactive.');

@@ -2,7 +2,8 @@ import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { addHistoryItem } from '../services/historyService';
+import { ScanService } from '../services/scanService';
+import { auth } from '../config/firebase';
 
 export default function ConditionsScreen() {
   const router = useRouter();
@@ -86,27 +87,63 @@ export default function ConditionsScreen() {
   };
 
   const handleSubmit = async () => {
-    // Always navigate to Result with whatever inputs are provided
-    const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Temperature: ${temperature || 'N/A'}°C\n• Humidity: ${humidity || 'N/A'}%\n• Light: ${lightCondition || 'N/A'}`;
+    if (!validateInputs()) return;
 
-    const isHealthy = (prediction || '').toLowerCase().includes('healthy');
-    router.push({
-      pathname: isHealthy ? '/no-result' : '/result',
-      params: {
-        fromHistory: '0',
-        imageUri: imageUri || undefined,
-        photoBase64: photoBase64 || undefined,
+    setIsSubmitting(true);
+
+    try {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
+      const result = await ScanService.saveScan({
+        userId,
+        imageUri: imageUri || '',
+        photoBase64: photoBase64 || '',
         prediction,
-        confidence,
-        details: enhancedDetails,
+        confidence: parseFloat(confidence) || 0,
+        details,
         recommendations,
-        weather,
-        soil,
-        temperature,
-        humidity,
-        lightCondition,
-      },
-    });
+        conditions: {
+          weather,
+          soil,
+          temperature: parseFloat(temperature) || 0,
+          humidity: parseFloat(humidity) || 0,
+          lightCondition,
+        }
+      });
+
+      if (result.success) {
+        const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Weather: ${weather}\n• Soil: ${soil}\n• Temperature: ${temperature}°C\n• Humidity: ${humidity}%\n• Light: ${lightCondition}`;
+
+        const isHealthy = (prediction || '').toLowerCase().includes('healthy');
+        router.push({
+          pathname: isHealthy ? '/no-result' : '/result',
+          params: {
+            fromHistory: '0',
+            imageUri,
+            photoBase64,
+            prediction,
+            confidence,
+            details: enhancedDetails,
+            recommendations,
+            weather,
+            soil,
+            temperature,
+            humidity,
+            lightCondition,
+          },
+        });
+      } else {
+        Alert.alert('Error', result.error || 'Failed to save scan data');
+      }
+    } catch (error) {
+      console.error('Error saving scan:', error);
+      Alert.alert('Error', 'An unexpected error occurred while saving the scan');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -131,7 +168,6 @@ export default function ConditionsScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
       <View style={styles.headerBar}>
         <TouchableOpacity
           style={styles.hamburger}
@@ -143,7 +179,6 @@ export default function ConditionsScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        {/* spacer for symmetry */}
         <View style={{ width: 40 }} />
       </View>
 
@@ -153,86 +188,86 @@ export default function ConditionsScreen() {
           <Text style={styles.subtitle}>Provide details about the current conditions</Text>
         </View>
         <View style={styles.formCard}>
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Weather Condition</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={weather}
-              onValueChange={(itemValue) => setWeather(itemValue)}
-              style={styles.picker}
-            >
-              {weatherOptions.map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Weather Condition</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={weather}
+                onValueChange={setWeather}
+                style={styles.picker}
+              >
+                {weatherOptions.map((option) => (
+                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                ))}
+              </Picker>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Soil Type</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={soil}
-              onValueChange={(itemValue) => setSoil(itemValue)}
-              style={styles.picker}
-            >
-              {soilOptions.map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Soil Type</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={soil}
+                onValueChange={setSoil}
+                style={styles.picker}
+              >
+                {soilOptions.map((option) => (
+                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                ))}
+              </Picker>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Temperature (°C)</Text>
-          <TextInput
-            style={styles.input}
-            value={temperature}
-            onChangeText={setTemperature}
-            placeholder="e.g., 25.5"
-            keyboardType="numeric"
-            placeholderTextColor="#999"
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Humidity (%)</Text>
-          <TextInput
-            style={styles.input}
-            value={humidity}
-            onChangeText={setHumidity}
-            placeholder="e.g., 70"
-            keyboardType="numeric"
-            placeholderTextColor="#999"
-          />
-        </View>
-
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Light Condition</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={lightCondition}
-              onValueChange={(itemValue) => setLightCondition(itemValue)}
-              style={styles.picker}
-            >
-              {lightOptions.map((option) => (
-                <Picker.Item key={option.value} label={option.label} value={option.value} />
-              ))}
-            </Picker>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Temperature (°C)</Text>
+            <TextInput
+              style={styles.input}
+              value={temperature}
+              onChangeText={setTemperature}
+              placeholder="e.g., 25.5"
+              keyboardType="numeric"
+              placeholderTextColor="#999"
+            />
           </View>
-        </View>
 
-        <TouchableOpacity
-          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.submitButtonText}>Analyze Conditions</Text>
-          )}
-        </TouchableOpacity>
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Humidity (%)</Text>
+            <TextInput
+              style={styles.input}
+              value={humidity}
+              onChangeText={setHumidity}
+              placeholder="e.g., 70"
+              keyboardType="numeric"
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          <View style={styles.formGroup}>
+            <Text style={styles.label}>Light Condition</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={lightCondition}
+                onValueChange={setLightCondition}
+                style={styles.picker}
+              >
+                {lightOptions.map((option) => (
+                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitButtonText}>Analyze Conditions</Text>
+            )}
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

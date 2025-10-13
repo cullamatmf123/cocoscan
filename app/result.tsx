@@ -52,42 +52,45 @@ export default function ResultScreen() {
     }
   }, [imageUri, photoBase64]);
 
-  // Save result to local history once when screen mounts with data
+  // Save result to Firestore history once when screen mounts with data
   useEffect(() => {
     const saveToHistory = async () => {
       if (savedRef.current) return; // avoid duplicates on rerenders
       // If opened from history or an id already exists, do not save again
       if (fromHistory === '1' || (id && id.length > 0)) return;
       if (!imageUri && !photoBase64) return;
+      
       try {
-        const key = 'scanHistory';
-        const existing = await AsyncStorage.getItem(key);
-        const list = existing ? JSON.parse(existing) : [];
-        const entry = {
-          id: `${Date.now()}`,
-          timestamp: new Date().toISOString(),
+        const { addHistoryItem } = await import('../services/historyService');
+        
+        await addHistoryItem({
           imageUri: imageUri || null,
           photoBase64: photoBase64 || null,
-          prediction,
-          confidence,
-          details,
-          recommendations,
-          weather,
-          soil,
-          temperature,
-          humidity,
-          lightCondition,
-        };
-        // newest first
-        const updated = [entry, ...list].slice(0, 100);
-        await AsyncStorage.setItem(key, JSON.stringify(updated));
+          prediction: prediction || 'Unknown',
+          confidence: confidence || '0',
+          details: details || '',
+          recommendations: recommendations || 'No specific recommendations available.',
+          weather: weather || 'Not specified',
+          soil: soil || 'Not specified',
+          temperature: temperature ? parseFloat(temperature) : undefined,
+          humidity: humidity ? parseFloat(humidity) : undefined,
+          lightCondition: lightCondition || 'Not specified'
+        });
+        
         savedRef.current = true;
-      } catch (e) {
-        console.warn('Failed to save history:', e);
+      } catch (error) {
+        console.warn('Failed to save to history:', error);
+        Alert.alert(
+          'Save Failed', 
+          'Could not save to history. Please check your internet connection and try again.',
+          [{ text: 'OK' }]
+        );
       }
     };
+    
     saveToHistory();
-  }, [imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition]);
+  }, [id, fromHistory, imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition]);
+
   const handleAboutPress = () => {
     router.push({
       pathname: '/about',
@@ -198,8 +201,8 @@ export default function ResultScreen() {
                   ) : photoBase64 ? (
                     <Image source={{ uri: `data:image/jpeg;base64,${photoBase64}` }} style={styles.statusThumb} />
                   ) : (
-                    <View style={[styles.statusThumb, { backgroundColor: '#E5E7EB' }]} />)
-                  }
+                    <View style={[styles.statusThumb, { backgroundColor: '#E5E7EB' }]} />
+                  )}
                 </View>
                 {/* Right content */}
                 <View style={{ flex: 1 }}>
@@ -238,7 +241,7 @@ export default function ResultScreen() {
                 </View>
               </View>
 
-              {/* Recommended Pesticides (images + names only) */}
+              {/* Recommended Pesticides */}
               <View style={styles.sectionCard}>
                 <View style={styles.sectionHeaderRow}>
                   <Text style={styles.sectionTitle}>Recommended Pesticides</Text>
@@ -307,11 +310,9 @@ export default function ResultScreen() {
               </ScrollView>
             </>
           )}
-
-          
         </View>
 
-        {/* Scan Again button (kept) */}
+        {/* Scan Again button */}
         <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 56 }}>
           <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/camera')} accessibilityLabel="Scan Again">
             <Text style={styles.scanAgainText}>Scan Again</Text>

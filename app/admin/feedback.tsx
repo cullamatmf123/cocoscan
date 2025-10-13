@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { doc, updateDoc } from 'firebase/firestore';
-import React, { useMemo, useState } from 'react';
+import { collection, doc, onSnapshot, orderBy, query as fsQuery, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../config/firebase';
 
@@ -12,16 +12,7 @@ export default function AdminFeedbackScreen() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailStatus, setDetailStatus] = useState<'New' | 'Reviewed' | 'Resolved'>('New');
 
-  const items = useMemo(
-    () => [
-      { id: '1', rating: 5, message: 'Amazing experience, the scanner is very accurate!', userEmail: 'jane@example.com', status: 'New', timestamp: new Date('2025-10-06T10:30:00') },
-      { id: '2', rating: 2, message: 'Sometimes the app crashes when uploading photos.', userEmail: 'mark@example.com', status: 'Reviewed', timestamp: new Date('2025-10-05T14:12:00') },
-      { id: '3', rating: 4, message: 'Would love dark mode and offline history.', userEmail: 'lisa@example.com', status: 'Resolved', timestamp: new Date('2025-10-03T09:00:00') },
-      { id: '4', rating: 1, message: 'Scan results are slow on poor connection.', userEmail: 'pete@example.com', status: 'New', timestamp: new Date('2025-10-02T18:45:00') },
-    ],
-    []
-  );
-  const [itemsState, setItemsState] = useState(items);
+  const [itemsState, setItemsState] = useState<Array<{ id: string; rating: number; message: string; userEmail: string; status: 'New' | 'Reviewed' | 'Resolved'; timestamp: Date; }>>([]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -38,11 +29,35 @@ export default function AdminFeedbackScreen() {
     setDetailStatus(s);
     setItemsState(prev => prev.map(it => it.id === selectedId ? { ...it, status: s } : it));
     try {
-      await updateDoc(doc(db, 'feedback', selectedId), { status: s });
+      // Persist as lowercase to match backend convention
+      await updateDoc(doc(db, 'feedback', selectedId), { status: s.toLowerCase() });
     } catch (e: any) {
       Alert.alert('Update failed', 'Could not save status.');
     }
   };
+
+  useEffect(() => {
+    // Real-time subscription to feedback collection
+    const q = fsQuery(collection(db, 'feedback'), orderBy('timestamp', 'desc'));
+    const unsub = onSnapshot(q, (snap) => {
+      const list = snap.docs.map((d) => {
+        const data: any = d.data();
+        const ts: Date = data?.timestamp?.toDate ? data.timestamp.toDate() : new Date();
+        const rawStatus: string = (data?.status || 'new').toString();
+        const uiStatus = (rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1)) as 'New' | 'Reviewed' | 'Resolved';
+        return {
+          id: d.id,
+          rating: Number(data?.rating ?? 0),
+          message: String(data?.message ?? ''),
+          userEmail: String(data?.userEmail ?? ''),
+          status: uiStatus,
+          timestamp: ts,
+        };
+      });
+      setItemsState(list);
+    });
+    return () => unsub();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe}>
