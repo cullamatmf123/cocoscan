@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
 import { collection, doc, getDoc } from 'firebase/firestore';
@@ -20,6 +21,20 @@ export default function AdminProfileScreen() {
     photoURL?: string | null;
   } | null>(null);
   const [showMore, setShowMore] = React.useState(false);
+  const pickImage = React.useCallback(async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
+    });
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const uri = result.assets[0].uri;
+      setProfile((p) => (p ? { ...p, photoURL: uri } : p));
+    }
+  }, []);
   const handleSignOut = React.useCallback(() => {
     router.replace('/');
   }, []);
@@ -103,10 +118,10 @@ export default function AdminProfileScreen() {
               <Image source={{ uri: profile.photoURL }} style={styles.avatarLarge} />
             ) : (
               <View style={styles.avatarLargePlaceholder}>
-                <Ionicons name="leaf-outline" size={42} color="#14532D" />
+                <Ionicons name="person-outline" size={42} color="#14532D" />
               </View>
             )}
-            <TouchableOpacity style={styles.camBadge} accessibilityLabel="Change photo">
+            <TouchableOpacity style={styles.camBadge} accessibilityLabel="Change photo" onPress={pickImage}>
               <Ionicons name="camera" size={16} color="#14532D" />
             </TouchableOpacity>
           </View>

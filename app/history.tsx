@@ -22,6 +22,7 @@ export default function HistoryScreen() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [confirmVisible, setConfirmVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const handleBack = () => router.replace('/home');
 
@@ -201,7 +202,7 @@ export default function HistoryScreen() {
     <View style={{ flex: 1 }}>
       {/* App Bar (white) */}
       <View style={styles.appBar}>
-        <TouchableOpacity style={styles.hamburger} onPress={() => router.replace('/home')} accessibilityLabel="Open menu">
+        <TouchableOpacity style={styles.hamburger} onPress={() => setMenuVisible(true)} accessibilityLabel="Open menu">
           <View style={styles.menuLineDark} />
           <View style={styles.menuLineDark} />
           <View style={styles.menuLineDark} />
@@ -209,6 +210,31 @@ export default function HistoryScreen() {
         <Text style={styles.brandTitle}>COCOSCAN</Text>
         <View style={styles.appBarSpacer} />
       </View>
+      {/* Menu Modal */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <View style={styles.menuBackdrop}>
+          <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
+          <View style={styles.menuSheet}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
+              <Text style={styles.menuItemText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Text style={styles.menuItemText}>About</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
+              <Text style={styles.menuItemText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
       <Text style={styles.pageHeading}>History</Text>
 
       {/* List */}
@@ -260,6 +286,15 @@ const styles = StyleSheet.create({
   menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
   brandTitle: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', letterSpacing: 1 },
   appBarSpacer: { width: 34, height: 34 },
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
+  menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
+  menuSheet: {
+    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
+  },
+  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
+  menuDivider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 2 },
   pageHeading: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', marginBottom: 8, textAlign: 'center', alignSelf: 'center' },
   dateHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, marginBottom: 8 },
   dateHeader: { color: '#111827', fontWeight: '900' },

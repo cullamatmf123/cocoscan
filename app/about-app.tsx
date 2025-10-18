@@ -1,21 +1,50 @@
-import { Ionicons } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AboutAppScreen() {
+  const [menuVisible, setMenuVisible] = useState(false);
   return (
     <SafeAreaView style={styles.safe}> 
-      <View style={styles.header}> 
-        <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Go back" style={styles.backBtn}>
-          <Text style={[styles.backText, { opacity: 0 }]}>‹ Back</Text>
+      {/* App Bar with hamburger + centered brand */}
+      <View style={styles.appBar}> 
+        <TouchableOpacity style={styles.hamburger} onPress={() => setMenuVisible(true)} accessibilityLabel="Open menu">
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
         </TouchableOpacity>
-        <Text style={styles.title}>About This App</Text>
-        <View style={{ width: 60 }} />
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
+        <View style={{ width: 34, height: 34 }} />
       </View>
 
+      {/* Menu Modal */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <View style={styles.menuBackdrop}>
+          <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
+          <View style={styles.menuSheet}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
+              <Text style={styles.menuItemText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Text style={styles.menuItemText}>About</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
+              <Text style={styles.menuItemText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.appName}>COCOSCAN</Text>
         <Text style={styles.tagline}>Detect Oryctes Rhinoceros in Dwarf Coconut Trees.</Text>
 
         <View style={[styles.card, styles.cardShadow]}>
@@ -49,24 +78,20 @@ export default function AboutAppScreen() {
         </View>
       </ScrollView>
       
-      {/* Bottom navigation */}
-      <View style={styles.bottomWrap} pointerEvents="box-none">
-        <View style={styles.bottomNav}>
-          <TouchableOpacity style={styles.navItem} onPress={() => router.replace('/home')}>
-            <Ionicons name="home-outline" size={26} color="#475569" />
-          </TouchableOpacity>
-          <View style={styles.navSpacer} />
-          <TouchableOpacity style={styles.navItem} onPress={() => router.push('/profile')}>
-            <Ionicons name="person-outline" size={26} color="#475569" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Center floating camera button */}
-        <View style={styles.fabContainer} pointerEvents="box-none">
-          <TouchableOpacity style={styles.fab} onPress={() => router.replace('/camera')}>
-            <Ionicons name="camera" size={28} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+      {/* Footer navigation (floating rounded bar) */}
+      <View style={styles.footerBar}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/camera')} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#000" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -74,17 +99,13 @@ export default function AboutAppScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#ffffff' },
-  header: {
+  appBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: 50, paddingHorizontal: 20, paddingBottom: 12, backgroundColor: '#EAF4EC',
-    borderBottomColor: '#D5E6DA', borderBottomWidth: 1,
+    paddingTop: 48, paddingHorizontal: 16, paddingBottom: 12, backgroundColor: '#FFFFFF',
   },
-  backBtn: { width: 60, paddingVertical: 8, paddingHorizontal: 6 },
-  backText: { color: '#1F3D2A', fontSize: 16, fontWeight: '700' },
-  title: {
-    position: 'absolute', left: 0, right: 0, textAlign: 'center', pointerEvents: 'none',
-    color: '#1F3D2A', fontSize: 20, fontWeight: '800', letterSpacing: 0.3,
-  },
+  hamburger: { padding: 8 },
+  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  brandTitle: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', letterSpacing: 1 },
   content: { padding: 16, paddingBottom: 160, gap: 14 },
   appName: { fontSize: 24, fontWeight: '900', color: '#2d5a3d', textAlign: 'center', letterSpacing: 0.3 },
   tagline: { fontSize: 14, color: '#374151', textAlign: 'center', marginTop: 2, marginBottom: 10 },
@@ -100,31 +121,26 @@ const styles = StyleSheet.create({
   sectionTitle: { fontSize: 16, color: '#2d5a3d', fontWeight: '800' },
   paragraph: { fontSize: 14, color: '#374151', lineHeight: 20 },
   bullet: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  /* Menu styles */
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
+  menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
+  menuSheet: {
+    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
+  },
+  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
+  footerBar: {
+    position: 'absolute', left: 0, right: 0, bottom: 8,
+    alignSelf: 'center', width: '92%', height: 60,
+    backgroundColor: '#FFFFFF', borderRadius: 20,
+    paddingHorizontal: 24,
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    shadowColor: '#000', shadowOpacity: 0.12, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 6,
+  },
+  footerItem: { flex: 1, alignItems: 'center' },
   primaryBtn: { backgroundColor: '#2d5a3d', paddingVertical: 14, borderRadius: 10, alignItems: 'center', marginTop: 8 },
   primaryBtnText: { color: '#fff', fontWeight: '800', fontSize: 16 },
-  bottomWrap: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    alignItems: 'center',
-    paddingBottom: 8,
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    height: 60,
-    width: '90%',
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-  },
   navItem: { padding: 8 },
   navIcon: { fontSize: 20, color: '#1f2937' },
   navSpacer: { width: 84 },

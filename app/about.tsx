@@ -1,15 +1,52 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function AboutScreen() {
+  const [menuVisible, setMenuVisible] = useState(false);
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Simple header */}
+      {/* Header with hamburger */}
       <View style={styles.headerBar}>
+        <TouchableOpacity
+          style={styles.hamburger}
+          onPress={() => setMenuVisible(true)}
+          accessibilityLabel="Open menu"
+        >
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+        </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
+        <View style={{ width: 34, height: 34 }} />
       </View>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <View style={styles.menuBackdrop}>
+          <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
+          <View style={styles.menuSheet}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
+              <Text style={styles.menuItemText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Text style={styles.menuItemText}>About</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
+              <Text style={styles.menuItemText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Content */}
       <ScrollView contentContainerStyle={styles.contentWrap} showsVerticalScrollIndicator={false}>
@@ -120,6 +157,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E5E7EB',
     borderBottomWidth: 1,
   },
+  hamburger: { padding: 8 },
+  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
   brandTitle: {
     color: '#0F3D1E',
     fontSize: 20,
@@ -149,6 +188,15 @@ const styles = StyleSheet.create({
   sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12, marginBottom: 6 },
   paragraph: { fontSize: 14, color: '#374151', lineHeight: 20 },
   bullet: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
+  menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
+  menuSheet: {
+    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
+  },
+  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
+  menuDivider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 2 },
   footerBar: {
     position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF',
     borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 24,

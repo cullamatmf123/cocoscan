@@ -41,15 +41,12 @@ export default function PesticidesScreen() {
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); handleProfilePress(); }}>
               <Text style={styles.menuItemText}>Profile</Text>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
               <Text style={styles.menuItemText}>Settings</Text>
             </TouchableOpacity>
-            <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
               <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
@@ -310,17 +307,17 @@ const styles = StyleSheet.create({
   },
   menuSheet: {
     position: 'absolute',
-    top: 56,
-    right: 12,
+    top: 60,
+    left: 12,
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    paddingVertical: 6,
-    width: 180,
+    borderRadius: 16,
+    paddingVertical: 8,
+    width: 220,
     shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
   },
   menuItem: {
     paddingHorizontal: 14,

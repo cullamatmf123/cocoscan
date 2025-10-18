@@ -5,15 +5,16 @@ import { getAuth, updateProfile } from 'firebase/auth';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Image,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Image,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { AuthService } from '../services/authService';
 
@@ -21,6 +22,7 @@ export default function ProfileScreen() {
   const [displayName, setDisplayName] = useState<string>('');
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [menuVisible, setMenuVisible] = useState(false);
 
   useEffect(() => {
     const computeName = (email?: string | null, fallback?: string | null) => {
@@ -115,28 +117,63 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Top App Bar */}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => console.log('Open Menu')} style={styles.menuBtn}>
+        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
           <Feather name="menu" size={22} color="#0B3B2A" />
         </TouchableOpacity>
         <Text style={styles.appTitle}>COCOSCAN</Text>
         <View style={{ width: 22 }} />
       </View>
 
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <View style={styles.menuBackdrop}>
+          <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
+          <View style={styles.menuSheet}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
+              <Text style={styles.menuItemText}>Profile</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Text style={styles.menuItemText}>About</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
+              <Text style={styles.menuItemText}>Settings</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
         {/* Hero Section */}
         <View style={styles.hero}>
-          <TouchableOpacity onPress={pickImage} disabled={uploading}>
-            {uploading ? (
-              <View style={styles.uploadingContainer}>
-                <ActivityIndicator size="large" color="#4CAF84" />
-                <Text style={styles.uploadingText}>Uploading...</Text>
-              </View>
-            ) : image ? (
-              <Image source={{ uri: image }} style={styles.profileImage} />
-            ) : (
-              <Ionicons name="person" size={56} color="#EAF7EF" style={styles.defaultAvatar} />
-            )}
-          </TouchableOpacity>
+          <View style={styles.avatarWrap}>
+            <TouchableOpacity onPress={pickImage} disabled={uploading}>
+              {uploading ? (
+                <View style={styles.uploadingContainer}>
+                  <ActivityIndicator size="large" color="#4CAF84" />
+                  <Text style={styles.uploadingText}>Uploading...</Text>
+                </View>
+              ) : image ? (
+                <Image source={{ uri: image }} style={styles.profileImage} />
+              ) : (
+                <Ionicons name="person" size={56} color="#EAF7EF" style={styles.defaultAvatar} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.avatarCamBtn}
+              onPress={pickImage}
+              disabled={uploading}
+              activeOpacity={0.85}
+            >
+              <Ionicons name="camera-outline" size={16} color="#1F3D2A" />
+            </TouchableOpacity>
+          </View>
 
           <Text style={styles.nameHero}>{displayName || 'User'}</Text>
           <Text style={styles.emailText}>{AuthService.getCurrentUser()?.email || 'user@example.com'}</Text>
@@ -146,28 +183,9 @@ export default function ProfileScreen() {
             <Text style={styles.editBtnText}>Edit Personal Info</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Metrics Card */}
-        <View style={[styles.card, styles.metricsCard]}>
-          <View style={styles.metricCol}>
-            <Text style={styles.metricTitle}>Pest Detected</Text>
-            <Text style={styles.metricValue}>0</Text>
-          </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metricCol}>
-            <Text style={styles.metricTitle}>Total Scan</Text>
-            <Text style={styles.metricValue}>0</Text>
-          </View>
-        </View>
-
-        {/* Recent Detection */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Recent Detection</Text>
-          <View style={styles.recentEmpty} />
-        </View>
-
+ 
         {/* Feedback Card */}
-        <View style={styles.card}>
+        <View style={[styles.card, { marginTop: 24 }]}>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Ionicons name="chatbubbles-outline" size={22} color="#1F3D2A" />
             <View style={{ flex: 1 }}>
@@ -204,6 +222,41 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: '#FFFFFF'
+  },
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.25)'
+  },
+  menuBackdropTouch: {
+    ...StyleSheet.absoluteFillObject as any,
+  },
+  menuSheet: {
+    position: 'absolute',
+    top: 60,
+    left: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingVertical: 8,
+    width: 220,
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
+  menuItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  menuItemText: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 2,
   },
   /* Top bar */
   topBar: {
@@ -249,6 +302,31 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textAlignVertical: 'center',
     backgroundColor: 'transparent'
+  },
+  avatarWrap: {
+    position: 'relative',
+    width: 92,
+    height: 92,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarCamBtn: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5EFE8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
   uploadingContainer: {
     width: 92,
