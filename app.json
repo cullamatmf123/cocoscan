@@ -12,41 +12,42 @@
       "resizeMode": "contain",
       "backgroundColor": "#2D5A3D"
     },
-    "ios": {
-      "supportsTablet": true
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundColor": "#2D5A3D"
       },
-      "package": "com.markmark987654321.cocoscan"
-    },
-    "web": {
-      "favicon": "./assets/images/favicon.png"
+      "package": "com.simonsimon23.cocoscan",
+      "versionCode": 1,
+      "permissions": [],
+      "softwareKeyboardLayoutMode": "pan"
     },
     "plugins": [
       [
         "expo-build-properties",
         {
           "android": {
-            "compileSdkVersion": 33,
-            "targetSdkVersion": 33,
-            "buildToolsVersion": "33.0.0"
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "buildToolsVersion": "35.0.0",
+            "enableProguardInReleaseBuilds": true,
+            "enableMinifyInReleaseBuilds": true
           }
         }
       ]
     ],
+    "owner": "simonsimon23",
     "extra": {
       "eas": {
-        "projectId": "82408c9e-43eb-4178-a9fb-225c52e8ccf2"
+        "projectId": "7682d028-f73a-4f56-b8bc-720b3f00f28d"
       }
     },
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/82408c9e-43eb-4178-a9fb-225c52e8ccf2"
-    }
+      "url": "https://u.expo.dev/7682d028-f73a-4f56-b8bc-720b3f00f28d"
+    },
+    "ios": {}
   }
 }
