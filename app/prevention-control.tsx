@@ -111,6 +111,7 @@ export default function PreventionControlScreen() {
               <Image key={`pre-top-${idx}`} source={src} style={styles.preventionImage} resizeMode="cover" />
             ))}
           </ScrollView>
+          
           <View style={styles.photosCountChip}>
             <Text style={styles.photosCountText}>{sanitationImages.length} photos</Text>
           </View>
