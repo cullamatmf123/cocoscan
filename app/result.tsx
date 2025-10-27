@@ -1,5 +1,4 @@
 import { Feather } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -66,7 +65,7 @@ export default function ResultScreen() {
         await addHistoryItem({
           imageUri: imageUri || null,
           photoBase64: photoBase64 || null,
-          prediction: prediction || 'Unknown',
+          prediction: displayPrediction || 'Unknown',
           confidence: confidence || '0',
           details: details || '',
           recommendations: recommendations || 'No specific recommendations available.',
@@ -90,6 +89,24 @@ export default function ResultScreen() {
     
     saveToHistory();
   }, [id, fromHistory, imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition]);
+
+  const unhealthyType = React.useMemo(() => {
+    const d = (details || '').toLowerCase();
+    const signKeywords = ['sign', 'symptom', 'v-shaped', 'triangular', 'notch', 'bore hole', 'cuts', 'fronds', 'leaf'];
+    const presenceKeywords = ['presence', 'beetle', 'adult', 'larva', 'grub', 'found', 'seen', 'captured', 'detected'];
+    const hasSign = signKeywords.some(k => d.includes(k));
+    const hasPresence = presenceKeywords.some(k => d.includes(k));
+    if (hasSign) return 'sign';
+    if (hasPresence) return 'presence';
+    return 'unknown';
+  }, [details]);
+
+  const displayPrediction = React.useMemo(() => {
+    if ((prediction || '').toLowerCase() === 'healthy') return 'Healthy';
+    if (unhealthyType === 'sign') return 'Unhealthy, Oryctes Rhinoceros Sign';
+    if (unhealthyType === 'presence') return 'Unhealthy: Oryctes Rhinoceros Detected';
+    return 'Unhealthy';
+  }, [prediction, unhealthyType]);
 
   const handleAboutPress = () => {
     router.push({
@@ -206,7 +223,7 @@ export default function ResultScreen() {
                 </View>
                 {/* Right content */}
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.statusTitle}>AI : {prediction?.toLowerCase() === 'healthy' ? 'Healthy' : 'Pest Detected'}</Text>
+                  <Text style={styles.statusTitle}>AI : {displayPrediction}</Text>
                   <View style={styles.statusChipsRow}>
                     <Text style={styles.statusChipText}>🌤️ {weather || 'Not specified'}</Text>
                     <Text style={styles.statusChipText}>🌡️ {temperature || 'Not specified'}°C</Text>

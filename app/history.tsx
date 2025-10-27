@@ -208,7 +208,7 @@ export default function HistoryScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={styles.appBarSpacer} />
+        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
       </View>
       {/* Menu Modal */}
       <Modal
@@ -286,6 +286,8 @@ const styles = StyleSheet.create({
   menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
   brandTitle: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', letterSpacing: 1 },
   appBarSpacer: { width: 34, height: 34 },
+  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
+  logoEmoji: { fontSize: 18 },
   menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
   menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
   menuSheet: {

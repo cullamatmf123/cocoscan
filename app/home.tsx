@@ -72,13 +72,11 @@ export default function HomeScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <TouchableOpacity
-          style={styles.profileButton}
-          onPress={handleProfilePress}
-          accessibilityLabel="Open profile"
-        >
-          <View style={styles.defaultProfileIcon} />
-        </TouchableOpacity>
+        <View style={styles.profileButton}>
+          <View style={styles.logoBadge}>
+            <Text style={styles.logoEmoji}>🌴</Text>
+          </View>
+        </View>
       </View>
 
       {/* Menu Modal */}
@@ -271,6 +269,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
+    position: 'relative',
   },
   hamburger: {
     padding: 8,
@@ -331,6 +330,19 @@ const styles = StyleSheet.create({
   profileButton: {
     padding: 5,
   },
+  logoBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1F4D36',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#F2C200',
+  },
+  logoEmoji: {
+    fontSize: 22,
+  },
   defaultProfileIcon: {
     width: 40,
     height: 40,
@@ -346,6 +358,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '900',
     letterSpacing: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    zIndex: 1,
+    pointerEvents: 'none',
   },
   searchBar: {
     marginTop: 8,

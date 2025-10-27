@@ -19,7 +19,7 @@ export default function AboutScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={{ width: 34, height: 34 }} />
+        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
       </View>
 
       {/* Menu Modal */}
@@ -73,58 +73,70 @@ export default function AboutScreen() {
         </View>
 
         {/* Overview */}
-        <Text style={styles.sectionHeading}>Overview</Text>
-        <Text style={styles.paragraph}>
-          The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest that primarily attacks coconut
-          palms and other palm species by boring into the crown to feed on sap, damaging young fronds and inhibiting
-          leaf and flower development. Native to South and Southeast Asia, this beetle has spread to many tropical
-          regions. Its rapid reproduction and adaptability make it a major threat to coconut productivity.
-        </Text>
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionCardHeading}>Overview</Text>
+          <Text style={styles.paragraph}>
+            The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest that primarily attacks coconut
+            palms and other palm species by boring into the crown to feed on sap, damaging young fronds and inhibiting
+            leaf and flower development. Native to South and Southeast Asia, this beetle has spread to many tropical
+            regions. Its rapid reproduction and adaptability make it a major threat to coconut productivity.
+          </Text>
+          <Text style={styles.paragraph}>
+            Adults boring into the crown and spear leaf can repeatedly wound the growing point, causing the familiar
+            V-shaped cuts, canopy decline, and substantial yield losses; severe or sustained attacks may kill young
+            palms. Outbreaks spread quickly where breeding sites and favorable weather persist, making early detection
+            and control essential.
+          </Text>
+        </View>
 
         {/* Signs */}
-        <Text style={styles.sectionHeading}>Signs:</Text>
-        <View style={styles.photoStripWrap}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.signsRow}
-          >
-            <Image source={require('../assets/images/design/v-cut-sign.jpg')} style={styles.signImage} resizeMode="cover" />
-            <Image source={require('../assets/images/design/sign(2).png')} style={styles.signImage} resizeMode="cover" />
-            <Image source={require('../assets/images/design/v-cut(2).jpg')} style={styles.signImage} resizeMode="cover" />
-            <Image source={require('../assets/images/design/sign(3).jpg')} style={styles.signImage} resizeMode="cover" />
-          </ScrollView>
-          <View style={styles.photosCountChip}>
-            <Text style={styles.photosCountText}>4 photos</Text>
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionCardHeading}>Signs</Text>
+          <View style={styles.photoStripWrap}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.signsRow}
+            >
+              <Image source={require('../assets/images/design/v-cut-sign.jpg')} style={styles.signImage} resizeMode="cover" />
+              <Image source={require('../assets/images/design/sign(2).png')} style={styles.signImage} resizeMode="cover" />
+              <Image source={require('../assets/images/design/v-cut(2).jpg')} style={styles.signImage} resizeMode="cover" />
+              <Image source={require('../assets/images/design/sign(3).jpg')} style={styles.signImage} resizeMode="cover" />
+            </ScrollView>
+            <View style={styles.photosCountChip}>
+              <Text style={styles.photosCountText}>4 photos</Text>
+            </View>
           </View>
+          <Text style={styles.bullet}>• V-shaped cuts or holes on young, unopened fronds</Text>
+          <Text style={styles.bullet}>• Boreholes visible on the crown or trunk</Text>
+          <Text style={styles.bullet}>• Frass (fibrous debris) around leaf bases and at bore entry</Text>
+          <Text style={styles.bullet}>• Notched or missing tissues along leaflet margins</Text>
+          <Text style={styles.bullet}>• Damaged or broken spear leaf</Text>
         </View>
-        <Text style={styles.bullet}>• V-shaped cuts or holes on young, unopened fronds</Text>
-        <Text style={styles.bullet}>• Boreholes visible on the crown or trunk</Text>
-        <Text style={styles.bullet}>• Frass (fibrous debris) around leaf bases and at bore entry</Text>
-        <Text style={styles.bullet}>• Notched or missing tissues along leaflet margins</Text>
-        <Text style={styles.bullet}>• Damaged or broken spear leaf</Text>
 
         {/* Symptoms */}
-        <Text style={styles.sectionHeading}>Symptoms:</Text>
-        <View style={styles.photoStripWrap}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.signsRow}
-          >
-            <Image source={require('../assets/images/design/Symptoms(2).jpg')} style={styles.signImage} resizeMode="cover" />
-            <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
-            <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
-            <Image source={require('../assets/images/design/Symptoms(4).jpg')} style={styles.signImage} resizeMode="cover" />
-          </ScrollView>
-          <View style={styles.photosCountChip}>
-            <Text style={styles.photosCountText}>4 photos</Text>
+        <View style={styles.sectionCard}>
+          <Text style={styles.sectionCardHeading}>Symptoms</Text>
+          <View style={styles.photoStripWrap}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.signsRow}
+            >
+              <Image source={require('../assets/images/design/Symptoms(2).jpg')} style={styles.signImage} resizeMode="cover" />
+              <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
+              <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
+              <Image source={require('../assets/images/design/Symptoms(4).jpg')} style={styles.signImage} resizeMode="cover" />
+            </ScrollView>
+            <View style={styles.photosCountChip}>
+              <Text style={styles.photosCountText}>4 photos</Text>
+            </View>
           </View>
+          <Text style={styles.bullet}>• Distorted or stunted emerging fronds; reduced canopy density</Text>
+          <Text style={styles.bullet}>• Declining vigor and reduced nut yield over time</Text>
+          <Text style={styles.bullet}>• Secondary infections in damaged crown tissue</Text>
+          <Text style={styles.bullet}>• Severe, repeated attacks may lead to palm death (especially young palms)</Text>
         </View>
-        <Text style={styles.bullet}>• Distorted or stunted emerging fronds; reduced canopy density</Text>
-        <Text style={styles.bullet}>• Declining vigor and reduced nut yield over time</Text>
-        <Text style={styles.bullet}>• Secondary infections in damaged crown tissue</Text>
-        <Text style={styles.bullet}>• Severe, repeated attacks may lead to palm death (especially young palms)</Text>
 
         <View style={{ height: 100 }} />
       </ScrollView>
@@ -156,6 +168,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderBottomColor: '#E5E7EB',
     borderBottomWidth: 1,
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   hamburger: { padding: 8 },
   menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
@@ -164,15 +180,21 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '900',
     letterSpacing: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    zIndex: 1,
+    pointerEvents: 'none',
   },
-  contentWrap: { padding: 16, paddingBottom: 24 },
+  contentWrap: { padding: 16, paddingBottom: 32 },
   title: { fontSize: 22, fontWeight: '800', color: '#111827', marginTop: 8 },
   subtitle: { fontSize: 12, color: '#6B7280', fontStyle: 'italic', marginTop: 2 },
   italic: { fontStyle: 'italic' },
-  photoRow: { flexDirection: 'row', gap: 10, marginTop: 12, paddingRight: 4 },
+  photoRow: { flexDirection: 'row', gap: 12, marginTop: 12, paddingRight: 6 },
   photo: { width: 220, height: 110, borderRadius: 12 },
-  photoStripWrap: { position: 'relative' },
-  signsRow: { flexDirection: 'row', gap: 10, marginTop: 10, marginBottom: 10, paddingRight: 4 },
+  photoStripWrap: { position: 'relative', marginTop: 6, marginBottom: 10 },
+  signsRow: { flexDirection: 'row', gap: 12, marginTop: 12, marginBottom: 12, paddingRight: 6 },
   signImage: { width: 180, height: 110, borderRadius: 12 },
   photoCount: { alignSelf: 'flex-end', color: '#6B7280', fontSize: 12, marginTop: 4 },
   photosCountChip: {
@@ -185,9 +207,15 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   photosCountText: { color: '#6B7280', fontSize: 12, fontWeight: '600' },
-  sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12, marginBottom: 6 },
-  paragraph: { fontSize: 14, color: '#374151', lineHeight: 20 },
-  bullet: { fontSize: 14, color: '#374151', lineHeight: 20 },
+  sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 14, marginBottom: 8 },
+  paragraph: { fontSize: 14, color: '#374151', lineHeight: 20, marginBottom: 8 },
+  bullet: { fontSize: 14, color: '#374151', lineHeight: 20, marginBottom: 6 },
+  overviewCard: { backgroundColor: '#EAF5EE', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#CFE6D2', marginTop: 8, marginBottom: 10 },
+  overviewHeading: { fontSize: 16, fontWeight: '900', color: '#2d5a3d', marginBottom: 6 },
+  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
+  logoEmoji: { fontSize: 18 },
+  sectionCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 14, borderWidth: 1, borderColor: '#E5E7EB', marginTop: 8, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  sectionCardHeading: { fontSize: 16, fontWeight: '900', color: '#111827', marginBottom: 8 },
   menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
   menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
   menuSheet: {

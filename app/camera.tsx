@@ -15,18 +15,32 @@ interface HealthPrediction {
 
 const mockClassifyHealth = async (): Promise<HealthPrediction> => {
   await new Promise(resolve => setTimeout(resolve, 1500));
-  const results = [
-    { prediction: 'Healthy', confidence: 92 },
-    { prediction: 'Diseased', confidence: 87 },
-    { prediction: 'Pest Detected', confidence: 94 }
-  ];
-  const randomResult = results[Math.floor(Math.random() * results.length)];
+  // Choose between Healthy, Unhealthy with presence, Unhealthy with signs
+  const roll = Math.random();
+  if (roll < 0.34) {
+    return {
+      prediction: 'Healthy',
+      confidence: Math.floor(90 + Math.random() * 10),
+      analysis: {
+        details: 'No signs of pest detected',
+        recommendations: 'Continue current care',
+      },
+    };
+  }
+  const isPresence = roll < 0.67; // middle bucket -> presence, upper bucket -> signs
+  const confidence = Math.floor(80 + Math.random() * 20);
   return {
-    ...randomResult,
+    // Keep as 'Pest Detected' so routing logic elsewhere (includes("healthy")) is unaffected
+    prediction: 'Pest Detected',
+    confidence,
     analysis: {
-      details: `Mock analysis shows ${randomResult.prediction.toLowerCase()} condition`,
-      recommendations: randomResult.prediction === 'Healthy' ? 'Continue current care' : 'Consider treatment'
-    }
+      // Presence variant contains presence-related keywords
+      // Signs variant contains signs/symptoms keywords
+      details: isPresence
+        ? 'Presence of adult beetle detected near the crown; live Oryctes Rhinoceros presence observed'
+        : 'V-shaped cuts and triangular notches on fronds; bore hole signs consistent with Oryctes Rhinoceros',
+      recommendations: 'Consider treatment and monitoring',
+    },
   };
 };
 
@@ -177,7 +191,16 @@ export default function CameraScreen() {
                   : '#F44336' 
               }
             ]}>
-              {capturedPhoto.healthResult.prediction}
+              {(() => {
+                const hr: HealthPrediction = capturedPhoto.healthResult;
+                if (hr.prediction === 'Healthy') return 'Healthy';
+                const d = (hr.analysis?.details || '').toLowerCase();
+                const presence = ['presence', 'beetle', 'adult', 'larva', 'grub', 'found', 'seen', 'captured', 'detected'].some(k => d.includes(k));
+                const sign = ['sign', 'symptom', 'v-shaped', 'triangular', 'notch', 'bore hole', 'cuts', 'fronds', 'leaf'].some(k => d.includes(k));
+                if (sign) return 'Unhealthy, Oryctes Rhinoceros Sign';
+                if (presence) return 'Unhealthy: Oryctes Rhinoceros Detected';
+                return 'Unhealthy';
+              })()}
             </Text>
             <Text style={styles.healthConfidence}>
               {capturedPhoto.healthResult.confidence}% confidence

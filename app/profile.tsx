@@ -121,7 +121,7 @@ export default function ProfileScreen() {
           <Feather name="menu" size={22} color="#0B3B2A" />
         </TouchableOpacity>
         <Text style={styles.appTitle}>COCOSCAN</Text>
-        <View style={{ width: 22 }} />
+        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
       </View>
 
       <Modal
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
   },
   menuBtn: {
@@ -277,6 +277,17 @@ const styles = StyleSheet.create({
     color: '#0B3B2A',
     letterSpacing: 1.5,
   },
+  logoBadge: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#1F4D36',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#F2C200',
+  },
+  logoEmoji: { fontSize: 18 },
 
   /* Hero */
   hero: {
