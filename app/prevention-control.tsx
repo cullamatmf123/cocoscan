@@ -116,12 +116,16 @@ export default function PreventionControlScreen() {
             <Text style={styles.photosCountText}>{sanitationImages.length} photos</Text>
           </View>
         </View>
-        <View style={styles.tabsRow}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsRow}
+        >
           <TouchableOpacity
             onPress={() => handleTabPress(0)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={activeTab === 0 ? styles.tabItemActive : styles.tabItem}
+            style={[activeTab === 0 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={activeTab === 0 ? styles.tabTextActive : styles.tabText}>Sanitation & Habitat Management</Text>
             {activeTab === 0 && <View style={styles.tabUnderline} />}
@@ -130,7 +134,7 @@ export default function PreventionControlScreen() {
             onPress={() => handleTabPress(1)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={activeTab === 1 ? styles.tabItemActive : styles.tabItem}
+            style={[activeTab === 1 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={activeTab === 1 ? styles.tabTextActive : styles.tabText}>Monitoring & Early Detection</Text>
             {activeTab === 1 && <View style={styles.tabUnderline} />}
@@ -139,12 +143,12 @@ export default function PreventionControlScreen() {
             onPress={() => handleTabPress(2)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={activeTab === 2 ? styles.tabItemActive : styles.tabItem}
+            style={[activeTab === 2 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={activeTab === 2 ? styles.tabTextActive : styles.tabText}>Preventing Spread</Text>
             {activeTab === 2 && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
         {/* Content area: not swipeable; switches only on tab press */}
         {activeTab === 0 && (
@@ -193,12 +197,16 @@ export default function PreventionControlScreen() {
         )}
         <View style={{ height: 12 }} />
         <Text style={[styles.sectionHeading, { marginBottom: 8 }]}>Control</Text>
-        <View style={styles.tabsRow}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsRow}
+        >
           <TouchableOpacity
             onPress={() => handleControlTabPress(0)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={controlTab === 0 ? styles.tabItemActive : styles.tabItem}
+            style={[controlTab === 0 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={controlTab === 0 ? styles.tabTextActive : styles.tabText}>Mechanical Control</Text>
             {controlTab === 0 && <View style={styles.tabUnderline} />}
@@ -207,7 +215,7 @@ export default function PreventionControlScreen() {
             onPress={() => handleControlTabPress(1)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={controlTab === 1 ? styles.tabItemActive : styles.tabItem}
+            style={[controlTab === 1 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={controlTab === 1 ? styles.tabTextActive : styles.tabText}>Biological Control</Text>
             {controlTab === 1 && <View style={styles.tabUnderline} />}
@@ -216,7 +224,7 @@ export default function PreventionControlScreen() {
             onPress={() => handleControlTabPress(2)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={controlTab === 2 ? styles.tabItemActive : styles.tabItem}
+            style={[controlTab === 2 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={controlTab === 2 ? styles.tabTextActive : styles.tabText}>Trapping Methods</Text>
             {controlTab === 2 && <View style={styles.tabUnderline} />}
@@ -225,12 +233,12 @@ export default function PreventionControlScreen() {
             onPress={() => handleControlTabPress(3)}
             activeOpacity={0.8}
             accessibilityRole="button"
-            style={controlTab === 3 ? styles.tabItemActive : styles.tabItem}
+            style={[controlTab === 3 ? styles.tabItemActive : styles.tabItem, { paddingHorizontal: 12 }]}
           >
             <Text style={controlTab === 3 ? styles.tabTextActive : styles.tabText}>Chemical Control</Text>
             {controlTab === 3 && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
-        </View>
+        </ScrollView>
 
         {controlTab === 0 && (
           <View>
@@ -435,12 +443,12 @@ const styles = StyleSheet.create({
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    gap: 14,
     paddingVertical: 6,
     marginBottom: 6,
+    paddingRight: 20, // Extra padding to ensure last tab is fully visible
   },
-  tabItem: { paddingBottom: 2 },
-  tabItemActive: { paddingBottom: 2 },
+  tabItem: { paddingBottom: 2, flexShrink: 0 },
+  tabItemActive: { paddingBottom: 2, flexShrink: 0 },
   tabText: { color: '#6B7280', fontSize: 14, fontWeight: '600' },
   tabTextActive: { color: '#16A34A', fontSize: 14, fontWeight: '800' },
   tabUnderline: { height: 3, backgroundColor: '#16A34A', borderRadius: 2, marginTop: 2, width: 22 },
