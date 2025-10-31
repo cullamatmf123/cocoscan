@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CocoScan Logo - Android Format</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #2D5A3D;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .logo-circle {
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background-color: transparent;
+            border: 6px solid #FFD700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .logo-circle:hover {
+            transform: scale(1.05);
+        }
+
+        .palm-tree-icon {
+            font-size: 120px;
+            text-align: center;
+            user-select: none;
+        }
+
+        .logo-text {
+            color: #FFFFFF;
+            font-size: 48px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .tagline {
+            color: #FFD700;
+            font-size: 18px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            margin-top: -10px;
+        }
+
+        .download-section {
+            margin-top: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .download-btn {
+            background-color: #FFD700;
+            color: #2D5A3D;
+            border: none;
+            border-radius: 25px;
+            padding: 14px 32px;
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .download-btn:hover {
+            background-color: #FFC700;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        .info-text {
+            color: #FFFFFF;
+            font-size: 14px;
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+            opacity: 0.9;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .logo-circle {
+                width: 200px;
+                height: 200px;
+                border-width: 5px;
+            }
+
+            .palm-tree-icon {
+                font-size: 100px;
+            }
+
+            .logo-text {
+                font-size: 36px;
+            }
+
+            .tagline {
+                font-size: 16px;
+            }
+
+            .download-btn {
+                padding: 12px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logo-container">
+        <!-- Main Logo -->
+        <div class="logo-circle" id="logoCircle">
+            <div class="palm-tree-icon">🌴</div>
+        </div>
+
+        <!-- App Name -->
+        <div style="text-align: center;">
+            <h1 class="logo-text">COCOSCAN</h1>
+            <p class="tagline">AI-Powered Coconut Health Detection</p>
+        </div>
+
+        <!-- Download Section -->
+        <div class="download-section">
+            <button class="download-btn" onclick="downloadAndroidForeground()">📱 Download Android Foreground (512x512)</button>
+            <button class="download-btn" onclick="downloadAndroidBackground()">📱 Download Android Background (512x512)</button>
+            <button class="download-btn" onclick="downloadAsImage()">📥 Download Logo PNG (512x512)</button>
+            <button class="download-btn" onclick="downloadAsSVG()">📥 Download Logo SVG (512x512)</button>
+            <p class="info-text">
+                <strong>Standard App Icon Size:</strong> All images are 512x512 pixels.<br>
+                Foreground: Palm tree with golden circle (transparent background)<br>
+                Background: Green solid color (#2D5A3D)<br>
+                Perfect for Android adaptive icons and app stores
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Function to download Android Foreground (512x512)
+        function downloadAndroidForeground() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Standard app icon size: 512x512
+            canvas.width = 512;
+            canvas.height = 512;
+            
+            // Transparent background for foreground layer
+            ctx.clearRect(0, 0, 512, 512);
+            
+            // Draw golden circle (centered, within safe zone)
+            ctx.beginPath();
+            ctx.arc(256, 256, 130, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 10;
+            ctx.stroke();
+            
+            // Draw palm tree emoji (larger size)
+            ctx.font = 'bold 150px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🌴', 256, 256);
+            
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'cocoscan-foreground.png';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Function to download Android Background (512x512)
+        function downloadAndroidBackground() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Standard app icon size: 512x512
+            canvas.width = 512;
+            canvas.height = 512;
+            
+            // Draw green background (solid color)
+            ctx.fillStyle = '#2D5A3D';
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'cocoscan-background.png';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Function to download logo as PNG
+        function downloadAsImage() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Standard app icon size: 512x512
+            canvas.width = 512;
+            canvas.height = 512;
+            
+            // Draw green background
+            ctx.fillStyle = '#2D5A3D';
+            ctx.fillRect(0, 0, 512, 512);
+            
+            // Draw golden circle (larger)
+            ctx.beginPath();
+            ctx.arc(256, 256, 130, 0, 2 * Math.PI);
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 10;
+            ctx.stroke();
+            
+            // Draw palm tree emoji (larger size)
+            ctx.font = 'bold 150px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🌴', 256, 256);
+            
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'cocoscan-logo.png';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+            });
+        }
+
+        // Function to download logo as SVG
+        function downloadAsSVG() {
+            const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+    <!-- Green background -->
+    <rect width="512" height="512" fill="#2D5A3D"/>
+    
+    <!-- Golden circle border (larger) -->
+    <circle cx="256" cy="256" r="130" fill="transparent" stroke="#FFD700" stroke-width="10"/>
+    
+    <!-- Palm tree text (larger) -->
+    <text x="256" y="300" font-size="150" text-anchor="middle" fill="#000">🌴</text>
+</svg>`;
+            
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = 'cocoscan-logo.svg';
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,19 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { AuthService } from '../services/authService';
 
 export default function SignUpScreen() {
@@ -13,7 +26,7 @@ export default function SignUpScreen() {
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
-    
+
     if (!fullName.trim()) newErrors.fullName = 'Full name is required';
     if (!email) {
       newErrors.email = 'Email is required';
@@ -28,7 +41,7 @@ export default function SignUpScreen() {
     if (password !== confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -37,15 +50,15 @@ export default function SignUpScreen() {
     if (!validateForm()) return;
 
     setLoading(true);
-    
+
     try {
       const result = await AuthService.signUp({
         email,
         password,
         fullName,
-        isAdmin: false // Regular user
+        isAdmin: false
       });
-      
+
       if (result.success) {
         Alert.alert(
           'Success',
@@ -56,147 +69,209 @@ export default function SignUpScreen() {
         Alert.alert('Error', result.error || 'Failed to create account');
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'An error occurred during sign up');
+      console.error('Sign up error:', error);
+      Alert.alert('Error', error?.message || 'An error occurred during sign up');
     } finally {
       setLoading(false);
     }
   };
 
   const handleGoToSignIn = () => {
-    router.push('/signin');
+    try {
+      router.push('/signin');
+    } catch (error) {
+      console.log('Navigation to signin failed:', error);
+    }
   };
 
   return (
-    <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
-    >
-      <Text style={styles.title}>Create Account</Text>
-      <Text style={styles.subtitle}>Sign up to get started</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight, backgroundColor: '#FFFFFF' }} />}
 
-      <View style={styles.form}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Full Name</Text>
-          <TextInput
-            style={[styles.input, errors.fullName && styles.inputError]}
-            placeholder="Enter your full name"
-            value={fullName}
-            onChangeText={setFullName}
-            autoCapitalize="words"
-            placeholderTextColor="#999"
-            editable={!loading}
-          />
-          {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Email</Text>
-          <TextInput
-            style={[styles.input, errors.email && styles.inputError]}
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholderTextColor="#999"
-            editable={!loading}
-          />
-          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={[styles.input, errors.password && styles.inputError]}
-            placeholder="Create a password (min 6 characters)"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
-            editable={!loading}
-          />
-          {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
-        </View>
-
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Confirm Password</Text>
-          <TextInput
-            style={[styles.input, errors.confirmPassword && styles.inputError]}
-            placeholder="Confirm your password"
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            secureTextEntry
-            placeholderTextColor="#999"
-            onSubmitEditing={handleSignUp}
-            editable={!loading}
-          />
-          {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
-        </View>
-
-        <TouchableOpacity 
-          style={[styles.button, loading && styles.buttonDisabled]} 
-          onPress={handleSignUp}
-          disabled={loading}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.select({ ios: 0, android: 20 })}
+      >
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Sign Up</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <Text style={styles.palmTreeIcon}>🌴</Text>
+            </View>
+          </View>
 
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Already have an account? </Text>
-        <TouchableOpacity onPress={handleGoToSignIn} disabled={loading}>
-          <Text style={[styles.signInLink, loading && styles.linkDisabled]}>Sign In</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.subtitle}>Sign up to get started</Text>
+
+          <View style={styles.formContainer}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Full Name</Text>
+              <TextInput
+                style={[styles.input, errors.fullName && styles.inputError]}
+                placeholder="Enter your full name"
+                placeholderTextColor="#A0A0A0"
+                value={fullName}
+                onChangeText={setFullName}
+                autoCapitalize="words"
+                editable={!loading}
+                returnKeyType="next"
+              />
+              {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={[styles.input, errors.email && styles.inputError]}
+                placeholder="Enter your email"
+                placeholderTextColor="#A0A0A0"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!loading}
+                returnKeyType="next"
+              />
+              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                style={[styles.input, errors.password && styles.inputError]}
+                placeholder="Create a password (min 6 characters)"
+                placeholderTextColor="#A0A0A0"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                editable={!loading}
+                returnKeyType="next"
+              />
+              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Confirm Password</Text>
+              <TextInput
+                style={[styles.input, errors.confirmPassword && styles.inputError]}
+                placeholder="Confirm your password"
+                placeholderTextColor="#A0A0A0"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                editable={!loading}
+                onSubmitEditing={handleSignUp}
+                returnKeyType="done"
+              />
+              {errors.confirmPassword && <Text style={styles.errorText}>{errors.confirmPassword}</Text>}
+            </View>
+          </View>
+
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity
+              style={[styles.signUpButton, loading && styles.buttonDisabled]}
+              onPress={handleSignUp}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.signUpText}>Sign Up</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              disabled={loading}
+            >
+              <Text style={styles.backButtonText}>Back to Login</Text>
+            </TouchableOpacity>
+
+            <View style={styles.signInPrompt}>
+              <Text style={styles.signInPromptText}>Already have an account? </Text>
+              <TouchableOpacity onPress={handleGoToSignIn} disabled={loading}>
+                <Text style={[styles.signInLink, loading && styles.linkDisabled]}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#FFFFFF',
   },
-  contentContainer: {
+  // increased paddingTop to move icon and title further down
+  content: {
+    flexGrow: 1,
+    width: '100%',
     padding: 24,
-    paddingTop: 40,
+    justifyContent: 'flex-start',
+    paddingTop: 100, // <-- increased from 60 to 100 to lower icon & text
+  },
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'transparent',
+    borderWidth: 3,
+    borderColor: '#FFD700',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  palmTreeIcon: {
+    fontSize: 40,
+    textAlign: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
     color: '#2D5A3D',
+    fontSize: 28,
+    fontWeight: '700',
+    textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
+    color: '#666666',
     fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
+    textAlign: 'center',
+    marginBottom: 24,
   },
-  form: {
+  formContainer: {
     width: '100%',
+    marginBottom: 24,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  label: {
-    fontSize: 14,
+  inputLabel: {
+    color: '#2D5A3D',
+    fontSize: 16,
     fontWeight: '600',
-    color: '#444',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: '#F5F9F7',
     borderWidth: 1,
-    borderColor: '#DDD',
-    borderRadius: 8,
-    padding: 14,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
-    color: '#333',
+    color: '#333333',
   },
   inputError: {
     borderColor: '#E74C3C',
@@ -204,37 +279,59 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#E74C3C',
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 6,
   },
-  button: {
-    backgroundColor: '#2D5A3D',
-    padding: 16,
-    borderRadius: 8,
+  buttonsContainer: {
+    width: '100%',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 8,
+  },
+  signUpButton: {
+    backgroundColor: '#2D5A3D',
+    borderRadius: 25,
+    paddingVertical: 16,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 12,
   },
   buttonDisabled: {
-    backgroundColor: '#A0C0A8',
+    backgroundColor: '#A0A0A0',
+    opacity: 0.6,
   },
-  buttonText: {
-    color: '#fff',
+  signUpText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  backButton: {
+    width: '100%',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#2E7D32',
+    paddingVertical: 12,
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+    marginBottom: 12,
+  },
+  backButtonText: {
+    color: '#2E7D32',
     fontSize: 16,
     fontWeight: '600',
   },
-  footer: {
+  signInPrompt: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 24,
+    alignItems: 'center',
   },
-  footerText: {
-    color: '#666',
+  signInPromptText: {
+    color: '#666666',
+    fontSize: 16,
   },
   signInLink: {
     color: '#2D5A3D',
+    fontSize: 16,
     fontWeight: '600',
   },
   linkDisabled: {
-    opacity: 0.5,
-  },
+    color: '#A0A0A0',
+  }
 });

@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Platform, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { AuthService } from '../services/authService';
 
 export default function SignInScreen() {
@@ -28,7 +28,6 @@ export default function SignInScreen() {
     setLoading(true);
     
     try {
-      // Role-based authentication: false = user portal (blocks admin users)
       const result = await AuthService.signIn(email, password, false);
       
       if (result.success) {
@@ -69,6 +68,10 @@ export default function SignInScreen() {
 
   return (
     <View style={styles.container}>
+      {/* make the native status bar translucent and draw our white background behind it on Android */}
+      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight, backgroundColor: '#FFFFFF' }} />}
+
       <View style={styles.content}>
         <View style={styles.logoContainer}>
           <View style={styles.logoCircle}>
@@ -77,7 +80,6 @@ export default function SignInScreen() {
         </View>
 
         <Text style={styles.title}>Sign In</Text>
-        <Text style={styles.subtitle}>Welcome back! Please sign in to continue</Text>
 
         <View style={styles.formContainer}>
           <View style={styles.inputContainer}>
@@ -138,12 +140,6 @@ export default function SignInScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
-        <View style={styles.adminLinkContainer}>
-          <TouchableOpacity onPress={() => router.push('/admin/admin')} disabled={loading}>
-            <Text style={[styles.adminLink, loading && styles.linkDisabled]}>Admin Portal</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </View>
   );
@@ -156,12 +152,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    alignItems: 'center',
+    width: '100%',
+    padding: 24,
     justifyContent: 'center',
-    paddingHorizontal: 24,
   },
   logoContainer: {
-    marginBottom: 20,
+    alignItems: 'center',
+    marginBottom: 30,
   },
   logoCircle: {
     width: 80,
@@ -169,7 +166,7 @@ const styles = StyleSheet.create({
     borderRadius: 40,
     backgroundColor: 'transparent',
     borderWidth: 3,
-    borderColor: '#2D5A3D',
+    borderColor: '#FFD700',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -181,12 +178,11 @@ const styles = StyleSheet.create({
     color: '#2D5A3D',
     fontSize: 28,
     fontWeight: '700',
-    letterSpacing: 1,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
-    color: '#666',
+    color: '#666666',
     fontSize: 16,
     textAlign: 'center',
     marginBottom: 32,
@@ -226,6 +222,7 @@ const styles = StyleSheet.create({
   buttonsContainer: {
     width: '100%',
     alignItems: 'center',
+    marginTop: 20,
   },
   signInButton: {
     backgroundColor: '#2D5A3D',
@@ -234,14 +231,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
   },
   buttonDisabled: {
     backgroundColor: '#A0A0A0',
@@ -251,12 +240,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '700',
-    letterSpacing: 1,
   },
   signUpPrompt: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
   },
   signUpPromptText: {
     color: '#666666',
@@ -269,14 +256,5 @@ const styles = StyleSheet.create({
   },
   linkDisabled: {
     color: '#A0A0A0',
-  },
-  adminLinkContainer: {
-    marginTop: 20,
-  },
-  adminLink: {
-    color: '#666',
-    fontSize: 14,
-    fontWeight: '500',
-    textDecorationLine: 'underline',
-  },
+  }
 });

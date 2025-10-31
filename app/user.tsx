@@ -25,6 +25,7 @@ export default function Index() {
           <View style={styles.logoCircle}>
             <Text style={styles.palmTreeIcon}>🌴</Text>
           </View>
+          <Text style={styles.appName}>COCOSCAN</Text>
         </View>
 
         <View style={styles.buttonsContainer}>
@@ -53,7 +54,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logoContainer: {
-    marginBottom: 40,
+    marginBottom: 30,
+    alignItems: 'center',
   },
   logoCircle: {
     width: 100,
@@ -67,6 +69,17 @@ const styles = StyleSheet.create({
   },
   palmTreeIcon: {
     fontSize: 50,
+    textAlign: 'center',
+  },
+  appName: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 15,
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
     textAlign: 'center',
   },
   buttonsContainer: {
@@ -98,10 +111,13 @@ const styles = StyleSheet.create({
     maxWidth: 300,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   signUpText: {
     color: '#2D5A3D',

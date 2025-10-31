@@ -1,7 +1,19 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Alert, Image, Modal, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Modal,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { AuthService } from '../services/authService';
 import { HistoryItem, getUserHistory } from '../services/historyService';
 
@@ -10,19 +22,16 @@ export default function HomeScreen() {
   const [displayName, setDisplayName] = useState<string>('');
   const [recentHistory, setRecentHistory] = useState<HistoryItem[]>([]);
 
-  const handleStartScanning = () => {
-    router.push('/camera');
-  };
-
-  const handleHistoryPress = () => {
-    router.push('/history');
-  };
+  const handleStartScanning = () => router.push('/camera');
+  const handleHistoryPress = () => router.push('/history');
+  const handleProfilePress = () => router.push('/profile');
+  const handleMenuPress = () => setMenuVisible(true);
 
   useEffect(() => {
     const computeName = (email?: string | null, fallback?: string | null) => {
       if (fallback && fallback.trim()) return fallback.trim();
       if (!email) return 'User';
-      const handle = (email.split('@')[0] || '');
+      const handle = email.split('@')[0] || '';
       const noTrailingDigits = handle.replace(/[0-9]+$/, '');
       const base = noTrailingDigits || handle;
       return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
@@ -31,12 +40,11 @@ export default function HomeScreen() {
     const unsubscribe = AuthService.onAuthStateChanged((user) => {
       if (user) {
         setDisplayName(computeName(user.email, user.displayName));
-        // Load recent history preview
         (async () => {
           try {
             const items = await getUserHistory();
             setRecentHistory((items || []).slice(0, 3));
-          } catch (e) {
+          } catch {
             setRecentHistory([]);
           }
         })();
@@ -45,47 +53,35 @@ export default function HomeScreen() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
   }, []);
 
-  const handleProfilePress = () => {
-    router.push('/profile');
-  };
-
-  const handleMenuPress = () => {
-    setMenuVisible(true);
-  };
-
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+      {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight, backgroundColor: '#FFFFFF' }} />}
 
       {/* App Bar */}
       <View style={styles.appBar}>
-        <TouchableOpacity
-          style={styles.hamburger}
-          onPress={handleMenuPress}
-          accessibilityLabel="Open menu"
-        >
+        <TouchableOpacity style={styles.hamburger} onPress={handleMenuPress} accessibilityLabel="Open menu">
           <View style={styles.menuLineDark} />
           <View style={styles.menuLineDark} />
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
+
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={styles.profileButton}>
+
+        <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress} accessibilityLabel="Open profile">
           <View style={styles.logoBadge}>
             <Text style={styles.logoEmoji}>🌴</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* Menu Modal */}
-      <Modal
-        visible={menuVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuVisible(false)}
-      >
+      <Modal visible={menuVisible} transparent animationType="fade" onRequestClose={() => setMenuVisible(false)}>
         <View style={styles.menuBackdrop}>
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
@@ -107,18 +103,6 @@ export default function HomeScreen() {
 
       {/* Content */}
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Search (temporarily hidden) */}
-        {false && (
-          <View style={styles.searchBar}>
-            <View style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search"
-              placeholderTextColor="#6B7280"
-            />
-          </View>
-        )}
-
         {/* Greeting */}
         <View style={styles.greetBox}>
           <Text style={styles.greetTitle}>Hi, {displayName || 'User'}</Text>
@@ -234,7 +218,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
 
       {/* Footer navigation */}
@@ -252,15 +236,12 @@ export default function HomeScreen() {
           <Feather name="user" size={24} color="#000" />
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
   appBar: {
     paddingTop: 48,
     paddingHorizontal: 16,
@@ -271,34 +252,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     position: 'relative',
   },
-  hamburger: {
-    padding: 8,
-  },
-  menuButton: {
-    padding: 10,
-    marginLeft: 12,
-  },
-  menuLine: {
-    width: 25,
-    height: 3,
-    backgroundColor: '#FFFFFF',
-    marginVertical: 2,
-    borderRadius: 2,
-  },
-  menuLineDark: {
-    width: 24,
-    height: 3,
-    backgroundColor: '#0F3D1E',
-    marginVertical: 2,
-    borderRadius: 2,
-  },
-  menuBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  menuBackdropTouch: {
-    ...StyleSheet.absoluteFillObject as any,
-  },
+  hamburger: { padding: 8 },
+  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
+  menuBackdropTouch: StyleSheet.absoluteFillObject,
   menuSheet: {
     position: 'absolute',
     top: 60,
@@ -313,274 +270,42 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 6,
   },
-  menuItem: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  menuItemText: {
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 2,
-  },
-  profileButton: {
-    padding: 5,
-  },
-  logoBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#1F4D36',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#F2C200',
-  },
-  logoEmoji: {
-    fontSize: 22,
-  },
-  defaultProfileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#C9E4CA',
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 24,
-  },
-  brandTitle: {
-    color: '#0F3D1E',
-    fontSize: 20,
-    fontWeight: '900',
-    letterSpacing: 1,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  searchBar: {
-    marginTop: 8,
-    marginBottom: 16,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 16,
-    paddingHorizontal: 12,
-    height: 44,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  searchIcon: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#9CA3AF',
-    marginRight: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 16,
-    color: '#111827',
-  },
-  greetBox: {
-    marginBottom: 8,
-  },
-  greetTitle: {
-    color: '#0F3D1E',
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  greetSubtitle: {
-    color: '#374151',
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 2,
-  },
-  sectionTitle: {
-    marginTop: 8,
-    marginBottom: 8,
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  imageRow: {
-    flexDirection: 'row',
-    marginBottom: 12,
-  },
-  imageTile: {
-    flex: 1,
-    height: 110,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 12,
-  },
-  heroButton: {
-    marginBottom: 12,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  heroImage: {
-    width: '100%',
-    height: 110,
-  },
-  cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  infoCard: {
-    flex: 1,
-    backgroundColor: '#195A2B',
-    borderRadius: 12,
-    padding: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 4,
-  },
-  cardIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#EAF7EB',
-    marginBottom: 12,
-  },
-  cardIconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  cardIconImage: {
-    width: 22,
-    height: 22,
-  },
-  cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  processCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 3,
-  },
-  processRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  processStep: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  stepIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#111827',
-    marginBottom: 6,
-  },
-  stepImage: {
-    width: 44,
-    height: 44,
-    marginBottom: 6,
-  },
-  stepText: {
-    color: '#111827',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  processArrow: {
-    marginHorizontal: 6,
-    color: '#111827',
-    fontSize: 28,
-    fontWeight: '900',
-  },
-  scanButton: {
-    backgroundColor: '#3F7A4A',
-    borderRadius: 24,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    alignSelf: 'center',
-    minWidth: 220,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  scanButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  historyHeader: {
-    marginTop: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  historyTitle: {
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  chevron: {
-    color: '#111827',
-    fontSize: 24,
-    fontWeight: '800',
-  },
-  historyGrid: { flexDirection: 'row', marginTop: 8 },
-  historyTile: { flex: 1, height: 120, borderRadius: 16, borderWidth: 2, borderColor: '#9FE3A9', backgroundColor: '#FFFFFF', marginRight: 12 },
+  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
+  profileButton: { padding: 5 },
+  logoBadge: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
+  logoEmoji: { fontSize: 22 },
+  scrollContent: { paddingHorizontal: 16, paddingBottom: 24 },
+  brandTitle: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', letterSpacing: 1, position: 'absolute', left: 0, right: 0, textAlign: 'center', zIndex: 1, pointerEvents: 'none' },
+  greetBox: { marginBottom: 8 },
+  greetTitle: { color: '#0F3D1E', fontSize: 22, fontWeight: '800' },
+  greetSubtitle: { color: '#374151', fontSize: 14, fontWeight: '700', marginTop: 2 },
+  sectionTitle: { marginTop: 8, marginBottom: 8, color: '#111827', fontSize: 16, fontWeight: '800' },
+  heroButton: { marginBottom: 12, borderRadius: 12, overflow: 'hidden' },
+  heroImage: { width: '100%', height: 110 },
+  cardRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+  infoCard: { flex: 1, backgroundColor: '#195A2B', borderRadius: 12, padding: 12, shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 6, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  cardIconWrapper: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', marginBottom: 12, overflow: 'hidden' },
+  cardIconImage: { width: 22, height: 22 },
+  cardTitle: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  processCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, borderWidth: 1, borderColor: '#E5E7EB', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 3 },
+  processRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  processStep: { alignItems: 'center', flex: 1 },
+  stepImage: { width: 44, height: 44, marginBottom: 6 },
+  stepText: { color: '#111827', fontSize: 12, textAlign: 'center' },
+  processArrow: { marginHorizontal: 6, color: '#111827', fontSize: 28, fontWeight: '900' },
+  scanButton: { backgroundColor: '#3F7A4A', borderRadius: 24, paddingVertical: 14, paddingHorizontal: 24, alignSelf: 'center', minWidth: 220, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8, elevation: 2 },
+  scanButtonText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', textAlign: 'center' },
+  historyHeader: { marginTop: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  historyTitle: { color: '#111827', fontSize: 16, fontWeight: '800' },
+  chevron: { color: '#111827', fontSize: 24, fontWeight: '800' },
   historyEmpty: { color: '#6B7280', marginTop: 8 },
   historyItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF', borderRadius: 12, borderWidth: 1, borderColor: '#E5E7EB', padding: 10, marginBottom: 8 },
-  historyThumbRow: { flexDirection: 'row', marginTop: 8, alignItems: 'center' },
   historyThumb: { width: 54, height: 54, borderRadius: 12, backgroundColor: '#F3F4F6', marginRight: 12 },
-  historyThumbSpacing: { marginRight: 12 },
   historyThumbFallback: { alignItems: 'center', justifyContent: 'center' },
   historyItemTitle: { color: '#111827', fontWeight: '800' },
   historyItemSub: { color: '#6B7280', fontSize: 12 },
-  footerBar: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  footerItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  footerIconText: {
-    fontSize: 24,
-    color: '#111827',
-  },
+  footerBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  footerItem: { flex: 1, alignItems: 'center' },
+  footerIconText: { fontSize: 24, color: '#111827' },
 });

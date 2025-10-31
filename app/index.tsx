@@ -30,7 +30,6 @@ export default function GetStarted() {
             <Text style={styles.palmTreeIcon}>🌴</Text>
           </View>
           <Text style={styles.appName}>COCOSCAN</Text>
-          <Text style={styles.tagline}>AI-Powered Coconut Analysis</Text>
         </View>
       </View>
 

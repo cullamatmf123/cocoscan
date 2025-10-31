@@ -26,8 +26,7 @@ export default function Admin() {
           <View style={styles.logoCircle}>
             <Text style={styles.palmTreeIcon}>🌴</Text>
           </View>
-          <Text style={styles.title}>Admin Panel</Text>
-          <Text style={styles.subtitle}>Access your admin dashboard</Text>
+          <Text style={styles.appName}>COCOSCAN</Text>
         </View>
 
         <View style={styles.buttonsContainer}>
@@ -35,14 +34,8 @@ export default function Admin() {
             <Text style={styles.signInText}>Sign In</Text>
           </TouchableOpacity>
 
-          <View style={styles.divider}>
-            <View style={styles.line} />
-            <Text style={styles.orText}>OR</Text>
-            <View style={styles.line} />
-          </View>
-
           <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-            <Text style={styles.signUpText}>Create Admin Account</Text>
+            <Text style={styles.signUpText}>Create Account</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -62,28 +55,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   logoContainer: {
+    marginBottom: 30,
     alignItems: 'center',
-    marginBottom: 40,
-    width: '100%',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#2D5A3D',
-    marginTop: 20,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginBottom: 20,
   },
   logoCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#F5F9F7',
+    backgroundColor: 'transparent',
     borderWidth: 3,
     borderColor: '#2D5A3D',
     alignItems: 'center',
@@ -93,54 +72,58 @@ const styles = StyleSheet.create({
     fontSize: 50,
     textAlign: 'center',
   },
+  appName: {
+    color: '#2D5A3D',
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginTop: 15,
+    letterSpacing: 2,
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+    textAlign: 'center',
+  },
   buttonsContainer: {
     alignItems: 'center',
+    gap: 16,
     width: '100%',
-    maxWidth: 350,
   },
   signInButton: {
-    backgroundColor: '#2D5A3D',
+    backgroundColor: 'transparent',
+    borderColor: '#2D5A3D',
+    borderWidth: 2,
     borderRadius: 25,
     paddingVertical: 14,
-    width: '100%',
+    width: '80%',
+    maxWidth: 300,
     alignItems: 'center',
-    marginBottom: 16,
   },
   signInText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 16,
-    width: '100%',
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E5E5',
-  },
-  orText: {
-    paddingHorizontal: 10,
-    color: '#888',
-    fontSize: 14,
+    color: '#2D5A3D',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
   signUpButton: {
-    backgroundColor: '#F5F9F7',
+    backgroundColor: '#FFD700',
     borderRadius: 25,
     paddingVertical: 14,
-    width: '100%',
+    width: '80%',
+    maxWidth: 300,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#2D5A3D',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   signUpText: {
     color: '#2D5A3D',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.5,
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: 1,
   },
 });
