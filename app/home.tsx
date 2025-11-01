@@ -5,10 +5,8 @@ import {
   Alert,
   Image,
   Modal,
-  Platform,
   SafeAreaView,
   ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -60,24 +58,19 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
-      {Platform.OS === 'android' && <View style={{ height: StatusBar.currentHeight, backgroundColor: '#FFFFFF' }} />}
-
       {/* App Bar */}
       <View style={styles.appBar}>
-        <TouchableOpacity style={styles.hamburger} onPress={handleMenuPress} accessibilityLabel="Open menu">
+        <TouchableOpacity
+          style={styles.hamburger}
+          onPress={handleMenuPress}
+          accessibilityLabel="Open menu"
+        >
           <View style={styles.menuLineDark} />
           <View style={styles.menuLineDark} />
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
-
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-
-        <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress} accessibilityLabel="Open profile">
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoEmoji}>🌴</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
       </View>
 
       {/* Menu Modal */}
@@ -250,33 +243,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    position: 'relative',
   },
   hamburger: { padding: 8 },
   menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  brandTitle: {
+    color: '#0F3D1E',
+    fontSize: 20,
+    fontWeight: '900',
+    letterSpacing: 1,
+  },
+  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
+  logoEmoji: { fontSize: 18 },
   menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
   menuBackdropTouch: StyleSheet.absoluteFillObject,
   menuSheet: {
-    position: 'absolute',
-    top: 60,
-    left: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    width: 220,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
   },
   menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
   menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
-  profileButton: { padding: 5 },
-  logoBadge: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
-  logoEmoji: { fontSize: 22 },
   scrollContent: { paddingHorizontal: 16, paddingBottom: 24 },
-  brandTitle: { color: '#0F3D1E', fontSize: 20, fontWeight: '900', letterSpacing: 1, position: 'absolute', left: 0, right: 0, textAlign: 'center', zIndex: 1, pointerEvents: 'none' },
   greetBox: { marginBottom: 8 },
   greetTitle: { color: '#0F3D1E', fontSize: 22, fontWeight: '800' },
   greetSubtitle: { color: '#374151', fontSize: 14, fontWeight: '700', marginTop: 2 },
@@ -307,5 +293,4 @@ const styles = StyleSheet.create({
   historyItemSub: { color: '#6B7280', fontSize: 12 },
   footerBar: { position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   footerItem: { flex: 1, alignItems: 'center' },
-  footerIconText: { fontSize: 24, color: '#111827' },
 });

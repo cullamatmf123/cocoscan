@@ -1,11 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { collection, doc, getDoc } from 'firebase/firestore';
 import React from 'react';
-import { Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { auth, db } from '../../config/firebase';
+import { AuthService } from '../../services/authService';
 
 export default function AdminProfileScreen() {
   const [showFarmInfo, setShowFarmInfo] = React.useState(false);
@@ -20,7 +21,6 @@ export default function AdminProfileScreen() {
     lastLogin?: Date;
     photoURL?: string | null;
   } | null>(null);
-  const [showMore, setShowMore] = React.useState(false);
   const pickImage = React.useCallback(async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!perm.granted) return;
@@ -35,8 +35,13 @@ export default function AdminProfileScreen() {
       setProfile((p) => (p ? { ...p, photoURL: uri } : p));
     }
   }, []);
-  const handleSignOut = React.useCallback(() => {
-    router.replace('/');
+  const handleSignOut = React.useCallback(async () => {
+    try {
+      await AuthService.signOut();
+      router.replace('/');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to sign out. Please try again.');
+    }
   }, []);
 
   const load = React.useCallback(async () => {
@@ -166,42 +171,23 @@ export default function AdminProfileScreen() {
               <Text style={styles.primaryBtnText}>View Feedback</Text>
             </TouchableOpacity>
           </View>
-      </ScrollView>
 
-      {/* Bottom dock */}
-      <View style={styles.bottomDock}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Dashboard" onPress={() => router.push('/admin/dashboard')} style={styles.dockBtn}>
-          <Ionicons name="home-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to History" onPress={() => router.push('/admin/history')} style={styles.dockBtn}>
-          <Ionicons name="time-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to User Management" onPress={() => router.push('/admin/user-management')} style={[styles.dockBtn, styles.dockCircleOutline]}>
-          <Text style={[styles.dockGlyph, styles.dockGlyphLarge]}>＋</Text>
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Profile" onPress={() => {}} style={styles.dockBtn}>
-          <Ionicons name="person-circle-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="More options" onPress={() => setShowMore(true)} style={styles.dockBtn}>
-          <Ionicons name="ellipsis-horizontal" size={22} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
-      {/* More menu */}
-      <Modal transparent visible={showMore} animationType="fade" onRequestClose={() => setShowMore(false)}>
-        <Pressable style={styles.menuBackdrop} onPress={() => setShowMore(false)}><View /></Pressable>
-        <View style={styles.menuContainer} pointerEvents="box-none">
-          <View style={styles.menuCard}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setShowMore(false); alert('Settings coming soon.'); }}>
-              <Ionicons name="settings-outline" size={18} color="#0F172A" />
-              <Text style={styles.menuText}>Settings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setShowMore(false); handleSignOut(); }}>
-              <Ionicons name="log-out-outline" size={18} color="#0F172A" />
-              <Text style={styles.menuText}>Sign out</Text>
+          <View style={[styles.card, styles.shadow, { marginTop: 12 }]}>
+            <Text style={{ fontSize: 16, fontWeight: '900', color: '#1F3D2A', marginBottom: 6 }}>Account</Text>
+            <Text style={{ color: '#475569', marginBottom: 12 }}>
+              Sign out of your admin account.
+            </Text>
+            <TouchableOpacity
+              style={[styles.logoutBtn, { alignSelf: 'flex-start' }]}
+              accessibilityRole="button"
+              accessibilityLabel="Sign out"
+              onPress={handleSignOut}
+            >
+              <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
+              <Text style={styles.logoutBtnText}>Sign Out</Text>
             </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -240,6 +226,8 @@ const styles = StyleSheet.create({
   heroEmail: { color: '#E6FFFA', marginBottom: 10, fontWeight: '700' },
   primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E6FFFA', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 10 },
   primaryBtnText: { color: '#14532D', fontWeight: '900' },
+  logoutBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#DC2626', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 10 },
+  logoutBtnText: { color: '#FFFFFF', fontWeight: '900' },
 
   levelCard: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   levelBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center' },
@@ -247,21 +235,8 @@ const styles = StyleSheet.create({
   statChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E6FFFA', borderColor: '#BAE6FD', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
   statChipText: { color: '#14532D', fontWeight: '800' },
 
-  bottomDock: {
-    position: 'absolute', left: 16, right: 16, bottom: 12, height: 56,
-    backgroundColor: '#A7F3D0', borderRadius: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around'
-  },
-  dockBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  dockCircleOutline: { borderWidth: 2, borderColor: '#0F172A' },
-  dockGlyph: { color: '#0F172A', fontSize: 18, fontWeight: '600' },
-  dockGlyphLarge: { fontSize: 26 },
   graphIcon: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
   graphBar: { width: 6, backgroundColor: '#0F172A', borderRadius: 2 },
-  menuBackdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.1)' },
-  menuContainer: { position: 'absolute', left: 0, right: 0, bottom: 80, alignItems: 'flex-end', paddingHorizontal: 16 },
-  menuCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
-  menuText: { color: '#0F172A', fontWeight: '700' },
 
   // Modal styles
   modalBackdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.2)' },

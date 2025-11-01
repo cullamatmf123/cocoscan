@@ -115,12 +115,18 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Top App Bar */}
-      <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => setMenuVisible(true)} style={styles.menuBtn}>
-          <Feather name="menu" size={22} color="#0B3B2A" />
+      {/* App Bar */}
+      <View style={styles.appBar}>
+        <TouchableOpacity
+          style={styles.hamburger}
+          onPress={() => setMenuVisible(true)}
+          accessibilityLabel="Open menu"
+        >
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
+          <View style={styles.menuLineDark} />
         </TouchableOpacity>
-        <Text style={styles.appTitle}>COCOSCAN</Text>
+        <Text style={styles.brandTitle}>COCOSCAN</Text>
         <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
       </View>
 
@@ -231,62 +237,35 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject as any,
   },
   menuSheet: {
-    position: 'absolute',
-    top: 60,
-    left: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    width: 220,
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
   },
-  menuItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  menuItemText: {
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
+  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
   menuDivider: {
     height: 1,
     backgroundColor: '#E5E7EB',
     marginVertical: 2,
   },
-  /* Top bar */
-  topBar: {
+  /* App Bar */
+  appBar: {
+    paddingTop: 48,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
   },
-  menuBtn: {
-    padding: 4,
-    borderRadius: 8,
-  },
-  appTitle: {
-    fontSize: 18,
+  hamburger: { padding: 8 },
+  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  brandTitle: {
+    color: '#0F3D1E',
+    fontSize: 20,
     fontWeight: '900',
-    color: '#0B3B2A',
-    letterSpacing: 1.5,
+    letterSpacing: 1,
   },
-  logoBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#1F4D36',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#F2C200',
-  },
+  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
   logoEmoji: { fontSize: 18 },
 
   /* Hero */

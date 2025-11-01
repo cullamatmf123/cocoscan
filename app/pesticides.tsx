@@ -64,7 +64,8 @@ export default function PesticidesScreen() {
 
         <Text style={styles.cardTitle}>Recommended Pesticides</Text>
         <View style={styles.card}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6 }}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginVertical: 6, marginHorizontal: -14 }}>
+            <View style={{ width: 14 }} />
             <View style={styles.imageTile}>
               <TouchableOpacity onPress={() => setExpanded(expanded === 'karate' ? null : 'karate')} activeOpacity={0.9}>
                 <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.image} />
@@ -89,13 +90,15 @@ export default function PesticidesScreen() {
               </TouchableOpacity>
               <Text style={styles.imageCaption}>Chlorantraniliprole</Text>
             </View>
+            <View style={{ width: 14 }} />
           </ScrollView>
           
         </View>
 
         {expanded && (
           <View style={styles.detailCard}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -12 }}>
+              <View style={{ width: 12 }} />
               {expanded === 'karate' && (
                 <>
                   <View style={styles.imageTile}><Image source={require('../assets/images/design/Karate-front.webp')} style={styles.image} /></View>
@@ -124,6 +127,7 @@ export default function PesticidesScreen() {
                   <View style={styles.imageTile}><Image source={require('../assets/images/design/prevathon.webp')} style={styles.image} /></View>
                 </>
               )}
+              <View style={{ width: 12 }} />
             </ScrollView>
             <View style={styles.detailBox}>
               {expanded === 'karate' && (
@@ -254,76 +258,103 @@ export default function PesticidesScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFFFFF' },
+  safe: { 
+    flex: 1, 
+    backgroundColor: '#F8F9FA' 
+  },
   header: {
     paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 0,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   appBar: {
     paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
   },
   hamburger: {
-    padding: 8,
+    padding: 10,
+    borderRadius: 8,
   },
   menuLineDark: {
-    width: 24,
+    width: 26,
     height: 3,
     backgroundColor: '#0F3D1E',
-    marginVertical: 2,
+    marginVertical: 3,
     borderRadius: 2,
   },
   brandTitle: {
     color: '#0F3D1E',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
   profileButton: {
-    padding: 5,
+    padding: 6,
   },
   appBarSpacer: {
-    width: 34,
-    height: 34,
+    width: 40,
+    height: 40,
   },
-  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
-  logoEmoji: { fontSize: 18 },
+  logoBadge: { 
+    width: 40, 
+    height: 40, 
+    borderRadius: 20, 
+    backgroundColor: '#1F4D36', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 3, 
+    borderColor: '#F2C200',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 4,
+  },
+  logoEmoji: { fontSize: 20 },
   menuBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   menuBackdropTouch: {
     ...StyleSheet.absoluteFillObject as any,
   },
   menuSheet: {
     position: 'absolute',
-    top: 60,
-    left: 12,
+    top: 70,
+    left: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    width: 220,
+    borderRadius: 20,
+    paddingVertical: 12,
+    width: 240,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 14,
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+    elevation: 10,
   },
   menuItem: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 14,
   },
   menuItemText: {
     color: '#111827',
@@ -333,74 +364,177 @@ const styles = StyleSheet.create({
   menuDivider: {
     height: 1,
     backgroundColor: '#E5E7EB',
-    marginVertical: 2,
+    marginVertical: 4,
   },
-  content: { padding: 16, paddingBottom: 100 },
-  lead: { color: '#1F2937', fontSize: 14, lineHeight: 20, marginBottom: 12, fontWeight: '600' },
+  content: { 
+    padding: 20, 
+    paddingBottom: 110 
+  },
+  lead: { 
+    color: '#374151', 
+    fontSize: 15, 
+    lineHeight: 22, 
+    marginBottom: 20, 
+    fontWeight: '500',
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#0F3D1E',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 0,
+    borderColor: 'transparent',
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-    marginBottom: 12,
+    elevation: 4,
+    marginBottom: 16,
   },
-  cardTitle: { color: '#0F3D1E', fontSize: 16, fontWeight: '800', marginBottom: 6 },
-  item: { color: '#111827', fontSize: 14, marginBottom: 4 },
-  itemNote: { color: '#374151', fontSize: 12 },
-  link: { color: '#2563EB', textDecorationLine: 'underline' },
-  imageTile: { width: 180, marginRight: 10 },
-  image: { width: 180, height: 120, borderRadius: 8, backgroundColor: '#F3F4F6' },
-  imageCaption: { fontSize: 12, color: '#374151', marginTop: 6 },
-  ppeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  italicNote: { fontStyle: 'italic' },
+  cardTitle: { 
+    color: '#0F3D1E', 
+    fontSize: 18, 
+    fontWeight: '800', 
+    marginBottom: 12,
+    letterSpacing: 0.3,
+  },
+  item: { 
+    color: '#111827', 
+    fontSize: 15, 
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+  itemNote: { 
+    color: '#6B7280', 
+    fontSize: 13,
+    lineHeight: 20,
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  link: { 
+    color: '#2563EB', 
+    textDecorationLine: 'underline' 
+  },
+  imageTile: { 
+    width: 200, 
+    marginRight: 12 
+  },
+  image: { 
+    width: 200, 
+    height: 140, 
+    borderRadius: 12, 
+    backgroundColor: '#F3F4F6',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  imageCaption: { 
+    fontSize: 13, 
+    color: '#374151', 
+    marginTop: 8,
+    fontWeight: '600',
+  },
+  ppeHeader: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
+  italicNote: { 
+    fontStyle: 'italic' 
+  },
   detailCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 0,
+    borderColor: 'transparent',
     shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-    marginBottom: 12,
+    elevation: 4,
+    marginBottom: 16,
   },
   detailBox: {
-    marginTop: 12,
+    marginTop: 16,
     backgroundColor: '#F9FAFB',
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  detailTitle: { fontSize: 14, fontWeight: '800', color: '#0F3D1E', marginBottom: 6 },
-  detailText: { fontSize: 13, color: '#374151', marginBottom: 6, lineHeight: 18 },
-  detailBullet: { fontSize: 13, color: '#111827', marginBottom: 4 },
-  disclaimer: { color: '#6B7280', fontSize: 12, marginTop: 8 },
-  disclaimerSmall: { color: '#6B7280', fontSize: 11, marginTop: 8 },
+  detailTitle: { 
+    fontSize: 16, 
+    fontWeight: '800', 
+    color: '#0F3D1E', 
+    marginBottom: 8,
+    marginTop: 8,
+  },
+  detailText: { 
+    fontSize: 14, 
+    color: '#374151', 
+    marginBottom: 10, 
+    lineHeight: 21,
+  },
+  detailBullet: { 
+    fontSize: 14, 
+    color: '#111827', 
+    marginBottom: 6,
+    lineHeight: 21,
+  },
+  disclaimer: { 
+    color: '#6B7280', 
+    fontSize: 13, 
+    marginTop: 12,
+    lineHeight: 20,
+  },
+  disclaimerSmall: { 
+    color: '#6B7280', 
+    fontSize: 12, 
+    marginTop: 12,
+    lineHeight: 18,
+    fontStyle: 'italic',
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   footerBar: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingVertical: 10,
+    borderTopWidth: 0,
+    borderTopColor: 'transparent',
+    paddingVertical: 14,
     paddingHorizontal: 24,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
+    paddingBottom: 20,
   },
   footerItem: {
     flex: 1,
     alignItems: 'center',
+    padding: 8,
   },
 });

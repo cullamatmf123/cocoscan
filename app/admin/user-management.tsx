@@ -2,11 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
-import { collection, doc, getDocs, orderBy, query, setDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDocs, orderBy, query, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert, FlatList, Modal, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../config/firebase';
-import { AuthService } from '../../services/authService';
 
 export type AdminUser = {
   id: string;
@@ -22,7 +21,6 @@ export default function UserManagementScreen() {
   // Start with empty list; populate from Firestore
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [filter, setFilter] = useState('');
-  const [showMore, setShowMore] = useState(false);
 
   const goAnalyticsSameAsDashboard = async () => {
     try {
@@ -302,42 +300,6 @@ export default function UserManagementScreen() {
         ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
         renderItem={renderItem}
       />
-
-      {/* Bottom dock */}
-      <View style={styles.bottomDock}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Dashboard" onPress={() => router.push('/admin/dashboard')} style={styles.dockBtn}>
-          <Ionicons name="home-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to ReportHistory" onPress={goAnalyticsSameAsDashboard} style={styles.dockBtn}>
-          <Ionicons name="time-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to User Management" onPress={() => router.push('/admin/user-management')} style={[styles.dockBtn, styles.dockCircleOutline]}>
-          <Text style={[styles.dockGlyph, styles.dockGlyphLarge]}>＋</Text>
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Profile" onPress={() => router.push('/admin/profile')} style={styles.dockBtn}>
-          <Ionicons name="person-circle-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="More options" onPress={() => setShowMore(true)} style={styles.dockBtn}>
-          <Ionicons name="ellipsis-horizontal" size={22} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
-
-      {/* More menu */}
-      <Modal transparent visible={showMore} animationType="fade" onRequestClose={() => setShowMore(false)}>
-        <Pressable style={styles.menuBackdrop} onPress={() => setShowMore(false)}><View /></Pressable>
-        <View style={styles.menuContainer} pointerEvents="box-none">
-          <View style={styles.menuCard}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setShowMore(false); Alert.alert('Settings', 'Settings coming soon.'); }}>
-              <Ionicons name="settings-outline" size={18} color="#0F172A" />
-              <Text style={styles.menuText}>Settings</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={async () => { setShowMore(false); try { await AuthService.signOut(); router.replace('/'); } catch { Alert.alert('Error', 'Failed to sign out'); } }}>
-              <Ionicons name="log-out-outline" size={18} color="#0F172A" />
-              <Text style={styles.menuText}>Sign out</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -394,19 +356,7 @@ const styles = StyleSheet.create({
   footerBar: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#E5EFE8' },
   saveBtn: { backgroundColor: '#2d5a3d', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 },
   saveBtnText: { color: '#ffffff', fontWeight: '900' },
-  saveTopWrap: { paddingHorizontal: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'flex-end' },  bottomDock: {
-    position: 'absolute', left: 16, right: 16, bottom: 12, height: 56,
-    backgroundColor: '#A7F3D0', borderRadius: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around'
-  },
-  dockBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  dockCircleOutline: { borderWidth: 2, borderColor: '#0F172A' },
-  dockGlyph: { color: '#0F172A', fontSize: 18, fontWeight: '600' },
-  dockGlyphLarge: { fontSize: 26 },
+  saveTopWrap: { paddingHorizontal: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'flex-end' },
   graphIcon: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
   graphBar: { width: 6, backgroundColor: '#0F172A', borderRadius: 2 },
-  menuBackdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.1)' },
-  menuContainer: { position: 'absolute', left: 0, right: 0, bottom: 80, alignItems: 'flex-end', paddingHorizontal: 16 },
-  menuCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
-  menuText: { color: '#0F172A', fontWeight: '700' },
 });

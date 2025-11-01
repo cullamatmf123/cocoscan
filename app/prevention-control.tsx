@@ -106,10 +106,12 @@ export default function PreventionControlScreen() {
 
         <Text style={[styles.sectionHeading, { marginBottom: 8 }]}>Prevention & Control</Text>
         <View style={styles.imageBg}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
+            <View style={{ width: 6 }} />
             {sanitationImages.map((src, idx) => (
               <Image key={`pre-top-${idx}`} source={src} style={styles.preventionImage} resizeMode="cover" />
             ))}
+            <View style={{ width: 6 }} />
           </ScrollView>
           
           <View style={styles.photosCountChip}>
@@ -120,7 +122,9 @@ export default function PreventionControlScreen() {
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
+          style={{ marginHorizontal: -16 }}
         >
+          <View style={{ width: 16 }} />
           <TouchableOpacity
             onPress={() => handleTabPress(0)}
             activeOpacity={0.8}
@@ -148,6 +152,7 @@ export default function PreventionControlScreen() {
             <Text style={activeTab === 2 ? styles.tabTextActive : styles.tabText}>Preventing Spread</Text>
             {activeTab === 2 && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
+          <View style={{ width: 16 }} />
         </ScrollView>
 
         {/* Content area: not swipeable; switches only on tab press */}
@@ -201,7 +206,9 @@ export default function PreventionControlScreen() {
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsRow}
+          style={{ marginHorizontal: -16 }}
         >
+          <View style={{ width: 16 }} />
           <TouchableOpacity
             onPress={() => handleControlTabPress(0)}
             activeOpacity={0.8}
@@ -238,15 +245,18 @@ export default function PreventionControlScreen() {
             <Text style={controlTab === 3 ? styles.tabTextActive : styles.tabText}>Chemical Control</Text>
             {controlTab === 3 && <View style={styles.tabUnderline} />}
           </TouchableOpacity>
+          <View style={{ width: 16 }} />
         </ScrollView>
 
         {controlTab === 0 && (
           <View>
             <View style={styles.imageBg}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
+                <View style={{ width: 6 }} />
                 {controlMechanicalImages.map((src, idx) => (
                   <Image key={`ctrl-mech-${idx}`} source={src} style={styles.preventionImage} resizeMode="cover" />
                 ))}
+                <View style={{ width: 6 }} />
               </ScrollView>
               <View style={styles.photosCountChip}>
                 <Text style={styles.photosCountText}>{controlMechanicalImages.length} photos</Text>
@@ -261,13 +271,15 @@ export default function PreventionControlScreen() {
         {controlTab === 1 && (
           <View>
             <View style={styles.imageBg}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
+                <View style={{ width: 6 }} />
                 {ornvGmfImages.map((item, idx) => (
                   <View key={`ornvgmf-${idx}`} style={{ marginRight: 10 }}>
                     <Image source={item.src} style={styles.preventionImage} resizeMode="cover" />
                     <Text style={styles.imageCaption}>{item.label}</Text>
                   </View>
                 ))}
+                <View style={{ width: 6 }} />
               </ScrollView>
               <Text style={[styles.imageCaption, { marginTop: 4 }]}>Online reference images</Text>
               <View style={styles.photosCountChip}>
@@ -283,10 +295,12 @@ export default function PreventionControlScreen() {
         {controlTab === 2 && (
           <View>
             <View style={styles.imageBg}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
+                <View style={{ width: 6 }} />
                 {monitoringImages.map((src, idx) => (
                   <Image key={`trap-strip-${idx}`} source={src} style={styles.preventionImage} resizeMode="cover" />
                 ))}
+                <View style={{ width: 6 }} />
               </ScrollView>
               <View style={styles.photosCountChip}>
                 <Text style={styles.photosCountText}>{monitoringImages.length} photos</Text>
@@ -303,13 +317,15 @@ export default function PreventionControlScreen() {
         {controlTab === 3 && (
           <View>
             <View style={styles.imageBg}>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
+                <View style={{ width: 6 }} />
                 {chemicalImages.map((item, idx) => (
                   <View key={`chem-${idx}`} style={{ marginRight: 10 }}>
                     <Image source={item.src} style={styles.preventionImage} resizeMode="cover" />
                     <Text style={styles.imageCaption}>{item.label}</Text>
                   </View>
                 ))}
+                <View style={{ width: 6 }} />
               </ScrollView>
               <View style={styles.photosCountChip}>
                 <Text style={styles.photosCountText}>{chemicalImages.length} photos</Text>

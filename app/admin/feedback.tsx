@@ -1,14 +1,13 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { collection, doc, onSnapshot, orderBy, query as fsQuery, updateDoc } from 'firebase/firestore';
+import { collection, doc, query as fsQuery, onSnapshot, orderBy, updateDoc } from 'firebase/firestore';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../config/firebase';
 
 export default function AdminFeedbackScreen() {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<'All' | 'New' | 'Reviewed' | 'Resolved'>('All');
-  const [showMore, setShowMore] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [detailStatus, setDetailStatus] = useState<'New' | 'Reviewed' | 'Resolved'>('New');
 
@@ -165,36 +164,6 @@ export default function AdminFeedbackScreen() {
         )}
 
       </ScrollView>
-
-      <View style={styles.bottomDock}>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Dashboard" onPress={() => router.push('/admin/dashboard')} style={styles.dockBtn}>
-          <Ionicons name="home-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to History" onPress={() => router.push('/admin/history')} style={styles.dockBtn}>
-          <Ionicons name="time-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to User Management" onPress={() => router.push('/admin/user-management')} style={[styles.dockBtn, styles.dockCircleOutline]}>
-          <Text style={[styles.dockGlyph, styles.dockGlyphLarge]}>＋</Text>
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Go to Profile" onPress={() => router.push('/admin/profile')} style={styles.dockBtn}>
-          <Ionicons name="person-circle-outline" size={22} color="#0F172A" />
-        </TouchableOpacity>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="More options" onPress={() => setShowMore(true)} style={styles.dockBtn}>
-          <Ionicons name="ellipsis-horizontal" size={22} color="#0F172A" />
-        </TouchableOpacity>
-      </View>
-
-      <Modal transparent visible={showMore} animationType="fade" onRequestClose={() => setShowMore(false)}>
-        <Pressable style={styles.menuBackdrop} onPress={() => setShowMore(false)}><View /></Pressable>
-        <View style={styles.menuContainer} pointerEvents="box-none">
-          <View style={styles.menuCard}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setShowMore(false); }}>
-              <Ionicons name="settings-outline" size={18} color="#0F172A" />
-              <Text style={styles.menuText}>Settings</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -249,17 +218,4 @@ const styles = StyleSheet.create({
   actionPillActiveBlue: { backgroundColor: '#EFF6FF', borderColor: '#93C5FD' },
   actionPillActiveGreen: { backgroundColor: '#ECFDF5', borderColor: '#86EFAC' },
   actionPillText: { color: '#0F172A', fontWeight: '800' },
-  bottomDock: {
-    position: 'absolute', left: 16, right: 16, bottom: 12, height: 56,
-    backgroundColor: '#A7F3D0', borderRadius: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around'
-  },
-  dockBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  dockCircleOutline: { borderWidth: 2, borderColor: '#0F172A' },
-  dockGlyph: { color: '#0F172A', fontSize: 18, fontWeight: '600' },
-  dockGlyphLarge: { fontSize: 26 },
-  menuBackdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.1)' },
-  menuContainer: { position: 'absolute', left: 0, right: 0, bottom: 80, alignItems: 'flex-end', paddingHorizontal: 16 },
-  menuCard: { backgroundColor: '#FFFFFF', borderRadius: 10, paddingVertical: 6, paddingHorizontal: 8, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 3 },
-  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 8, paddingHorizontal: 6 },
-  menuText: { color: '#0F172A', fontWeight: '700' },
 });
