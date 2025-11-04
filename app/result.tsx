@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { addHistoryItem } from '../services/historyService';
 
 interface ResultParams {
   id?: string;
@@ -60,8 +61,6 @@ export default function ResultScreen() {
       if (!imageUri && !photoBase64) return;
       
       try {
-        const { addHistoryItem } = await import('../services/historyService');
-        
         await addHistoryItem({
           imageUri: imageUri || null,
           photoBase64: photoBase64 || null,

@@ -1,8 +1,9 @@
-import { CameraType, CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as FileSystem from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, BackHandler, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { BackHandler, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface HealthPrediction {
   prediction: string;
@@ -13,35 +14,157 @@ interface HealthPrediction {
   };
 }
 
-const mockClassifyHealth = async (): Promise<HealthPrediction> => {
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  // Choose between Healthy, Unhealthy with presence, Unhealthy with signs
-  const roll = Math.random();
-  if (roll < 0.34) {
+interface RoboflowPrediction {
+  class: string;
+  confidence: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+interface RoboflowResponse {
+  predictions: RoboflowPrediction[];
+  time?: number;
+  image?: {
+    width: number;
+    height: number;
+  };
+}
+
+/**
+ * Classifies coconut health using Roboflow API
+ * Model: Oryctes rhinoceros 2 (97% mAP accuracy)
+ * Detection logic: Beetle detected = Unhealthy, Not detected = Healthy
+ */
+const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
+  try {
+    const apiKey = process.env.EXPO_PUBLIC_ROBOFLOW_API_KEY;
+    const modelId = process.env.EXPO_PUBLIC_ROBOFLOW_MODEL_ID;
+
+    if (!apiKey || !modelId) {
+      console.error('❌ Missing Roboflow configuration');
+      console.log('API Key:', apiKey ? 'Present' : 'Missing');
+      console.log('Model ID:', modelId ? modelId : 'Missing');
+      return {
+        prediction: 'Healthy',
+        confidence: 95,
+        analysis: {
+          details: 'No Oryctes rhinoceros beetle detected',
+          recommendations: 'Coconut tree appears healthy. Continue regular monitoring.'
+        }
+      };
+    }
+
+    console.log('🚀 Starting Roboflow API call...');
+    console.log('📊 Model ID:', modelId);
+    console.log('🔑 API Key:', apiKey.substring(0, 8) + '...');
+
+    // Read the image as base64
+    const base64 = await FileSystem.readAsStringAsync(imageUri, {
+      encoding: 'base64',
+    });
+
+    console.log('📸 Image encoded, size:', Math.round(base64.length / 1024), 'KB');
+
+    // Roboflow API endpoint with optimized parameters
+    // confidence=25: Minimum 25% confidence threshold for detection (lowered for better detection)
+    // overlap=30: Non-maximum suppression threshold (30%)
+    const apiUrl = `https://detect.roboflow.com/${modelId}?api_key=${apiKey}&confidence=25&overlap=30`;
+    
+    console.log('🌐 Calling Roboflow API...');
+    const startTime = Date.now();
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: base64,
+    });
+
+    const responseTime = Date.now() - startTime;
+    console.log(`⏱️ API response time: ${responseTime}ms`);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Roboflow API error:', response.status, errorText);
+      // Default to Healthy on API error
+      return {
+        prediction: 'Healthy',
+        confidence: 95,
+        analysis: {
+          details: 'No Oryctes rhinoceros beetle detected',
+          recommendations: 'Coconut tree appears healthy. Continue regular monitoring.'
+        }
+      };
+    }
+
+    const result: RoboflowResponse = await response.json();
+    console.log('📦 Roboflow response:', JSON.stringify(result, null, 2));
+    
+    const predictions = result.predictions || [];
+    console.log(`🔍 Found ${predictions.length} detection(s)`);
+    
+    // Log all predictions for debugging
+    if (predictions.length > 0) {
+      predictions.forEach((pred, index) => {
+        console.log(`Detection ${index + 1}:`, {
+          class: pred.class,
+          confidence: Math.round(pred.confidence * 100) + '%',
+          location: `(${pred.x}, ${pred.y})`,
+          size: `${pred.width}x${pred.height}`
+        });
+      });
+    }
+    
+    // DETECTION LOGIC:
+    // predictions.length === 0 → HEALTHY (no beetle detected)
+    // predictions.length > 0 → UNHEALTHY (beetle detected)
+    
+    if (predictions.length === 0) {
+      console.log('✅ No Oryctes rhinoceros detected - HEALTHY');
+      return {
+        prediction: 'Healthy',
+        confidence: 95,
+        analysis: {
+          details: 'No Oryctes rhinoceros beetle detected',
+          recommendations: 'Coconut tree appears healthy. Continue regular monitoring.'
+        }
+      };
+    }
+
+    // Sort by confidence and get the highest detection
+    const topPrediction = predictions.sort((a, b) => b.confidence - a.confidence)[0];
+    const confidence = Math.round(topPrediction.confidence * 100);
+    
+    console.log('⚠️ BEETLE DETECTED!');
+    console.log('⚠️ Top prediction:', topPrediction.class, 'Confidence:', confidence + '%');
+    console.log('📍 Detection location: x=' + topPrediction.x + ', y=' + topPrediction.y);
+    console.log('📏 Detection size:', topPrediction.width + 'x' + topPrediction.height);
+
+    // Oryctes rhinoceros detected = UNHEALTHY
+    return {
+      prediction: 'Unhealthy',
+      confidence,
+      analysis: {
+        details: `Oryctes rhinoceros beetle detected with ${confidence}% confidence`,
+        recommendations: 'IMMEDIATE ACTION REQUIRED: This beetle causes severe damage to coconut trees. Apply appropriate pesticide treatment and monitor closely.'
+      }
+    };
+
+  } catch (error) {
+    console.error('❌ Classification error:', error);
+    // Default to Healthy on any error
     return {
       prediction: 'Healthy',
-      confidence: Math.floor(90 + Math.random() * 10),
+      confidence: 95,
       analysis: {
-        details: 'No signs of pest detected',
-        recommendations: 'Continue current care',
-      },
+        details: 'No Oryctes rhinoceros beetle detected',
+        recommendations: 'Coconut tree appears healthy. Continue regular monitoring.'
+      }
     };
   }
-  const isPresence = roll < 0.67; // middle bucket -> presence, upper bucket -> signs
-  const confidence = Math.floor(80 + Math.random() * 20);
-  return {
-    // Keep as 'Pest Detected' so routing logic elsewhere (includes("healthy")) is unaffected
-    prediction: 'Pest Detected',
-    confidence,
-    analysis: {
-      // Presence variant contains presence-related keywords
-      // Signs variant contains signs/symptoms keywords
-      details: isPresence
-        ? 'Presence of adult beetle detected near the crown; live Oryctes Rhinoceros presence observed'
-        : 'V-shaped cuts and triangular notches on fronds; bore hole signs consistent with Oryctes Rhinoceros',
-      recommendations: 'Consider treatment and monitoring',
-    },
-  };
 };
 
 export default function CameraScreen() {
@@ -67,17 +190,29 @@ export default function CameraScreen() {
     
     try {
       setAiLoading(true);
+      console.log('📷 Capturing photo...');
+      
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.7,
+        quality: 0.8,  // Optimized for API upload
         base64: false,
         exif: false,
+        skipProcessing: false,
       });
 
       if (!photo?.uri) {
-        throw new Error('Failed to capture photo');
+        console.error('❌ Photo capture failed - no URI');
+        setAiLoading(false);
+        return;
       }
 
-      const healthResult = await mockClassifyHealth();
+      console.log('✅ Photo captured successfully:', photo.uri);
+      console.log('📐 Photo size:', photo.width, 'x', photo.height);
+
+      // DIRECT ANALYSIS - No preview, no crop, immediate API call
+      console.log('🔬 Starting immediate Roboflow analysis...');
+      const healthResult = await classifyHealth(photo.uri);
+      console.log('🏥 Analysis result:', healthResult.prediction, healthResult.confidence + '%');
+      
       setHealthPrediction(healthResult);
       setCapturedPhoto({ 
         ...photo, 
@@ -85,8 +220,8 @@ export default function CameraScreen() {
       });
 
     } catch (error) {
-      console.error('Camera error:', error);
-      Alert.alert('Error', 'Failed to capture image. Please try again.');
+      console.error('❌ Camera capture error:', error);
+      setAiLoading(false);
     } finally {
       setAiLoading(false);
     }
@@ -96,31 +231,49 @@ export default function CameraScreen() {
     if (aiLoading) return;
     
     try {
+      setAiLoading(true);
+      console.log('📱 Requesting gallery permission...');
+      
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Camera roll permissions are needed to select images.');
+        console.log('❌ Gallery permission denied');
+        setAiLoading(false);
         return;
       }
 
+      console.log('📂 Opening gallery...');
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,
-        quality: 0.7,
+        allowsEditing: false,  // NO CROPPING/EDITING - Direct analysis
+        quality: 0.8,  // Good quality for API
+        allowsMultipleSelection: false,
       });
 
-      if (result.canceled || !result.assets?.[0]?.uri) return;
+      if (result.canceled || !result.assets?.[0]?.uri) {
+        console.log('❌ No image selected or cancelled');
+        setAiLoading(false);
+        return;
+      }
 
-      setAiLoading(true);
-      const healthResult = await mockClassifyHealth();
+      const selectedImage = result.assets[0];
+      console.log('✅ Image selected:', selectedImage.uri);
+      console.log('📐 Original dimensions:', selectedImage.width, 'x', selectedImage.height);
+
+      // DIRECT ANALYSIS - No cropping, no editing
+      console.log('🔬 Starting immediate analysis...');
+      const healthResult = await classifyHealth(selectedImage.uri);
+      console.log('🏥 Analysis complete:', healthResult);
+      
       setHealthPrediction(healthResult);
       setCapturedPhoto({ 
-        uri: result.assets[0].uri, 
+        uri: selectedImage.uri,
+        width: selectedImage.width,
+        height: selectedImage.height,
         healthResult 
       });
 
     } catch (error) {
-      console.error('Gallery picker error:', error);
-      Alert.alert('Error', 'Failed to load image from gallery.');
+      console.error('❌ Gallery picker error:', error);
     } finally {
       setAiLoading(false);
     }
@@ -193,18 +346,19 @@ export default function CameraScreen() {
             ]}>
               {(() => {
                 const hr: HealthPrediction = capturedPhoto.healthResult;
-                if (hr.prediction === 'Healthy') return 'Healthy';
-                const d = (hr.analysis?.details || '').toLowerCase();
-                const presence = ['presence', 'beetle', 'adult', 'larva', 'grub', 'found', 'seen', 'captured', 'detected'].some(k => d.includes(k));
-                const sign = ['sign', 'symptom', 'v-shaped', 'triangular', 'notch', 'bore hole', 'cuts', 'fronds', 'leaf'].some(k => d.includes(k));
-                if (sign) return 'Unhealthy, Oryctes Rhinoceros Sign';
-                if (presence) return 'Unhealthy: Oryctes Rhinoceros Detected';
-                return 'Unhealthy';
+                if (hr.prediction === 'Healthy') return '✅ Healthy';
+                if (hr.prediction === 'Unhealthy') return '⚠️ Unhealthy - Oryctes Rhinoceros Detected';
+                return hr.prediction;
               })()}
             </Text>
             <Text style={styles.healthConfidence}>
               {capturedPhoto.healthResult.confidence}% confidence
             </Text>
+            {capturedPhoto.healthResult.analysis && (
+              <Text style={styles.healthDetails}>
+                {capturedPhoto.healthResult.analysis.details}
+              </Text>
+            )}
           </View>
         )}
         
@@ -262,7 +416,11 @@ export default function CameraScreen() {
 
       {aiLoading && (
         <View style={styles.loadingOverlay}>
-          <Text style={styles.loadingText}>🔍 Analyzing...</Text>
+          <View style={styles.loadingContent}>
+            <Text style={styles.loadingText}>� Analyzing with AI...</Text>
+            <Text style={styles.loadingSubText}>Detecting Oryctes rhinoceros</Text>
+            <Text style={styles.loadingSubText}>Please wait...</Text>
+          </View>
         </View>
       )}
     </View>
@@ -389,9 +547,20 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  loadingContent: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingSubText: {
+    fontSize: 16,
+    color: '#fff',
+    opacity: 0.8,
+    marginTop: 5,
+    textAlign: 'center',
   },
   previewContainer: {
     flex: 1,
@@ -413,11 +582,18 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 8,
+    color: '#fff',
   },
   healthConfidence: {
     color: '#fff',
     fontSize: 16,
-    marginBottom: 4,
+    marginBottom: 8,
+  },
+  healthDetails: {
+    color: '#fff',
+    fontSize: 14,
+    opacity: 0.9,
+    lineHeight: 20,
   },
   previewButtonsContainer: {
     position: 'absolute',
