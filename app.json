@@ -36,18 +36,18 @@
         }
       ]
     ],
-    "owner": "simonsimon23",
-    "extra": {
-      "eas": {
-        "projectId": "7682d028-f73a-4f56-b8bc-720b3f00f28d"
-      }
-    },
+    "owner": "adminmark",
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/7682d028-f73a-4f56-b8bc-720b3f00f28d"
+    "ios": {},
+    "extra": {
+      "eas": {
+        "projectId": "b2a99d37-00b3-4cb5-b1d2-73f6b798e4c9"
+      }
     },
-    "ios": {}
+    "updates": {
+      "url": "https://u.expo.dev/b2a99d37-00b3-4cb5-b1d2-73f6b798e4c9"
+    }
   }
 }
