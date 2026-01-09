@@ -20,60 +20,56 @@ interface HealthPrediction {
  */
 const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
   try {
-    console.log('🔬 Starting local AI analysis...');
-    console.log('� Analyzing image:', imageUri);
+    console.log('🌐 Uploading image to AI API...');
+    console.log('🖼️ Analyzing image:', imageUri);
 
-    // Simulate processing time (1-3 seconds)
-    const processingTime = 1000 + Math.random() * 2000;
-    await new Promise(resolve => setTimeout(resolve, processingTime));
+    const formData = new FormData();
+    formData.append('file', {
+      uri: imageUri,
+      name: 'image.jpg',
+      type: 'image/jpeg',
+    } as any);
 
-    console.log(`⏱️ Analysis completed in ${Math.round(processingTime)}ms`);
+    const response = await fetch(
+      'https://cullamatmf123-oryctes-rhinoceros-detector.hf.space/analyze-image',
+      {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
 
-    // Weighted random simulation:
-    // 70% chance of Healthy
-    // 30% chance of Unhealthy (pest detected)
-    const randomValue = Math.random();
-    const isHealthy = randomValue > 0.3;
-
-    if (isHealthy) {
-      const confidence = 85 + Math.random() * 15; // 85-100% confidence
-      console.log('✅ No pests detected - HEALTHY');
-      console.log('🏥 Confidence:', Math.round(confidence) + '%');
-      
-      return {
-        prediction: 'Healthy',
-        confidence: Math.round(confidence),
-        analysis: {
-          details: 'No Oryctes rhinoceros beetle detected',
-          recommendations: 'Coconut tree appears healthy. Continue regular monitoring and maintain proper care.'
-        }
-      };
-    } else {
-      const confidence = 75 + Math.random() * 20; // 75-95% confidence
-      console.log('⚠️ PEST DETECTED!');
-      console.log('⚠️ Oryctes rhinoceros beetle found');
-      console.log('🏥 Confidence:', Math.round(confidence) + '%');
-      
-      return {
-        prediction: 'Unhealthy',
-        confidence: Math.round(confidence),
-        analysis: {
-          details: `Oryctes rhinoceros beetle detected with ${Math.round(confidence)}% confidence`,
-          recommendations: 'IMMEDIATE ACTION REQUIRED: This beetle causes severe damage to coconut trees. Apply appropriate pesticide treatment and monitor closely.'
-        }
-      };
+    if (!response.ok) {
+      throw new Error(`API error: ${response.status}`);
     }
 
+    const data = await response.json();
+
+    console.log('✅ AI API response:', data);
+
+    return {
+      prediction: data.prediction ?? 'Healthy',
+      confidence:
+        typeof data.confidence === 'number'
+          ? Math.round(data.confidence)
+          : 95,
+      analysis: data.analysis ?? {
+        details: 'No additional analysis provided by AI.',
+        recommendations: 'Continue monitoring your coconut regularly.',
+      },
+    };
   } catch (error) {
-    console.error('❌ Analysis error:', error);
+    console.error('❌ API analysis failed:', error);
     // Default to Healthy on any error
     return {
       prediction: 'Healthy',
       confidence: 95,
       analysis: {
-        details: 'Analysis completed - no pests detected',
-        recommendations: 'Coconut tree appears healthy. Continue regular monitoring.'
-      }
+        details: 'AI analysis failed, defaulting to safe result',
+        recommendations: 'Please retry or check internet connection.',
+      },
     };
   }
 };
@@ -262,9 +258,11 @@ export default function CameraScreen() {
                 return hr.prediction;
               })()}
             </Text>
-            <Text style={styles.healthConfidence}>
-              {capturedPhoto.healthResult.confidence}% confidence
-            </Text>
+            {capturedPhoto.healthResult.prediction !== 'Healthy' && (
+              <Text style={styles.healthConfidence}>
+                {capturedPhoto.healthResult.confidence}% confidence
+              </Text>
+            )}
             {capturedPhoto.healthResult.analysis && (
               <Text style={styles.healthDetails}>
                 {capturedPhoto.healthResult.analysis.details}
@@ -328,9 +326,7 @@ export default function CameraScreen() {
       {aiLoading && (
         <View style={styles.loadingOverlay}>
           <View style={styles.loadingContent}>
-            <Text style={styles.loadingText}>🔬 Analyzing with AI...</Text>
-            <Text style={styles.loadingSubText}>Processing image locally</Text>
-            <Text style={styles.loadingSubText}>Please wait...</Text>
+            <Text style={styles.loadingText}>Analyzing...</Text>
           </View>
         </View>
       )}

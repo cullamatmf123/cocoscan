@@ -52,6 +52,29 @@ export default function ResultScreen() {
     }
   }, [imageUri, photoBase64]);
 
+  const unhealthyType = React.useMemo(() => {
+    const d = (details || '').toLowerCase();
+    const signKeywords = ['sign', 'symptom', 'v-shaped', 'triangular', 'notch', 'bore hole', 'cuts', 'fronds', 'leaf'];
+    const presenceKeywords = ['presence', 'beetle', 'adult', 'larva', 'grub', 'found', 'seen', 'captured', 'detected'];
+    const hasSign = signKeywords.some(k => d.includes(k));
+    const hasPresence = presenceKeywords.some(k => d.includes(k));
+    if (hasSign) return 'sign';
+    if (hasPresence) return 'presence';
+    return 'unknown';
+  }, [details]);
+
+  const displayPrediction = React.useMemo(() => {
+    if ((prediction || '').toLowerCase() === 'healthy') return 'Healthy';
+    if (unhealthyType === 'sign') return 'Unhealthy, Oryctes Rhinoceros Sign';
+    if (unhealthyType === 'presence') return 'Unhealthy: Oryctes Rhinoceros Detected';
+    return 'Unhealthy';
+  }, [prediction, unhealthyType]);
+
+  const isHealthy = React.useMemo(
+    () => (prediction || '').toLowerCase() === 'healthy',
+    [prediction]
+  );
+
   // Save result to Firestore history once when screen mounts with data
   useEffect(() => {
     const saveToHistory = async () => {
@@ -87,25 +110,7 @@ export default function ResultScreen() {
     };
     
     saveToHistory();
-  }, [id, fromHistory, imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition]);
-
-  const unhealthyType = React.useMemo(() => {
-    const d = (details || '').toLowerCase();
-    const signKeywords = ['sign', 'symptom', 'v-shaped', 'triangular', 'notch', 'bore hole', 'cuts', 'fronds', 'leaf'];
-    const presenceKeywords = ['presence', 'beetle', 'adult', 'larva', 'grub', 'found', 'seen', 'captured', 'detected'];
-    const hasSign = signKeywords.some(k => d.includes(k));
-    const hasPresence = presenceKeywords.some(k => d.includes(k));
-    if (hasSign) return 'sign';
-    if (hasPresence) return 'presence';
-    return 'unknown';
-  }, [details]);
-
-  const displayPrediction = React.useMemo(() => {
-    if ((prediction || '').toLowerCase() === 'healthy') return 'Healthy';
-    if (unhealthyType === 'sign') return 'Unhealthy, Oryctes Rhinoceros Sign';
-    if (unhealthyType === 'presence') return 'Unhealthy: Oryctes Rhinoceros Detected';
-    return 'Unhealthy';
-  }, [prediction, unhealthyType]);
+  }, [id, fromHistory, imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition, displayPrediction]);
 
   const handleAboutPress = () => {
     router.push({
@@ -234,55 +239,69 @@ export default function ResultScreen() {
 
               <View style={styles.sectionCard}>
                 <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>Prevention & Control</Text>
+                  <Text style={styles.sectionTitle}>
+                    {isHealthy ? 'No Prevention & Control' : 'Prevention & Control'}
+                  </Text>
                   <TouchableOpacity onPress={handlePreventionPress} accessibilityLabel="Open Prevention & Control details" activeOpacity={0.8}>
                     <Text style={styles.sectionChevron}>›</Text>
                   </TouchableOpacity>
                 </View>
-                <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
-                <View style={{ gap: 6 }}>
-                  <Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text>
-                  <Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text>
-                  <Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text>
-                  <Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text>
-                  <Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text>
-                </View>
-                <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
-                <View style={{ gap: 6 }}>
-                  <Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text>
-                  <Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text>
-                  <Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text>
-                  <Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text>
-                  <Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text>
-                </View>
+                {!isHealthy && (
+                  <>
+                    <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
+                    <View style={{ gap: 6 }}>
+                      <Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text>
+                      <Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text>
+                      <Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text>
+                      <Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text>
+                      <Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text>
+                    </View>
+                    <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
+                    <View style={{ gap: 6 }}>
+                      <Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text>
+                      <Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text>
+                      <Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text>
+                      <Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text>
+                      <Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text>
+                    </View>
+                  </>
+                )}
               </View>
 
               {/* Recommended Pesticides */}
               <View style={styles.sectionCard}>
                 <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>Recommended Pesticides</Text>
-                  <TouchableOpacity onPress={() => router.push('/pesticides')} accessibilityLabel="Open full pesticide recommendations" activeOpacity={0.8}>
+                  <Text style={styles.sectionTitle}>
+                    {isHealthy ? 'No Recommended Pesticides' : 'Recommended Pesticides'}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => router.push('/pesticides')}
+                    accessibilityLabel="Open full pesticide recommendations"
+                    activeOpacity={0.8}
+                  >
                     <Text style={styles.sectionChevron}>›</Text>
                   </TouchableOpacity>
                 </View>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
-                  <View style={styles.recTile}>
-                    <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.recImage} />
-                    <Text style={styles.recCaption}>Lambda-cyhalothrin (Karate)</Text>
-                  </View>
-                  <View style={styles.recTile}>
-                    <Image source={require('../assets/images/design/imidacloprid.png')} style={styles.recImage} />
-                    <Text style={styles.recCaption}>Imidacloprid</Text>
-                  </View>
-                  <View style={styles.recTile}>
-                    <Image source={require('../assets/images/design/Emamectin-Benzoate.webp')} style={styles.recImage} />
-                    <Text style={styles.recCaption}>Emamectin Benzoate</Text>
-                  </View>
-                  <View style={styles.recTile}>
-                    <Image source={require('../assets/images/design/chloros-chlorantraniliprole.webp')} style={styles.recImage} />
-                    <Text style={styles.recCaption}>Chlorantraniliprole</Text>
-                  </View>
-                </ScrollView>
+                {!isHealthy && (
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+                    <View style={styles.recTile}>
+                      <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.recImage} />
+                      <Text style={styles.recCaption}>Lambda-cyhalothrin (Karate)</Text>
+                    </View>
+                    <View style={styles.recTile}>
+                      <Image source={require('../assets/images/design/imidacloprid.png')} style={styles.recImage} />
+                      <Text style={styles.recCaption}>Imidacloprid</Text>
+                    </View>
+                    <View style={styles.recTile}>
+                      <Image source={require('../assets/images/design/Emamectin-Benzoate.webp')} style={styles.recImage} />
+                      <Text style={styles.recCaption}>Emamectin Benzoate</Text>
+                    </View>
+                    <View style={styles.recTile}>
+                      <Image source={require('../assets/images/design/chloros-chlorantraniliprole.webp')} style={styles.recImage} />
+                      <Text style={styles.recCaption}>Chlorantraniliprole</Text>
+                    </View>
+                  </ScrollView>
+                )}
               </View>
             </>
           )}
@@ -291,39 +310,62 @@ export default function ResultScreen() {
           {tab === 'pest' && (
             <>
               <View style={styles.greenCardAlt}>
-                <Text style={styles.greenDescTitle}>Coconut Rhinoceros Beetle</Text>
-                <Text style={styles.greenDescSub}>Oryctes Rhinoceros</Text>
-                <Text style={styles.greenDescText}>
-                  A destructive coconut pest beetle that bores into the crowns and trunks of palm trees,
-                  causing severe damage and reduced yield.
+                <Text style={styles.greenDescTitle}>
+                  {isHealthy ? 'No Coconut Rhinoceros Beetle' : 'Coconut Rhinoceros Beetle'}
                 </Text>
+                {!isHealthy && (
+                  <>
+                    <Text style={styles.greenDescSub}>Oryctes Rhinoceros</Text>
+                    <Text style={styles.greenDescText}>
+                      A destructive coconut pest beetle that bores into the crowns and trunks of palm trees,
+                      causing severe damage and reduced yield.
+                    </Text>
+                  </>
+                )}
               </View>
               
               <View style={{ flexDirection: 'row', gap: 10 }}>
                 <View style={[styles.greenCard, { flex: 1 }]}> 
-                  <Text style={styles.greenListTitle}>Signs</Text>
-                  <Text style={styles.greenListItem}>• V-shaped cuts on fronds</Text>
-                  <Text style={styles.greenListItem}>• Triangular leaf notches</Text>
-                  <Text style={styles.greenListItem}>• Bore holes in crown</Text>
+                  <Text style={styles.greenListTitle}>
+                    {isHealthy ? 'No Sign' : 'Signs'}
+                  </Text>
+                  {!isHealthy && (
+                    <>
+                      <Text style={styles.greenListItem}>• V-shaped cuts on fronds</Text>
+                      <Text style={styles.greenListItem}>• Triangular leaf notches</Text>
+                      <Text style={styles.greenListItem}>• Bore holes in crown</Text>
+                    </>
+                  )}
                 </View>
                 <View style={[styles.greenCard, { flex: 1 }]}> 
-                  <Text style={styles.greenListTitle}>Symptoms</Text>
-                  <Text style={styles.greenListItem}>• Stunted or deformed fronds</Text>
-                  <Text style={styles.greenListItem}>• Yellowing of emerging leaf</Text>
-                  <Text style={styles.greenListItem}>• Possible death from repeated attack</Text>
+                  <Text style={styles.greenListTitle}>
+                    {isHealthy ? 'No Symptoms' : 'Symptoms'}
+                  </Text>
+                  {!isHealthy && (
+                    <>
+                      <Text style={styles.greenListItem}>• Stunted or deformed fronds</Text>
+                      <Text style={styles.greenListItem}>• Yellowing of emerging leaf</Text>
+                      <Text style={styles.greenListItem}>• Possible death from repeated attack</Text>
+                    </>
+                  )}
                 </View>
               </View>
-              <View style={[styles.sectionHeaderRow, { marginTop: 10 }]}>
-                <Text style={styles.sectionTitle}>Images</Text>
-                <TouchableOpacity onPress={handleAboutPress} accessibilityLabel="View more images" activeOpacity={0.8}>
-                  <Text style={styles.sectionChevron}>›</Text>
-                </TouchableOpacity>
-              </View>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
-                <Image source={require('../assets/images/design/CRB.jpg')} style={styles.pestImg} />
-                <Image source={require('../assets/images/design/crb(2).png')} style={styles.pestImg} />
-                <Image source={require('../assets/images/design/crb(3).png')} style={styles.pestImg} />
-              </ScrollView>
+
+              {!isHealthy && (
+                <>
+                  <View style={[styles.sectionHeaderRow, { marginTop: 10 }]}>
+                    <Text style={styles.sectionTitle}>Images</Text>
+                    <TouchableOpacity onPress={handleAboutPress} accessibilityLabel="View more images" activeOpacity={0.8}>
+                      <Text style={styles.sectionChevron}>›</Text>
+                    </TouchableOpacity>
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
+                    <Image source={require('../assets/images/design/CRB.jpg')} style={styles.pestImg} />
+                    <Image source={require('../assets/images/design/crb(2).png')} style={styles.pestImg} />
+                    <Image source={require('../assets/images/design/crb(3).png')} style={styles.pestImg} />
+                  </ScrollView>
+                </>
+              )}
             </>
           )}
         </View>

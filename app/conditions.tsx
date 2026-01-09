@@ -1,9 +1,19 @@
 import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, BackHandler, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { ScanService } from '../services/scanService';
-import { auth } from '../config/firebase';
+import {
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { addHistoryItem } from '../services/historyService';
 
 export default function ConditionsScreen() {
   const router = useRouter();
@@ -15,14 +25,13 @@ export default function ConditionsScreen() {
   const [lightCondition, setLightCondition] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Extract all parameters from the navigation
   const {
     imageUri,
     photoBase64,
     prediction = 'Unknown',
     confidence = '0',
     details = '',
-    recommendations = 'No recommendations available'
+    recommendations = 'No recommendations available',
   } = params as {
     imageUri?: string;
     photoBase64?: string;
@@ -71,15 +80,29 @@ export default function ConditionsScreen() {
       return false;
     }
 
-    if (!temperature.trim() || isNaN(Number(temperature)) || 
-        Number(temperature) < -10 || Number(temperature) > 60) {
-      Alert.alert('Invalid Temperature', 'Please enter a valid temperature between -10°C and 60°C');
+    if (
+      !temperature.trim() ||
+      isNaN(Number(temperature)) ||
+      Number(temperature) < -10 ||
+      Number(temperature) > 60
+    ) {
+      Alert.alert(
+        'Invalid Temperature',
+        'Please enter a valid temperature between -10°C and 60°C'
+      );
       return false;
     }
 
-    if (!humidity.trim() || isNaN(Number(humidity)) || 
-        Number(humidity) < 0 || Number(humidity) > 100) {
-      Alert.alert('Invalid Humidity', 'Please enter a valid humidity percentage between 0% and 100%');
+    if (
+      !humidity.trim() ||
+      isNaN(Number(humidity)) ||
+      Number(humidity) < 0 ||
+      Number(humidity) > 100
+    ) {
+      Alert.alert(
+        'Invalid Humidity',
+        'Please enter a valid humidity percentage between 0% and 100%'
+      );
       return false;
     }
 
@@ -92,55 +115,48 @@ export default function ConditionsScreen() {
     setIsSubmitting(true);
 
     try {
-      const userId = auth.currentUser?.uid;
-      if (!userId) {
-        throw new Error('User not authenticated');
-      }
+      const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Weather: ${weather}\n• Soil: ${soil}\n• Temperature: ${temperature}°C\n• Humidity: ${humidity}%\n• Light: ${lightCondition}`;
 
-      const result = await ScanService.saveScan({
-        userId,
-        imageUri: imageUri || '',
-        photoBase64: photoBase64 || '',
+      const savedHistory = await addHistoryItem({
+        imageUri: imageUri || null,
+        photoBase64: photoBase64 || null,
         prediction,
-        confidence: parseFloat(confidence) || 0,
-        details,
+        confidence,
+        details: enhancedDetails,
         recommendations,
-        conditions: {
-          weather,
-          soil,
-          temperature: parseFloat(temperature) || 0,
-          humidity: parseFloat(humidity) || 0,
-          lightCondition,
-        }
+        weather,
+        soil,
+        temperature: parseFloat(temperature) || 0,
+        humidity: parseFloat(humidity) || 0,
+        lightCondition,
       });
 
-      if (result.success) {
-        const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Weather: ${weather}\n• Soil: ${soil}\n• Temperature: ${temperature}°C\n• Humidity: ${humidity}%\n• Light: ${lightCondition}`;
-
-        const isHealthy = (prediction || '').toLowerCase().includes('healthy');
-        router.push({
-          pathname: isHealthy ? '/no-result' : '/result',
-          params: {
-            fromHistory: '0',
-            imageUri,
-            photoBase64,
-            prediction,
-            confidence,
-            details: enhancedDetails,
-            recommendations,
-            weather,
-            soil,
-            temperature,
-            humidity,
-            lightCondition,
-          },
-        });
-      } else {
-        Alert.alert('Error', result.error || 'Failed to save scan data');
-      }
-    } catch (error) {
-      console.error('Error saving scan:', error);
-      Alert.alert('Error', 'An unexpected error occurred while saving the scan');
+      router.push({
+        pathname: '/result',
+        params: {
+          id: savedHistory.id,
+          // Mark as coming from history so ResultScreen does NOT save again
+          fromHistory: '1',
+          imageUri,
+          photoBase64,
+          prediction,
+          confidence,
+          details: enhancedDetails,
+          recommendations,
+          weather,
+          soil,
+          temperature,
+          humidity,
+          lightCondition,
+        },
+      });
+    } catch (error: any) {
+      console.error('Error saving scan to history:', error);
+      const message =
+        error?.message === 'User not authenticated'
+          ? 'User not authenticated. Please log in and try again.'
+          : 'An unexpected error occurred while saving the scan';
+      Alert.alert('Error', message);
     } finally {
       setIsSubmitting(false);
     }
@@ -153,7 +169,7 @@ export default function ConditionsScreen() {
         'Are you sure you want to cancel? All unsaved data will be lost.',
         [
           { text: 'No', onPress: () => null, style: 'cancel' },
-          { text: 'Yes', onPress: () => router.back() }
+          { text: 'Yes', onPress: () => router.back() },
         ]
       );
       return true;
@@ -185,7 +201,9 @@ export default function ConditionsScreen() {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Environmental Conditions</Text>
-          <Text style={styles.subtitle}>Provide details about the current conditions</Text>
+          <Text style={styles.subtitle}>
+            Provide details about the current conditions
+          </Text>
         </View>
         <View style={styles.formCard}>
           <View style={styles.formGroup}>
@@ -197,7 +215,11 @@ export default function ConditionsScreen() {
                 style={styles.picker}
               >
                 {weatherOptions.map((option) => (
-                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  <Picker.Item
+                    key={option.value}
+                    label={option.label}
+                    value={option.value}
+                  />
                 ))}
               </Picker>
             </View>
@@ -212,7 +234,11 @@ export default function ConditionsScreen() {
                 style={styles.picker}
               >
                 {soilOptions.map((option) => (
-                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  <Picker.Item
+                    key={option.value}
+                    label={option.label}
+                    value={option.value}
+                  />
                 ))}
               </Picker>
             </View>
@@ -251,7 +277,11 @@ export default function ConditionsScreen() {
                 style={styles.picker}
               >
                 {lightOptions.map((option) => (
-                  <Picker.Item key={option.value} label={option.label} value={option.value} />
+                  <Picker.Item
+                    key={option.value}
+                    label={option.label}
+                    value={option.value}
+                  />
                 ))}
               </Picker>
             </View>
