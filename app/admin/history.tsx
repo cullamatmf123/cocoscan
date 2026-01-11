@@ -27,24 +27,20 @@ export default function ReportHistoryScreen() {
   const handleSignOut = async () => {
     try {
       await AuthService.signOut();
-      // Redirect to the app index; it will decide sign-in/signup
       router.replace('/');
     } catch (e) {
       Alert.alert('Error', 'Failed to sign out');
     }
   };
 
-  // totalScans: prefer Dashboard-persisted value, then route param, then local scanHistory
   useEffect(() => {
     const load = async () => {
-      // 1) Dashboard authoritative value
       const dash = await AsyncStorage.getItem('dashboard_total_scans');
       const dashNum = dash !== null ? parseInt(dash, 10) : NaN;
       if (!Number.isNaN(dashNum)) {
         setTotalScans(dashNum);
         return;
       }
-      // 2) Route param
       if (params?.totalScans !== undefined) {
         const fromParam = parseInt(String(params.totalScans), 10);
         if (!Number.isNaN(fromParam)) {
@@ -52,7 +48,6 @@ export default function ReportHistoryScreen() {
           return;
         }
       }
-      // 3) Local fallback
       try {
         const raw = await AsyncStorage.getItem('scanHistory');
         const list = raw ? JSON.parse(raw) : [];
@@ -64,7 +59,6 @@ export default function ReportHistoryScreen() {
     load();
   }, [params?.totalScans]);
 
-  // totalUsers: prefer Dashboard-persisted non-admin users, then route param, else 0
   useEffect(() => {
     const loadUsers = async () => {
       const dashUsers = await AsyncStorage.getItem('dashboard_total_users_nonadmin');
@@ -85,7 +79,6 @@ export default function ReportHistoryScreen() {
     loadUsers();
   }, [params?.totalUsers]);
 
-  // Refresh both KPIs whenever Analytics gains focus
   useFocusEffect(
     React.useCallback(() => {
       let active = true;
@@ -104,7 +97,6 @@ export default function ReportHistoryScreen() {
             if (!Number.isNaN(u)) setTotalUsers(u);
           }
 
-          // Load scan history from Firestore 'scanHistory' collection
           try {
             const q = query(collection(db, 'scanHistory'), orderBy('timestamp', 'desc'));
             const snap = await getDocs(q);
@@ -130,7 +122,6 @@ export default function ReportHistoryScreen() {
             });
             if (active) setHistory(items);
 
-            // Update total scans count based on actual data
             if (active) {
               setTotalScans(items.length);
               await AsyncStorage.setItem('dashboard_total_scans', String(items.length));
@@ -149,44 +140,56 @@ export default function ReportHistoryScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.replace('/admin/dashboard')} style={styles.backBtn}>
-          {/* Intentionally empty to preserve spacing without showing text */}
+          {/* Intentionally empty to preserve spacing */}
         </TouchableOpacity>
         <Text style={styles.title}>CocoScan</Text>
-        <View style={{ width: 60, flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" onPress={() => router.push('/admin/notifications')} style={{ marginRight: 8 }}>
-            <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
+        <View style={{ width: 60 }} />
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
+        {/* Page Title */}
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Scan History</Text>
+          <Text style={styles.pageSubtitle}>Track all coconut disease detections</Text>
+        </View>
+
         {/* All History List */}
         <View style={[styles.panel, styles.shadow]}> 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <Text style={styles.panelTitle}>All Scan Records ({history.length})</Text>
+          <View style={styles.panelHeader}>
+            <Text style={styles.panelTitle}>All Scan Records</Text>
+            <View style={styles.countBadge}>
+              <Text style={styles.countBadgeText}>{history.length}</Text>
+            </View>
           </View>
           
           {history.length === 0 ? (
-            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
-              <Ionicons name="document-outline" size={48} color="#CBD5E1" />
-              <Text style={{ color: '#64748B', fontWeight: '700', marginTop: 8 }}>No scan history yet</Text>
-              <Text style={{ color: '#94A3B8', fontSize: 12, marginTop: 4 }}>User scans will appear here</Text>
+            <View style={styles.emptyState}>
+              <View style={styles.emptyIconWrap}>
+                <Ionicons name="document-outline" size={40} color="#64748B" />
+              </View>
+              <Text style={styles.emptyTitle}>No scan history yet</Text>
+              <Text style={styles.emptySubtitle}>User scans will appear here</Text>
             </View>
           ) : (
             history.map((scan, idx) => (
               <View key={scan.id} style={styles.historyItem}>
                 {/* User and Prediction */}
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                <View style={styles.itemHeader}>
+                  <View style={styles.userInfo}>
                     <View style={styles.userAvatar}>
-                      <Ionicons name="person" size={16} color="#FFFFFF" />
+                      <Ionicons name="person" size={18} color="#FFFFFF" />
                     </View>
-                    <View style={{ marginLeft: 10, flex: 1 }}>
+                    <View style={styles.userDetails}>
                       <Text style={styles.userId} numberOfLines={1}>{scan.userId}</Text>
-                      <Text style={styles.scanDate}>{scan.createdAt.toLocaleDateString()} • {scan.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                      <Text style={styles.scanDate}>
+                        {scan.createdAt.toLocaleDateString()} • {scan.createdAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
                     </View>
                   </View>
-                  <View style={[styles.pill, scan.prediction?.toLowerCase().includes('healthy') ? styles.pillHealthy : styles.pillUnhealthy]}>
+                  <View style={[
+                    styles.pill, 
+                    scan.prediction?.toLowerCase().includes('healthy') ? styles.pillHealthy : styles.pillUnhealthy
+                  ]}>
                     <Text style={styles.pillText}>{scan.prediction || 'Unknown'}</Text>
                   </View>
                 </View>
@@ -194,18 +197,24 @@ export default function ReportHistoryScreen() {
                 {/* Scan Details */}
                 <View style={styles.scanDetails}>
                   <View style={styles.detailRow}>
-                    <Ionicons name="cloud-outline" size={14} color="#64748B" />
-                    <Text style={styles.detailLabel}>Weather:</Text>
+                    <View style={styles.detailIconWrap}>
+                      <Ionicons name="cloud-outline" size={16} color="#64748B" />
+                    </View>
+                    <Text style={styles.detailLabel}>Weather</Text>
                     <Text style={styles.detailValue}>{scan.weather || 'N/A'}</Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Ionicons name="leaf-outline" size={14} color="#64748B" />
-                    <Text style={styles.detailLabel}>Soil:</Text>
+                    <View style={styles.detailIconWrap}>
+                      <Ionicons name="leaf-outline" size={16} color="#64748B" />
+                    </View>
+                    <Text style={styles.detailLabel}>Soil</Text>
                     <Text style={styles.detailValue}>{scan.soil || 'N/A'}</Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <Ionicons name="analytics-outline" size={14} color="#64748B" />
-                    <Text style={styles.detailLabel}>Confidence:</Text>
+                    <View style={styles.detailIconWrap}>
+                      <Ionicons name="analytics-outline" size={16} color="#64748B" />
+                    </View>
+                    <Text style={styles.detailLabel}>Confidence</Text>
                     <Text style={styles.detailValue}>{scan.confidence || 'N/A'}</Text>
                   </View>
                 </View>
@@ -220,84 +229,226 @@ export default function ReportHistoryScreen() {
   );
 }
 
+const GREEN = '#1F6A44';
+const GREEN_DARK = '#184F34';
+const GREEN_LIGHT = '#E8F5EF';
+const BG = '#F0F6F4';
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F7FAF8' },
+  safe: { 
+    flex: 1, 
+    backgroundColor: BG,
+  },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: 50, paddingHorizontal: 16, paddingBottom: 24, backgroundColor: '#175C35',
-    borderBottomColor: '#134E2B', borderBottomWidth: 0,
-    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingTop: 50, 
+    paddingHorizontal: 20, 
+    paddingBottom: 28, 
+    backgroundColor: GREEN,
+    borderBottomLeftRadius: 28, 
+    borderBottomRightRadius: 28,
+    shadowColor: GREEN_DARK,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  backBtn: { width: 80, paddingVertical: 6 },
-  backText: { color: '#1F3D2A', fontWeight: '900', fontSize: 16 },
-  title: { position: 'absolute', left: 0, right: 0, textAlign: 'center', color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
-
-  row: { flexDirection: 'row', gap: 12 },
-  card: { flex: 1, backgroundColor: '#FFFFFF', borderRadius: 12, padding: 14 },
-  shadow: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  cardIcon: { marginBottom: 6 },
-  kpiValue: { fontSize: 22, fontWeight: '900', color: '#1F3D2A' },
-  kpiLabel: { marginTop: 2, fontSize: 12, color: '#64748B', fontWeight: '700' },
-
-  panel: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: 14, marginTop: 16 },
-  panelTitle: { fontSize: 16, fontWeight: '900', color: '#1F3D2A', marginBottom: 8 },
-  panelText: { color: '#64748B', fontWeight: '700' },
-  pill: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 999 },
-  pillHealthy: { backgroundColor: '#86EFAC' },
-  pillUnhealthy: { backgroundColor: '#FCA5A5' },
-  pillText: { color: '#0F172A', fontSize: 12, fontWeight: '700' },
-  graphIcon: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
-  graphBar: { width: 6, backgroundColor: '#0F172A', borderRadius: 2 },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#1F3D2A' },
-  
-  // History Item Styles
-  historyItem: {
-    paddingVertical: 12,
+  backBtn: { 
+    width: 60, 
+    paddingVertical: 6,
   },
-  userAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#175C35',
+  title: { 
+    position: 'absolute', 
+    left: 0, 
+    right: 0, 
+    textAlign: 'center', 
+    color: '#FFFFFF', 
+    fontSize: 20, 
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+
+  pageHeader: {
+    marginBottom: 20,
+  },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: 0.3,
+  },
+  pageSubtitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 4,
+  },
+
+  panel: { 
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 20, 
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#D1E8DD',
+  },
+  shadow: { 
+    shadowColor: '#000', 
+    shadowOpacity: 0.06, 
+    shadowRadius: 12, 
+    shadowOffset: { width: 0, height: 4 }, 
+    elevation: 3,
+  },
+  panelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  panelTitle: { 
+    fontSize: 18, 
+    fontWeight: '900', 
+    color: '#0F172A',
+    letterSpacing: 0.3,
+  },
+  countBadge: {
+    backgroundColor: GREEN_LIGHT,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#D1E8DD',
+  },
+  countBadgeText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: GREEN,
+  },
+
+  emptyState: {
+    paddingVertical: 60,
+    alignItems: 'center',
+  },
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 6,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+
+  historyItem: {
+    paddingVertical: 16,
+  },
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 12,
+  },
+  userAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: GREEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: GREEN_LIGHT,
+  },
+  userDetails: {
+    marginLeft: 12,
+    flex: 1,
   },
   userId: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '700',
-    color: '#1F3D2A',
+    color: '#0F172A',
+    letterSpacing: 0.2,
   },
   scanDate: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 3,
+    fontWeight: '600',
   },
+  
+  pill: { 
+    paddingVertical: 6, 
+    paddingHorizontal: 14, 
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  pillHealthy: { 
+    backgroundColor: '#ECFDF5', 
+    borderColor: '#86EFAC',
+  },
+  pillUnhealthy: { 
+    backgroundColor: '#FEF2F2', 
+    borderColor: '#FCA5A5',
+  },
+  pillText: { 
+    color: '#0F172A', 
+    fontSize: 13, 
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+
   scanDetails: {
     backgroundColor: '#F8FAFC',
-    borderRadius: 8,
-    padding: 10,
-    marginTop: 8,
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+  },
+  detailIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
   },
   detailLabel: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#64748B',
-    marginLeft: 6,
-    marginRight: 4,
     fontWeight: '600',
+    marginRight: 8,
+    minWidth: 80,
   },
   detailValue: {
-    fontSize: 12,
-    color: '#1F3D2A',
+    fontSize: 13,
+    color: '#0F172A',
     fontWeight: '700',
+    flex: 1,
   },
   divider: {
     height: 1,
     backgroundColor: '#E2E8F0',
-    marginTop: 12,
+    marginTop: 16,
   },
 });

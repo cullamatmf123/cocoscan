@@ -18,7 +18,6 @@ export type AdminUser = {
 };
 
 export default function UserManagementScreen() {
-  // Start with empty list; populate from Firestore
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [filter, setFilter] = useState('');
 
@@ -30,14 +29,12 @@ export default function UserManagementScreen() {
         router.push({ pathname: '/admin/history', params: { totalScans: String(dashNum) } });
         return;
       }
-      // Fallback: keep existing behavior
       router.push('/admin/history');
     } catch {
       router.push('/admin/history');
     }
   };
 
-  // Load users from Firestore on mount
   useEffect(() => {
     const load = async () => {
       try {
@@ -61,7 +58,6 @@ export default function UserManagementScreen() {
     load();
   }, []);
 
-  // Reload users whenever this screen gains focus
   useFocusEffect(
     useCallback(() => {
       let active = true;
@@ -96,10 +92,8 @@ export default function UserManagementScreen() {
   );
 
   const updateUser = async (id: string, patch: Partial<AdminUser>) => {
-    // Update local state immediately for better UX
     setUsers(prev => prev.map(u => (u.id === id ? { ...u, ...patch } : u)));
     
-    // Update in Firestore
     try {
       const ref = doc(collection(db, 'users'), id);
       const updateData: any = {
@@ -118,7 +112,6 @@ export default function UserManagementScreen() {
       
       await updateDoc(ref, updateData);
       
-      // Show success message for role changes
       if (patch.role !== undefined) {
         Alert.alert('Success', `User role updated to ${patch.role}`);
       }
@@ -126,7 +119,6 @@ export default function UserManagementScreen() {
       console.error('Error updating user:', error);
       Alert.alert('Error', 'Failed to update user. Please try again.');
       
-      // Revert local state on error
       const revertPatch: Partial<AdminUser> = {};
       if (patch.role !== undefined) revertPatch.role = patch.role === 'admin' ? 'user' : 'admin';
       if (patch.active !== undefined) revertPatch.active = !patch.active;
@@ -138,7 +130,6 @@ export default function UserManagementScreen() {
 
   const onSave = async () => {
     try {
-      // Persist each user to Firestore users/{uid}
       await Promise.all(
         users.map(u => {
           const ref = doc(collection(db, 'users'), u.id);
@@ -150,7 +141,7 @@ export default function UserManagementScreen() {
             isActive: u.active,
             canScan: u.canScan,
             updatedAt: Timestamp.now(),
-            createdAt: Timestamp.now(), // Will be ignored if document exists
+            createdAt: Timestamp.now(),
           }, { merge: true });
         })
       );
@@ -169,7 +160,7 @@ export default function UserManagementScreen() {
     <View style={[styles.card, styles.cardShadow]}>
       <View style={styles.cardHeader}>
         <View style={styles.avatar}>
-          <Ionicons name="person" size={20} color="#1F3D2A" />
+          <Ionicons name="person" size={22} color="#1F6A44" />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.userName}>{item.name}</Text>
@@ -177,21 +168,26 @@ export default function UserManagementScreen() {
         </View>
         <View style={[
           styles.rolePill,
-          item.role === 'admin' && { backgroundColor: '#2D5A3D', borderColor: '#2D5A3D' }
+          item.role === 'admin' && styles.rolePillAdmin
         ]}>
           <Text style={[
             styles.rolePillText,
-            item.role === 'admin' && { color: '#FFFFFF' }
+            item.role === 'admin' && styles.rolePillTextAdmin
           ]}>{item.role}</Text>
         </View>
       </View>
 
       <View style={styles.roleRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.roleLabel}>Role</Text>
+          <Text style={styles.roleLabel}>Role Assignment</Text>
           <View style={styles.roleButtons}>
             {(['user','admin'] as const).map(r => (
-              <TouchableOpacity key={r} style={[styles.roleBtn, item.role === r && styles.roleBtnActive]} onPress={() => updateUser(item.id, { role: r, isAdmin: r === 'admin' })}>
+              <TouchableOpacity 
+                key={r} 
+                style={[styles.roleBtn, item.role === r && styles.roleBtnActive]} 
+                onPress={() => updateUser(item.id, { role: r, isAdmin: r === 'admin' })}
+                activeOpacity={0.7}
+              >
                 <Text style={[styles.roleBtnText, item.role === r && styles.roleBtnTextActive]}>{r}</Text>
               </TouchableOpacity>
             ))}
@@ -200,25 +196,32 @@ export default function UserManagementScreen() {
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={[styles.actionBtn, styles.actionWarn]} onPress={() => Alert.alert('Disable user', `Disable ${item.name}?`, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Disable', style: 'destructive', onPress: () => updateUser(item.id, { active: false }) },
-        ])}>
-          <Ionicons name="ban-outline" size={16} color="#fff" />
+        <TouchableOpacity 
+          style={[styles.actionBtn, styles.actionWarn]} 
+          onPress={() => Alert.alert('Disable user', `Disable ${item.name}?`, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Disable', style: 'destructive', onPress: () => updateUser(item.id, { active: false }) },
+          ])}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="ban-outline" size={18} color="#fff" />
           <Text style={styles.actionBtnText}>Disable</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.actionDanger]} onPress={() => Alert.alert('Delete user', `Delete ${item.name}?`, [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Delete', style: 'destructive', onPress: async () => {
-            try {
-              // Soft delete: mark inactive instead of removing doc to keep audit
-              const ref = doc(collection(db, 'users'), item.id);
-              await updateDoc(ref, { isActive: false, updatedAt: Timestamp.now() });
-              setUsers(prev => prev.filter(u => u.id !== item.id));
-            } catch {}
-          } },
-        ])}>
-          <Ionicons name="trash-outline" size={16} color="#fff" />
+        <TouchableOpacity 
+          style={[styles.actionBtn, styles.actionDanger]} 
+          onPress={() => Alert.alert('Delete user', `Delete ${item.name}?`, [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Delete', style: 'destructive', onPress: async () => {
+              try {
+                const ref = doc(collection(db, 'users'), item.id);
+                await updateDoc(ref, { isActive: false, updatedAt: Timestamp.now() });
+                setUsers(prev => prev.filter(u => u.id !== item.id));
+              } catch {}
+            } },
+          ])}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="trash-outline" size={18} color="#fff" />
           <Text style={styles.actionBtnText}>Delete</Text>
         </TouchableOpacity>
       </View>
@@ -232,37 +235,34 @@ export default function UserManagementScreen() {
           <Text style={{ opacity: 0 }}>‹ Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>CocoScan</Text>
-        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Notifications" onPress={() => router.push('/admin/notifications')} style={{ width: 60, alignItems: 'flex-end', marginRight: 8 }}>
-          <Ionicons name="notifications-outline" size={20} color="#FFFFFF" />
-        </TouchableOpacity>
+        <View style={{ width: 60 }} />
       </View>
 
-      {/* Page section title */}
-      <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+      <View style={styles.titleSection}>
         <Text style={styles.sectionTitle}>User Management</Text>
+        <Text style={styles.sectionSubtitle}>{filtered.length} {filtered.length === 1 ? 'user' : 'users'}</Text>
       </View>
 
       <View style={styles.controls}>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#6B7280" />
+          <Ionicons name="search" size={20} color="#64748B" />
           <TextInput
             placeholder="Search users"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="#94A3B8"
             value={filter}
             onChangeText={setFilter}
             style={styles.searchInput}
           />
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={onAddUser}>
-          <Ionicons name="search-outline" size={18} color="#ffffff" />
-          <Text style={styles.addBtnText}>Search User</Text>
+        <TouchableOpacity style={styles.addBtn} onPress={onAddUser} activeOpacity={0.8}>
+          <Ionicons name="search-outline" size={20} color="#ffffff" />
+          <Text style={styles.addBtnText}>Search</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Top actions: Delete (left) and Save (right) */}
-      <View style={[styles.saveTopWrap, { marginTop: 16, gap: 8 }]}>
+      <View style={styles.saveTopWrap}>
         <TouchableOpacity
-          style={[styles.actionBtn, styles.actionDanger]}
+          style={[styles.topActionBtn, styles.actionDanger]}
           onPress={() => Alert.alert(
             'Delete all users',
             'This will mark all users as inactive. Continue?',
@@ -283,80 +283,298 @@ export default function UserManagementScreen() {
               }
             ]
           )}
+          activeOpacity={0.8}
         >
-          <Ionicons name="trash-outline" size={18} color="#ffffff" />
+          <Ionicons name="trash-outline" size={20} color="#ffffff" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.saveBtn} onPress={onSave}>
-          <Ionicons name="save-outline" size={18} color="#ffffff" />
+        <TouchableOpacity style={styles.saveBtn} onPress={onSave} activeOpacity={0.8}>
+          <Ionicons name="save-outline" size={20} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
-      {/* Users list below Save Changes */}
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
-        ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+        ItemSeparatorComponent={() => <View style={{ height: 14 }} />}
         renderItem={renderItem}
       />
     </SafeAreaView>
   );
 }
 
+const GREEN = '#1F6A44';
+const GREEN_DARK = '#184F34';
+const GREEN_LIGHT = '#E8F5EF';
+const BG = '#F0F6F4';
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F7FAF8' },
+  safe: { 
+    flex: 1, 
+    backgroundColor: BG,
+  },
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: 50, paddingHorizontal: 16, paddingBottom: 24, backgroundColor: '#175C35',
-    borderBottomColor: '#134E2B', borderBottomWidth: 0,
-    borderBottomLeftRadius: 28, borderBottomRightRadius: 28,
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingTop: 50, 
+    paddingHorizontal: 20, 
+    paddingBottom: 28, 
+    backgroundColor: GREEN,
+    borderBottomLeftRadius: 28, 
+    borderBottomRightRadius: 28,
+    shadowColor: GREEN_DARK,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  title: { 
+    position: 'absolute', 
+    left: 0, 
+    right: 0, 
+    textAlign: 'center', 
+    color: '#FFFFFF', 
+    fontSize: 20, 
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  titleSection: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  sectionTitle: { 
+    fontSize: 24, 
+    fontWeight: '900', 
+    color: '#0F172A',
+    letterSpacing: 0.3,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
+    marginTop: 4,
+  },
+
+  controls: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 12, 
+    paddingHorizontal: 20,
+    marginTop: 12,
+  },
+  searchBox: {
+    flex: 1, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 10,
+    backgroundColor: '#ffffff', 
+    borderRadius: 14, 
+    paddingHorizontal: 14, 
+    paddingVertical: 12,
+    borderWidth: 1, 
+    borderColor: '#D1E8DD',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  searchInput: { 
+    flex: 1, 
+    fontSize: 15, 
+    color: '#0F172A', 
+    paddingVertical: 0,
+    fontWeight: '500',
+  },
+  addBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    backgroundColor: GREEN, 
+    paddingHorizontal: 16, 
+    paddingVertical: 12, 
+    borderRadius: 12,
+    shadowColor: GREEN_DARK,
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  addBtnText: { 
+    color: '#ffffff', 
+    fontWeight: '800',
+    fontSize: 14,
+    letterSpacing: 0.3,
+  },
+
+  card: { 
+    backgroundColor: '#ffffff', 
+    borderRadius: 18, 
+    padding: 16, 
+    borderWidth: 1, 
+    borderColor: '#D1E8DD',
+  },
+  cardShadow: { 
+    shadowColor: '#000', 
+    shadowOpacity: 0.06, 
+    shadowRadius: 10, 
+    shadowOffset: { width: 0, height: 4 }, 
+    elevation: 3,
+  },
+  cardHeader: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 14,
+  },
+  avatar: { 
+    width: 48, 
+    height: 48, 
+    borderRadius: 24, 
+    backgroundColor: GREEN_LIGHT, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    marginRight: 12, 
+    borderWidth: 2, 
+    borderColor: '#D1E8DD',
+  },
+  userName: { 
+    fontSize: 16, 
+    fontWeight: '800', 
+    color: '#0F172A',
+    letterSpacing: 0.2,
+  },
+  userEmail: { 
+    fontSize: 13, 
+    color: '#64748B',
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  rolePill: { 
+    backgroundColor: '#F1F5F9', 
+    borderWidth: 1, 
+    borderColor: '#E2E8F0', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8,
+  },
+  rolePillAdmin: {
+    backgroundColor: GREEN,
+    borderColor: GREEN,
+  },
+  rolePillText: { 
+    fontSize: 12, 
+    fontWeight: '800', 
+    color: '#475569',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  rolePillTextAdmin: {
+    color: '#FFFFFF',
+  },
+
+  roleRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between', 
+    marginTop: 4,
     marginBottom: 12,
   },
-  title: { position: 'absolute', left: 0, right: 0, textAlign: 'center', color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
-  sectionTitle: { fontSize: 20, fontWeight: '900', color: '#1F3D2A' },
-
-  controls: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16 },
-  searchBox: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#ffffff', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
-    borderWidth: 1, borderColor: '#E5EFE8',
+  roleLabel: { 
+    fontSize: 13, 
+    fontWeight: '700', 
+    color: '#475569', 
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
-  searchInput: { flex: 1, fontSize: 14, color: '#111827', paddingVertical: 0 },
-  addBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#2d5a3d', paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10 },
-  addBtnText: { color: '#ffffff', fontWeight: '900' },
+  roleButtons: { 
+    flexDirection: 'row', 
+    gap: 10,
+  },
+  roleBtn: { 
+    paddingHorizontal: 20, 
+    paddingVertical: 10, 
+    borderRadius: 10, 
+    borderWidth: 1, 
+    borderColor: '#D1E8DD', 
+    backgroundColor: '#FFFFFF',
+  },
+  roleBtnActive: { 
+    backgroundColor: GREEN, 
+    borderColor: GREEN,
+  },
+  roleBtnText: { 
+    color: '#475569', 
+    fontWeight: '700', 
+    fontSize: 13,
+    letterSpacing: 0.3,
+    textTransform: 'capitalize',
+  },
+  roleBtnTextActive: { 
+    color: '#FFFFFF',
+    fontWeight: '800',
+  },
 
-  card: { backgroundColor: '#ffffff', borderRadius: 14, padding: 12, borderWidth: 1, borderColor: '#E5EFE8' },
-  cardShadow: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
-  avatar: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', marginRight: 10, borderWidth: 1, borderColor: '#E2E8F0' },
-  userName: { fontSize: 15, fontWeight: '900', color: '#1F3D2A' },
-  userEmail: { fontSize: 12, color: '#6B7280' },
-  rolePill: { backgroundColor: '#F1F8F4', borderWidth: 1, borderColor: '#E5EFE8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  rolePillText: { fontSize: 12, fontWeight: '800', color: '#1F3D2A' },
+  actions: { 
+    flexDirection: 'row', 
+    gap: 10, 
+    marginTop: 8, 
+    justifyContent: 'flex-end',
+  },
+  actionBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 6, 
+    paddingHorizontal: 14, 
+    paddingVertical: 10, 
+    borderRadius: 10,
+  },
+  actionWarn: { 
+    backgroundColor: '#F59E0B',
+  },
+  actionDanger: { 
+    backgroundColor: '#EF4444',
+  },
+  actionBtnText: { 
+    color: '#fff', 
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 0.3,
+  },
 
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  switchCol: { alignItems: 'center', gap: 4, flex: 1 },
-  switchLabel: { fontSize: 12, fontWeight: '800', color: '#1F3D2A' },
-
-  roleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 },
-  roleLabel: { fontSize: 12, fontWeight: '800', color: '#1F3D2A', marginBottom: 6 },
-  roleButtons: { flexDirection: 'row', gap: 12 },
-  roleBtn: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 1, borderColor: '#E5EFE8', backgroundColor: '#FFFFFF' },
-  roleBtnActive: { backgroundColor: '#2D5A3D', borderColor: '#2D5A3D' },
-  roleBtnText: { color: '#1F3D2A', fontWeight: '800', fontSize: 12 },
-  roleBtnTextActive: { color: '#FFFFFF' },
-
-  actions: { flexDirection: 'row', gap: 8, marginTop: 10, justifyContent: 'flex-end' },
-  actionBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 10, borderRadius: 10 },
-  actionWarn: { backgroundColor: '#F59E0B' },
-  actionDanger: { backgroundColor: '#EF4444' },
-  actionBtnText: { color: '#fff', fontWeight: '900' },
-
-  footerBar: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: 12, backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#E5EFE8' },
-  saveBtn: { backgroundColor: '#2d5a3d', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center', gap: 8 },
-  saveBtnText: { color: '#ffffff', fontWeight: '900' },
-  saveTopWrap: { paddingHorizontal: 16, marginBottom: 8, flexDirection: 'row', justifyContent: 'flex-end' },
-  graphIcon: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
-  graphBar: { width: 6, backgroundColor: '#0F172A', borderRadius: 2 },
+  saveTopWrap: { 
+    paddingHorizontal: 20, 
+    marginTop: 16,
+    marginBottom: 8, 
+    flexDirection: 'row', 
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  topActionBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  saveBtn: { 
+    backgroundColor: GREEN, 
+    borderRadius: 24, 
+    width: 48,
+    height: 48,
+    alignItems: 'center', 
+    justifyContent: 'center',
+    shadowColor: GREEN_DARK,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
 });

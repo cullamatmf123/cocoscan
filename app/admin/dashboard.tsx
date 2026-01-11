@@ -67,71 +67,88 @@ export default function AdminDashboard() {
   return (
     <View style={{ flex: 1 }}>
       <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 120 }}>
-      {/* Header banner */}
-      <View style={styles.headerBanner}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerWelcome}>Welcome back,</Text>
-          <Text style={styles.headerName}>{currentAdmin?.split('@')[0]}</Text>
-        </View>
-        <View style={styles.headerIcons}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityLabel="Profile"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={goProfile}
-          >
+        {/* Header banner */}
+        <View style={styles.headerBanner}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerWelcome}>Welcome back,</Text>
+            <Text style={styles.headerName}>{currentAdmin?.split('@')[0]}</Text>
+          </View>
+          <View style={styles.headerCenter}>
             <View style={styles.emojiBtn}>
               <Text style={styles.emojiText}>🌴</Text>
             </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Stats Card */}
-      <View style={styles.statsCardWrapper}>
-        <View style={styles.statsCard}>
-          <View style={styles.statBlock}>
-            <Text style={styles.statLabel}>Active User</Text>
-            <Text style={styles.statValue}>{totalReport}</Text>
           </View>
-          
-          <View style={styles.statDivider} />
-          
-          <TouchableOpacity 
-            style={styles.statBlock} 
-            onPress={() => router.push('/admin/feedback')}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.statLabel}> User Feedback</Text>
-            <Text style={styles.statValue}>{totalScans}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Second Stats Card */}
-      <View style={[styles.statsCardWrapper, { marginTop: 12 }]}>
-        <TouchableOpacity 
-          style={[styles.statsCard, { backgroundColor: '#2C3E50' }]}
-          onPress={() => router.push('/admin/history')}
-          activeOpacity={0.9}
-        >
-          <View style={styles.statBlock}>
-            <Text style={styles.statLabel}>User History</Text>
-            <Text style={styles.statValue}>{totalHistory}</Text>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel="Profile"
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              onPress={goProfile}
+            >
+              <View style={styles.profileBtn}>
+                <Text style={styles.profileText}>👤</Text>
+              </View>
+            </TouchableOpacity>
           </View>
-          
-          <View style={[styles.statDivider, { backgroundColor: 'rgba(255,255,255,0.35)' }]} />
-          
-          <TouchableOpacity 
-            style={styles.statBlock} 
-            onPress={goUsers}
-            activeOpacity={0.9}
-          >
-            <Text style={styles.statLabel}>User Management</Text>
-            <Text style={styles.statValue}></Text>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </View>
+        </View>
+
+        {/* Stats Card */}
+        <View style={styles.statsCardWrapper}>
+          <View style={styles.statsCard}>
+            <View style={styles.statBlock}>
+              <View style={styles.statIconWrapper}>
+                <Text style={styles.statIcon}>👥</Text>
+              </View>
+              <Text style={styles.statValue}>{totalReport}</Text>
+              <Text style={styles.statLabel}>Active User</Text>
+            </View>
+            
+            <View style={styles.statDivider} />
+            
+            <TouchableOpacity 
+              style={styles.statBlock} 
+              onPress={() => router.push('/admin/feedback')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.statIconWrapper}>
+                <Text style={styles.statIcon}>💭</Text>
+              </View>
+              <Text style={styles.statValue}>{totalScans}</Text>
+              <Text style={styles.statLabel}>User Feedback</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Second Stats Card */}
+        <View style={[styles.statsCardWrapper, { marginTop: 16 }]}>
+          <View style={[styles.statsCard, styles.secondaryCard]}>
+            <TouchableOpacity 
+              style={styles.statBlock} 
+              onPress={() => router.push('/admin/history')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.statIconWrapper}>
+                <Text style={styles.statIcon}>📋</Text>
+              </View>
+              <Text style={styles.statValue}>{totalHistory}</Text>
+              <Text style={styles.statLabel}>User History</Text>
+            </TouchableOpacity>
+            
+            <View style={[styles.statDivider, { backgroundColor: 'rgba(255,255,255,0.3)' }]} />
+            
+            <TouchableOpacity 
+              style={styles.statBlock} 
+              onPress={goUsers}
+              activeOpacity={0.7}
+            >
+              <View style={styles.statIconWrapper}>
+                <Text style={styles.statIcon}>👨‍💼</Text>
+              </View>
+              <Text style={[styles.statValue, { fontSize: 18 }]}>Manage</Text>
+              <Text style={styles.statLabel}>User Management</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
 
       </ScrollView>
     </View>
@@ -139,6 +156,7 @@ export default function AdminDashboard() {
 }
 
 const GREEN = '#1F6A44';
+const DARK_GREEN = '#2C3E50';
 const BG = '#EAF1F7';
 
 const styles = StyleSheet.create({
@@ -148,152 +166,146 @@ const styles = StyleSheet.create({
   },
   headerBanner: {
     backgroundColor: GREEN,
-    paddingHorizontal: 16,
-    paddingTop: 44,
-    paddingBottom: 28,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 50,
+    paddingBottom: 40,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
     flexDirection: 'row',
     alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  headerLeft: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingTop: 72,
+  },
+  headerCenter: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+    pointerEvents: 'box-none',
+  },
+  headerRight: {
+    paddingTop: 72,
   },
   headerWelcome: {
-    color: '#EAFBF1',
-    fontSize: 14,
-    marginTop: 8,
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 15,
     marginBottom: 6,
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
   headerName: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '800',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
     textTransform: 'lowercase',
+    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: 8,
+  emojiBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 3.5,
+    borderColor: '#FFD700',
     alignItems: 'center',
-    paddingTop: 2,
-    paddingLeft: 0,
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    shadowColor: '#FFD700',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  emojiText: {
+    fontSize: 28,
+  },
+  profileBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2.5,
+    borderColor: '#A7F3D0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#A7F3D0',
+  },
+  profileText: {
+    fontSize: 22,
   },
   statsCardWrapper: {
-    marginTop: -8,
-    paddingHorizontal: 16,
+    marginTop: -12,
+    paddingHorizontal: 20,
   },
   statsCard: {
     backgroundColor: GREEN,
-    borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-    borderWidth: 3,
-    borderColor: '#E8F1EA',
+    borderRadius: 20,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    borderWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  secondaryCard: {
+    backgroundColor: DARK_GREEN,
   },
   statBlock: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
   },
+  statIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  statIcon: {
+    fontSize: 24,
+  },
   statDivider: {
-    width: 1,
-    height: '100%',
-    backgroundColor: 'rgba(255,255,255,0.35)',
+    width: 1.5,
+    height: '80%',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    marginHorizontal: 8,
   },
   statLabel: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
-    marginBottom: 8,
+    color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 13,
+    marginTop: 6,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
   statValue: {
     color: '#FFFFFF',
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
-  },
-  rowCard: {
-    marginHorizontal: 16,
-    marginTop: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#9EE6BE',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 14,
-    paddingLeft: 14,
-    paddingRight: 0,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  rowTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  rowArrow: {
-    fontSize: 18,
-    color: '#1E293B',
-  },
-  sectionHeaderRow: {
-    marginHorizontal: 16,
-    marginTop: 18,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1E293B',
-  },
-  statusCard: {
-    backgroundColor: '#FFFFFF',
-    marginTop: 12,
-    borderRadius: 14,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  statusItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 6,
-  },
-  statusText: {
-    color: '#1E293B',
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  dotGreen: {
-    color: '#22C55E',
-    fontSize: 22,
-    lineHeight: 16,
-  },
-  dotAmber: {
-    color: '#F59E0B',
-    fontSize: 22,
-    lineHeight: 16,
-  },
-  emojiBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    borderWidth: 3,
-    borderColor: '#FFD700',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent',
-    marginLeft: -4,
-  },
-  emojiText: {
-    fontSize: 24,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.15)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });

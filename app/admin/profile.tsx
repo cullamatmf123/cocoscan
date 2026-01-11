@@ -87,11 +87,11 @@ export default function AdminProfileScreen() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Go back" style={{ width: 60 }}>
-            <Text style={{ opacity: 0 }}>‹ Back</Text>
+          <TouchableOpacity onPress={() => router.back()} accessibilityLabel="Go back" style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <View style={{ width: 60 }} />
-          <View style={{ width: 60 }} />
+          <Text style={styles.headerTitle}>Profile</Text>
+          <View style={{ width: 40 }} />
         </View>
 
       {/* Farm Info Modal */}
@@ -101,154 +101,417 @@ export default function AdminProfileScreen() {
         </Pressable>
         <View style={styles.modalCenter} pointerEvents="box-none">
           <View style={[styles.card, styles.shadow, styles.modalCard]}>
-            <Text style={styles.modalTitle}>Profile  Info</Text>
+            <Text style={styles.modalTitle}>Profile Info</Text>
             <View style={styles.divider} />
             <View style={styles.row}><Text style={styles.label}>Status</Text><Text style={styles.value}>{profile?.isActive ? 'Active' : 'Inactive'}</Text></View>
             <View style={styles.row}><Text style={styles.label}>Can Scan</Text><Text style={styles.value}>{profile?.canScan ? 'Yes' : 'No'}</Text></View>
             <View style={styles.row}><Text style={styles.label}>Created</Text><Text style={styles.value}>{profile?.createdAt ? profile.createdAt.toLocaleDateString() : '—'}</Text></View>
             <View style={styles.row}><Text style={styles.label}>Last Login</Text><Text style={styles.value}>{profile?.lastLogin ? profile.lastLogin.toLocaleString() : '—'}</Text></View>
-            <TouchableOpacity style={[styles.primaryBtn, { alignSelf: 'center', marginTop: 12 }]} onPress={() => setShowFarmInfo(false)}>
-              <Ionicons name="checkmark" size={16} color="#14532D" />
+            <TouchableOpacity style={[styles.primaryBtn, { alignSelf: 'center', marginTop: 16 }]} onPress={() => setShowFarmInfo(false)}>
+              <Ionicons name="checkmark" size={18} color="#14532D" />
               <Text style={styles.primaryBtnText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-        {/* In-header hero content */}
-        <View style={styles.headerHero}>
-          <Text style={styles.heroTitle}>CocoScan</Text>
-          <View style={styles.heroAvatarWrap}>
+        {/* Profile Header Content */}
+        <View style={styles.profileHeaderContent}>
+          <View style={styles.avatarContainer}>
             {profile?.photoURL ? (
               <Image source={{ uri: profile.photoURL }} style={styles.avatarLarge} />
             ) : (
               <View style={styles.avatarLargePlaceholder}>
-                <Ionicons name="person-outline" size={42} color="#14532D" />
+                <Ionicons name="person" size={56} color="#14532D" />
               </View>
             )}
             <TouchableOpacity style={styles.camBadge} accessibilityLabel="Change photo" onPress={pickImage}>
-              <Ionicons name="camera" size={16} color="#14532D" />
+              <Ionicons name="camera" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
-          {/* Role + Name row */}
-          <View style={styles.heroNameRow}>
-            <View style={styles.heroRoleSpacer} />
-            <Text style={styles.heroNameText}>{profile?.fullName || 'Admin'}</Text>
-            <View style={[styles.heroRolePill, profile?.role === 'admin' && styles.heroRolePillAdmin]}>
-              <Text style={[styles.heroRolePillText, profile?.role === 'admin' && { color: '#FFFFFF' }]}>
-                {(profile?.role || 'admin').toLowerCase()}
-              </Text>
-            </View>
+          
+          <Text style={styles.profileName}>{profile?.fullName || 'Admin'}</Text>
+          
+          <View style={[styles.roleBadge, profile?.role === 'admin' && styles.roleBadgeAdmin]}>
+            <Ionicons name="shield-checkmark" size={14} color={profile?.role === 'admin' ? '#FFFFFF' : '#14532D'} />
+            <Text style={[styles.roleBadgeText, profile?.role === 'admin' && { color: '#FFFFFF' }]}>
+              {(profile?.role || 'admin').toUpperCase()}
+            </Text>
           </View>
-          {/* Set location pill removed per request */}
-          <Text style={[styles.heroEmail, { fontWeight: '900' }]}>{profile?.email}</Text>
-          <TouchableOpacity style={[styles.primaryBtn, { marginTop: 8 }]} accessibilityLabel="Edit Personal Info" onPress={() => setShowFarmInfo(true)}>
-            <Ionicons name="create-outline" size={16} color="#14532D" />
-            <Text style={styles.primaryBtnText}>Edit Personal Info</Text>
-          </TouchableOpacity>
+          
+          <Text style={styles.profileEmail}>{profile?.email}</Text>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }}>
-          {/* Hero content moved into header; keep body focused on details */}
-
-          {/* Level and stats removed per request */}
-
-          {/* Details card removed per request */}
-
-          <View style={[styles.card, styles.shadow, { marginTop: 8 }]}>
-            <Text style={{ fontSize: 16, fontWeight: '900', color: '#1F3D2A', marginBottom: 6 }}>User Feedback</Text>
-            <Text style={{ color: '#475569', marginBottom: 12 }}>
-              Collection of feedback submitted by users. Review and manage entries.
-            </Text>
-            <TouchableOpacity
-              style={[styles.primaryBtn, { alignSelf: 'flex-start' }]}
-              accessibilityRole="button"
-              accessibilityLabel="Go to Admin User Feedback list"
-              onPress={() => router.push('/admin/feedback')}
-            >
-              <Ionicons name="chatbubbles-outline" size={16} color="#14532D" />
-              <Text style={styles.primaryBtnText}>View Feedback</Text>
-            </TouchableOpacity>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* User Feedback Card */}
+        <View style={[styles.card, styles.shadow, styles.actionCard]}>
+          <View style={styles.actionCardHeader}>
+            <View style={styles.actionIconWrapper}>
+              <Ionicons name="chatbubbles" size={24} color="#14532D" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionCardTitle}>User Feedback</Text>
+              <Text style={styles.actionCardDescription}>
+                Review and manage feedback submitted by users
+              </Text>
+            </View>
           </View>
+          <TouchableOpacity
+            style={styles.actionButton}
+            accessibilityRole="button"
+            accessibilityLabel="Go to Admin User Feedback list"
+            onPress={() => router.push('/admin/feedback')}
+          >
+            <Text style={styles.actionButtonText}>View Feedback</Text>
+            <Ionicons name="arrow-forward" size={18} color="#14532D" />
+          </TouchableOpacity>
+        </View>
 
-          <View style={[styles.card, styles.shadow, { marginTop: 12 }]}>
-            <Text style={{ fontSize: 16, fontWeight: '900', color: '#1F3D2A', marginBottom: 6 }}>Account</Text>
-            <Text style={{ color: '#475569', marginBottom: 12 }}>
-              Sign out of your admin account.
-            </Text>
-            <TouchableOpacity
-              style={[styles.logoutBtn, { alignSelf: 'flex-start' }]}
-              accessibilityRole="button"
-              accessibilityLabel="Sign out"
-              onPress={handleSignOut}
-            >
-              <Ionicons name="log-out-outline" size={16} color="#FFFFFF" />
-              <Text style={styles.logoutBtnText}>Sign Out</Text>
-            </TouchableOpacity>
+        {/* Account Actions Card */}
+        <View style={[styles.card, styles.shadow, styles.actionCard]}>
+          <View style={styles.actionCardHeader}>
+            <View style={[styles.actionIconWrapper, { backgroundColor: '#FEE2E2' }]}>
+              <Ionicons name="log-out" size={24} color="#DC2626" />
+            </View>
+            <View style={styles.actionTextContainer}>
+              <Text style={styles.actionCardTitle}>Account</Text>
+              <Text style={styles.actionCardDescription}>
+                Sign out of your admin account
+              </Text>
+            </View>
           </View>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+            onPress={handleSignOut}
+          >
+            <Ionicons name="log-out-outline" size={18} color="#FFFFFF" />
+            <Text style={styles.logoutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+const GREEN_PRIMARY = '#175C35';
+const GREEN_LIGHT = '#A7F3D0';
+const GREEN_DARK = '#14532D';
+const BG_COLOR = '#F7FAF8';
+
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F7FAF8' },
-  header: {
-    flexDirection: 'column',
-    paddingTop: 50, paddingHorizontal: 16, paddingBottom: 24, backgroundColor: '#175C35',
-    borderBottomLeftRadius: 44, borderBottomRightRadius: 44,
+  safe: { 
+    flex: 1, 
+    backgroundColor: BG_COLOR 
   },
-  headerTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  headerHero: { alignItems: 'center', justifyContent: 'center', width: '100%', marginTop: 4 },
-  title: { position: 'absolute', left: 0, right: 0, textAlign: 'center', color: '#FFFFFF', fontSize: 18, fontWeight: '900' },
-
-  card: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 16, borderWidth: 1, borderColor: '#E5EFE8' },
-  shadow: { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  avatar: { width: 64, height: 64, borderRadius: 32, borderWidth: 2, borderColor: '#E6F7ED' },
-  name: { fontSize: 18, fontWeight: '900', color: '#1F3D2A' },
-  email: { fontSize: 12, color: '#6B7280' },
-  rolePill: { backgroundColor: '#F1F8F4', borderWidth: 1, borderColor: '#E5EFE8', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  rolePillText: { fontSize: 12, fontWeight: '800', color: '#1F3D2A' },
-  divider: { height: 1, backgroundColor: '#E5EFE8', marginVertical: 14 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  label: { fontSize: 12, color: '#64748B', fontWeight: '700' },
-  value: { fontSize: 14, color: '#1F3D2A', fontWeight: '800' },
-
-  heroCard: { backgroundColor: '#1F8F61', borderRadius: 22, padding: 16, alignItems: 'center', marginBottom: 12 },
-  heroTitle: { color: '#FFFFFF', fontWeight: '900', fontSize: 18, marginBottom: 10 },
-  heroAvatarWrap: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#A7F3D0', alignItems: 'center', justifyContent: 'center', position: 'relative', marginBottom: 12 },
-  avatarLarge: { width: 120, height: 120, borderRadius: 60 },
-  avatarLargePlaceholder: { width: 120, height: 120, borderRadius: 60, backgroundColor: '#BBF7D0', alignItems: 'center', justifyContent: 'center' },
-  camBadge: { position: 'absolute', right: -4, bottom: -4, width: 30, height: 30, borderRadius: 15, backgroundColor: '#BBF7D0', alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: '#E6F7ED' },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#CFFAEA', borderColor: '#A7F3D0', borderWidth: 1, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 999, marginBottom: 8 },
-  pillText: { color: '#14532D', fontWeight: '800', fontSize: 12 },
-  heroEmail: { color: '#E6FFFA', marginBottom: 10, fontWeight: '700' },
-  primaryBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E6FFFA', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 10 },
-  primaryBtnText: { color: '#14532D', fontWeight: '900' },
-  logoutBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#DC2626', borderRadius: 999, paddingHorizontal: 14, paddingVertical: 10 },
-  logoutBtnText: { color: '#FFFFFF', fontWeight: '900' },
-
-  levelCard: { backgroundColor: '#FFFFFF', borderRadius: 14, padding: 14, marginBottom: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  levelBadge: { width: 24, height: 24, borderRadius: 12, backgroundColor: '#D1FAE5', alignItems: 'center', justifyContent: 'center' },
-  levelText: { color: '#14532D', fontWeight: '900' },
-  statChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#E6FFFA', borderColor: '#BAE6FD', borderWidth: 1, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 999 },
-  statChipText: { color: '#14532D', fontWeight: '800' },
-
-  graphIcon: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
-  graphBar: { width: 6, backgroundColor: '#0F172A', borderRadius: 2 },
-
-  // Modal styles
-  modalBackdrop: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.2)' },
-  modalCenter: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, alignItems: 'center', justifyContent: 'center' },
-  modalCard: { width: '90%', maxWidth: 420, alignSelf: 'center' },
-  modalTitle: { fontSize: 16, fontWeight: '900', color: '#1F3D2A' },
-
-  // Header hero name/role styles
-  heroNameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 4, marginBottom: 2, width: '100%' },
-  heroRolePill: { backgroundColor: '#E6F7ED', borderWidth: 0, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999, minWidth: 64, alignItems: 'center' },
-  heroRolePillAdmin: { backgroundColor: '#134E2B' },
-  heroRolePillText: { fontSize: 12, fontWeight: '900', color: '#134E2B', textTransform: 'lowercase' },
-  heroNameText: { color: '#FFFFFF', fontSize: 18, fontWeight: '900', textAlign: 'center' },
-  heroRoleSpacer: { width: 64 },
+  header: {
+    backgroundColor: GREEN_PRIMARY,
+    paddingTop: 50,
+    paddingBottom: 32,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  headerTop: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 24,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '800',
+    letterSpacing: 0.5,
+  },
+  profileHeaderContent: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: 16,
+  },
+  avatarLarge: { 
+    width: 110, 
+    height: 110, 
+    borderRadius: 55,
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  avatarLargePlaceholder: { 
+    width: 110, 
+    height: 110, 
+    borderRadius: 55, 
+    backgroundColor: GREEN_LIGHT,
+    alignItems: 'center', 
+    justifyContent: 'center',
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  camBadge: { 
+    position: 'absolute', 
+    right: 0, 
+    bottom: 0, 
+    width: 36, 
+    height: 36, 
+    borderRadius: 18, 
+    backgroundColor: GREEN_PRIMARY,
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    borderWidth: 3, 
+    borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+  },
+  profileName: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  roleBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 999,
+    marginBottom: 8,
+  },
+  roleBadgeAdmin: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  roleBadgeText: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    letterSpacing: 1,
+  },
+  profileEmail: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 14,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 120,
+  },
+  card: { 
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 20, 
+    padding: 20,
+    borderWidth: 1, 
+    borderColor: '#E5EFE8',
+    marginBottom: 16,
+  },
+  shadow: { 
+    shadowColor: '#000', 
+    shadowOpacity: 0.08, 
+    shadowRadius: 12, 
+    shadowOffset: { width: 0, height: 4 }, 
+    elevation: 4,
+  },
+  statsCard: {
+    marginTop: -24,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  statIconBg: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#F0FDF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '600',
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
+  statValue: {
+    fontSize: 16,
+    color: GREEN_DARK,
+    fontWeight: '800',
+  },
+  statDivider: {
+    width: 1,
+    height: 60,
+    backgroundColor: '#E5EFE8',
+  },
+  actionCard: {
+    padding: 20,
+  },
+  actionCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+    gap: 14,
+  },
+  actionIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E6F7ED',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionCardTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: GREEN_DARK,
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
+  actionCardDescription: {
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 20,
+    fontWeight: '500',
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: GREEN_LIGHT,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  actionButtonText: {
+    color: GREEN_DARK,
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#DC2626',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+    letterSpacing: 0.3,
+  },
+  infoCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+  },
+  infoCardLabel: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#64748B',
+    letterSpacing: 0.3,
+  },
+  divider: { 
+    height: 1, 
+    backgroundColor: '#E5EFE8', 
+    marginVertical: 16,
+  },
+  row: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    marginBottom: 12,
+    paddingVertical: 4,
+  },
+  label: { 
+    fontSize: 14, 
+    color: '#64748B', 
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  value: { 
+    fontSize: 14, 
+    color: GREEN_DARK, 
+    fontWeight: '800',
+  },
+  modalBackdrop: { 
+    position: 'absolute', 
+    top: 0, 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  modalCenter: { 
+    position: 'absolute', 
+    top: 0, 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalCard: { 
+    width: '100%', 
+    maxWidth: 400,
+  },
+  modalTitle: { 
+    fontSize: 20, 
+    fontWeight: '900', 
+    color: GREEN_DARK,
+    letterSpacing: 0.3,
+  },
+  primaryBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 8, 
+    backgroundColor: GREEN_LIGHT, 
+    borderRadius: 12, 
+    paddingHorizontal: 20, 
+    paddingVertical: 12,
+  },
+  primaryBtnText: { 
+    color: GREEN_DARK, 
+    fontWeight: '900',
+    fontSize: 15,
+    letterSpacing: 0.3,
+  },
 });

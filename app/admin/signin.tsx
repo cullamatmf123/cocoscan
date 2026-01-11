@@ -146,7 +146,7 @@ export default function AdminSignInScreen() {
           <View style={styles.signUpPrompt}>
             <Text style={styles.signUpPromptText}>Don't have an admin account? </Text>
             <TouchableOpacity onPress={handleGoToSignUp} disabled={loading}>
-              <Text style={[styles.signUpLink, loading && styles.linkDisabled]}>Contact Administrator</Text>
+              <Text style={[styles.signUpLink, loading && styles.linkDisabled]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
