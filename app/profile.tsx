@@ -5,16 +5,16 @@ import { getAuth, updateProfile } from 'firebase/auth';
 import { getDownloadURL, getStorage, ref, uploadBytes } from 'firebase/storage';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { AuthService } from '../services/authService';
 
@@ -127,7 +127,9 @@ export default function ProfileScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
+        <View style={styles.logoBadge}>
+          <Text style={styles.logoEmoji}>🌴</Text>
+        </View>
       </View>
 
       <Modal
@@ -139,85 +141,91 @@ export default function ProfileScreen() {
         <View style={styles.menuBackdrop}>
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
-              <Text style={styles.menuItemText}>Profile</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
-              <Text style={styles.menuItemText}>Settings</Text>
-            </TouchableOpacity>
+            <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
               <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         {/* Hero Section */}
         <View style={styles.hero}>
+          <View style={styles.heroDecoTop} />
+          <View style={styles.heroDecoBottom} />
+          
           <View style={styles.avatarWrap}>
-            <TouchableOpacity onPress={pickImage} disabled={uploading}>
-              {uploading ? (
-                <View style={styles.uploadingContainer}>
-                  <ActivityIndicator size="large" color="#4CAF84" />
-                  <Text style={styles.uploadingText}>Uploading...</Text>
-                </View>
-              ) : image ? (
-                <Image source={{ uri: image }} style={styles.profileImage} />
-              ) : (
-                <Ionicons name="person" size={56} color="#EAF7EF" style={styles.defaultAvatar} />
-              )}
-            </TouchableOpacity>
+            <View style={styles.avatarRing}>
+              <TouchableOpacity onPress={pickImage} disabled={uploading} activeOpacity={0.9}>
+                {uploading ? (
+                  <View style={styles.uploadingContainer}>
+                    <ActivityIndicator size="large" color="#4CAF84" />
+                    <Text style={styles.uploadingText}>Uploading...</Text>
+                  </View>
+                ) : image ? (
+                  <Image source={{ uri: image }} style={styles.profileImage} />
+                ) : (
+                  <View style={styles.defaultAvatarContainer}>
+                    <Ionicons name="person" size={60} color="#EAF7EF" />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               style={styles.avatarCamBtn}
               onPress={pickImage}
               disabled={uploading}
               activeOpacity={0.85}
             >
-              <Ionicons name="camera-outline" size={16} color="#1F3D2A" />
+              <Ionicons name="camera" size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
 
           <Text style={styles.nameHero}>{displayName || 'User'}</Text>
           <Text style={styles.emailText}>{AuthService.getCurrentUser()?.email || 'user@example.com'}</Text>
 
-          <TouchableOpacity style={styles.editBtn} onPress={() => console.log('Edit Personal Info')} activeOpacity={0.85}>
-            <Ionicons name="create-outline" size={16} color="#1F3D2A" />
-            <Text style={styles.editBtnText}>Edit Personal Info</Text>
-          </TouchableOpacity>
+          
         </View>
  
         {/* Feedback Card */}
-        <View style={[styles.card, { marginTop: 24 }]}>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Ionicons name="chatbubbles-outline" size={22} color="#1F3D2A" />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.feedbackTitle}>Tell us what you think about the CocoScan app!</Text>
-              <Text style={styles.feedbackText}>We value your opinions  share your feedback with us.</Text>
-            </View>
+        <View style={styles.card}>
+          <View style={styles.feedbackIconContainer}>
+            <Ionicons name="chatbubbles" size={24} color="#3FA36E" />
           </View>
-          <TouchableOpacity style={styles.feedbackBtn} onPress={() => router.push('/feedback')} activeOpacity={0.9}>
-            <Text style={styles.feedbackBtnText}>Give Feedback</Text>
-          </TouchableOpacity>
+          <View style={styles.cardContent}>
+            <Text style={styles.feedbackTitle}>Tell us what you think!</Text>
+            <Text style={styles.feedbackText}>We value your opinions — share your feedback with us and help improve CocoScan.</Text>
+            <TouchableOpacity style={styles.feedbackBtn} onPress={() => router.push('/feedback')} activeOpacity={0.9}>
+              <Text style={styles.feedbackBtnText}>Give Feedback</Text>
+              <Ionicons name="arrow-forward" size={16} color="#FFFFFF" />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
-      {/* Footer navigation (unchanged) */}
+      {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')}>
-          <Feather name="home" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7}>
+          <Feather name="home" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')}>
-          <Feather name="camera" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} activeOpacity={0.7}>
+          <Feather name="camera" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')}>
-          <Feather name="clock" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} activeOpacity={0.7}>
+          <Feather name="clock" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>History</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')}>
-          <Feather name="user" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} activeOpacity={0.7}>
+          <Feather name="user" size={24} color="#1F3D2A" />
+          <Text style={[styles.footerLabel, { color: '#1F3D2A', fontWeight: '700' }]}>Profile</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -227,216 +235,299 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#FFFFFF'
+    backgroundColor: '#F9FAFB'
   },
   menuBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.25)'
+    backgroundColor: 'rgba(0,0,0,0.4)'
   },
   menuBackdropTouch: {
     ...StyleSheet.absoluteFillObject as any,
   },
   menuSheet: {
-    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
+    position: 'absolute',
+    top: 72,
+    left: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 12,
+    width: 240,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
-  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
-  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16
+  },
+  menuIcon: {
+    marginRight: 12
+  },
+  menuItemText: {
+    color: '#1F3D2A',
+    fontSize: 16,
+    fontWeight: '600'
+  },
   menuDivider: {
     height: 1,
-    backgroundColor: '#E5E7EB',
-    marginVertical: 2,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 12,
   },
+  
   /* App Bar */
   appBar: {
     paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
-  hamburger: { padding: 8 },
-  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  hamburger: {
+    padding: 8,
+    borderRadius: 12,
+  },
+  menuLineDark: {
+    width: 26,
+    height: 3,
+    backgroundColor: '#0F3D1E',
+    marginVertical: 3,
+    borderRadius: 2
+  },
   brandTitle: {
     color: '#0F3D1E',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
-  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
-  logoEmoji: { fontSize: 18 },
-
-  /* Hero */
-  hero: {
-    marginTop: 4,
-    marginHorizontal: 0,
-    backgroundColor: '#1E5A3A',
-    borderBottomLeftRadius: 96,
-    borderBottomRightRadius: 96,
+  logoBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1F4D36',
     alignItems: 'center',
-    paddingTop: 28,
-    paddingBottom: 28,
-  },
-  profileImage: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    justifyContent: 'center',
     borderWidth: 3,
-    borderColor: '#E2E8F0',
+    borderColor: '#F2C200',
+    shadowColor: '#F2C200',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
-  defaultAvatar: {
-    width: 92,
-    height: 92,
-    textAlign: 'center',
-    textAlignVertical: 'center',
-    backgroundColor: 'transparent'
+  logoEmoji: {
+    fontSize: 20
+  },
+
+  /* Hero - Enhanced Futuristic Design */
+  hero: {
+    marginTop: 8,
+    marginHorizontal: 16,
+    backgroundColor: '#0F3D1E',
+    borderRadius: 28,
+    alignItems: 'center',
+    paddingTop: 40,
+    paddingBottom: 40,
+    position: 'relative',
+    overflow: 'hidden',
+    shadowColor: '#0F3D1E',
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(242, 194, 0, 0.2)',
+  },
+  heroDecoTop: {
+    position: 'absolute',
+    top: -60,
+    right: -60,
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(242, 194, 0, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(242, 194, 0, 0.15)',
+  },
+  heroDecoBottom: {
+    position: 'absolute',
+    bottom: -50,
+    left: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(63, 163, 110, 0.08)',
+    borderWidth: 2,
+    borderColor: 'rgba(63, 163, 110, 0.12)',
   },
   avatarWrap: {
     position: 'relative',
-    width: 92,
-    height: 92,
+    width: 120,
+    height: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  avatarRing: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'transparent',
+    padding: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: 'rgba(242, 194, 0, 0.4)',
+    shadowColor: '#F2C200',
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  profileImage: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+  },
+  defaultAvatarContainer: {
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: 'rgba(31, 77, 54, 0.6)',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarCamBtn: {
     position: 'absolute',
     right: -2,
-    bottom: -2,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5EFE8',
+    bottom: 0,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#3FA36E',
+    borderWidth: 4,
+    borderColor: '#0F3D1E',
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#3FA36E',
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
   },
   uploadingContainer: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
-    backgroundColor: 'rgba(255,255,255,0.9)',
+    width: 108,
+    height: 108,
+    borderRadius: 54,
+    backgroundColor: 'rgba(255,255,255,0.98)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#E2E8F0',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
   },
   uploadingText: {
-    marginTop: 4,
-    fontSize: 10,
-    color: '#4CAF84',
-    fontWeight: '600',
-  },
-  nameHero: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#EAF7EF'
-  },
-  emailText: {
-    color: '#EAF7EF',
-    marginTop: 4,
-    fontWeight: '600',
-    textAlign: 'center'
-  },
-  editBtn: {
-    marginTop: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#ffffff',
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1,
-    borderColor: '#E5EFE8'
-  },
-  editBtnText: {
-    color: '#1F3D2A',
-    fontWeight: '900'
-  },
-
-  /* Cards */
-  card: {
-    marginTop: 12,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    marginHorizontal: 12,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#1F3D2A',
-  },
-  metricsCard: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-    padding: 0,
-    overflow: 'hidden',
-  },
-  metricCol: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  metricTitle: {
-    color: '#4B5563',
+    marginTop: 6,
+    fontSize: 11,
+    color: '#3FA36E',
     fontWeight: '700',
   },
-  metricValue: {
-    marginTop: 6,
-    fontSize: 20,
+  nameHero: {
+    marginTop: 18,
+    fontSize: 26,
     fontWeight: '900',
-    color: '#0B3B2A'
+    color: '#FFFFFF',
+    letterSpacing: 0.8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
-  metricDivider: {
-    width: 1,
-    backgroundColor: '#E5E7EB'
-  },
-  recentEmpty: {
-    height: 40,
-    backgroundColor: '#F5F6F7',
-    borderRadius: 8,
-    marginTop: 10,
+  emailText: {
+    color: 'rgba(242, 194, 0, 0.9)',
+    marginTop: 6,
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    letterSpacing: 0.3,
   },
 
-  /* Feedback */
+  /* Cards - Enhanced Tech Style */
+  card: {
+    marginTop: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    marginHorizontal: 16,
+    padding: 24,
+    shadowColor: '#0F3D1E',
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(63, 163, 110, 0.15)',
+  },
+  cardContent: {
+    marginTop: 16,
+  },
+  feedbackIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(63, 163, 110, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(63, 163, 110, 0.2)',
+    shadowColor: '#3FA36E',
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
   feedbackTitle: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#1F3D2A',
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#0F3D1E',
+    marginBottom: 10,
+    letterSpacing: 0.3,
   },
   feedbackText: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#4B5563',
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 22,
+    fontWeight: '500',
   },
   feedbackBtn: {
-    alignSelf: 'flex-end',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
     backgroundColor: '#3FA36E',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 999,
-    marginTop: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 28,
+    borderRadius: 16,
+    marginTop: 18,
+    shadowColor: '#3FA36E',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   feedbackBtnText: {
     color: '#FFFFFF',
-    fontWeight: '900',
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.4,
   },
 
   /* Footer */
@@ -447,17 +538,44 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    borderTopColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
   },
   footerItem: {
-    flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  footerLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  cameraButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3FA36E',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: -20,
+    shadowColor: '#3FA36E',
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
   },
 });
-
-

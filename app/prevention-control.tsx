@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Alert, Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -71,7 +71,9 @@ export default function PreventionControlScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
+        <View style={styles.logoBadge}>
+          <Text style={styles.logoEmoji}>🌴</Text>
+        </View>
       </View>
 
       {/* Menu Modal */}
@@ -84,16 +86,14 @@ export default function PreventionControlScreen() {
         <View style={styles.menuBackdrop}>
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
-              <Text style={styles.menuItemText}>Profile</Text>
-            </TouchableOpacity>
+            <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); Alert.alert('Settings', 'Settings will be available soon.'); }}>
-              <Text style={styles.menuItemText}>Settings</Text>
-            </TouchableOpacity>
+            <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
               <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
@@ -163,10 +163,10 @@ export default function PreventionControlScreen() {
             <Text style={styles.infoBody}>Chop up and destroy decaying logs, stumps, dead leaves, and dead standing palms—prime CRB larval habitats.</Text>
 
             <Text style={styles.infoHeading}>Compost properly</Text>
-            <Text style={styles.infoBody}>Turn piles regularly so they don’t harbor larvae; spread thin layers to make breeding unsuitable.</Text>
+            <Text style={styles.infoBody}>Turn piles regularly so they don't harbor larvae; spread thin layers to make breeding unsuitable.</Text>
 
             <Text style={styles.infoHeading}>Cover stumps</Text>
-            <Text style={styles.infoBody}>When removal isn’t possible, plant vines or ground cover over stumps to deter egg‑laying.</Text>
+            <Text style={styles.infoBody}>When removal isn't possible, plant vines or ground cover over stumps to deter egg‑laying.</Text>
 
             <Text style={styles.infoHeading}>Inspect green waste</Text>
             <Text style={styles.infoBody}>Check mulch or compost for CRB adults or larvae before use to avoid moving infestations.</Text>
@@ -249,7 +249,7 @@ export default function PreventionControlScreen() {
         </ScrollView>
 
         {controlTab === 0 && (
-          <View>
+          <View style={styles.contentSection}>
             <View style={styles.imageBg}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
                 <View style={{ width: 6 }} />
@@ -262,14 +262,27 @@ export default function PreventionControlScreen() {
                 <Text style={styles.photosCountText}>{controlMechanicalImages.length} photos</Text>
               </View>
             </View>
-            <Text style={styles.bullet}>• Manually remove adults from crowns and breeding sites.</Text>
-            <Text style={styles.bullet}>• Deploy pheromone traps (ethyl 4-methyl octanoate) for monitoring and mass-trapping.</Text>
-            <Text style={styles.bullet}>• Monitor after treatment to ensure populations stay low.</Text>
+            <View style={styles.infoCard}>
+              <View style={styles.bulletList}>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Manually remove adults from crowns and breeding sites.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Deploy pheromone traps (ethyl 4-methyl octanoate) for monitoring and mass-trapping.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Monitor after treatment to ensure populations stay low.</Text>
+                </View>
+              </View>
+            </View>
           </View>
         )}
 
         {controlTab === 1 && (
-          <View>
+          <View style={styles.contentSection}>
             <View style={styles.imageBg}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
                 <View style={{ width: 6 }} />
@@ -286,14 +299,27 @@ export default function PreventionControlScreen() {
                 <Text style={styles.photosCountText}>{ornvGmfImages.length} photos</Text>
               </View>
             </View>
-            <Text style={styles.bullet}>• Use Oryctes rhinoceros nudivirus (OrNV) to infect and kill beetles naturally.</Text>
-            <Text style={styles.bullet}>• Apply Metarhizium anisopliae (green fungus) to breeding sites.</Text>
-            <Text style={styles.bullet}>• Encourage natural predators such as birds or parasitic insects.</Text>
+            <View style={styles.infoCard}>
+              <View style={styles.bulletList}>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Use Oryctes rhinoceros nudivirus (OrNV) to infect and kill beetles naturally.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Apply Metarhizium anisopliae (green fungus) to breeding sites.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Encourage natural predators such as birds or parasitic insects.</Text>
+                </View>
+              </View>
+            </View>
           </View>
         )}
 
         {controlTab === 2 && (
-          <View>
+          <View style={styles.contentSection}>
             <View style={styles.imageBg}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
                 <View style={{ width: 6 }} />
@@ -306,16 +332,18 @@ export default function PreventionControlScreen() {
                 <Text style={styles.photosCountText}>{monitoringImages.length} photos</Text>
               </View>
             </View>
-            <Text style={styles.infoBody}>Log Trapping</Text>
-            <Text style={styles.infoBody}>Place decomposing coconut logs around plantations. Add attractants (e.g., sugar, yeast, or molasses) to lure adult beetles, and check regularly to destroy captured beetles.</Text>
+            <View style={styles.infoCard}>
+              <Text style={styles.methodTitle}>Log Trapping</Text>
+              <Text style={styles.methodBody}>Place decomposing coconut logs around plantations. Add attractants (e.g., sugar, yeast, or molasses) to lure adult beetles, and check regularly to destroy captured beetles.</Text>
 
-            <Text style={[styles.infoBody, { marginTop: 6 }]}>Pheromone Trapping</Text>
-            <Text style={styles.infoBody}>Use synthetic pheromones (e.g., ethyl 4-methyloctanoate) to attract adult beetles into traps. Suitable for monitoring and mass trapping in infested areas.</Text>
+              <Text style={[styles.methodTitle, { marginTop: 16 }]}>Pheromone Trapping</Text>
+              <Text style={styles.methodBody}>Use synthetic pheromones (e.g., ethyl 4-methyloctanoate) to attract adult beetles into traps. Suitable for monitoring and mass trapping in infested areas.</Text>
+            </View>
           </View>
         )}
 
         {controlTab === 3 && (
-          <View>
+          <View style={styles.contentSection}>
             <View style={styles.imageBg}>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
                 <View style={{ width: 6 }} />
@@ -331,10 +359,26 @@ export default function PreventionControlScreen() {
                 <Text style={styles.photosCountText}>{chemicalImages.length} photos</Text>
               </View>
             </View>
-            <Text style={styles.bullet}>• Use insecticides only as directed under expert guidance.</Text>
-            <Text style={styles.bullet}>• Adopt IPM: combine cultural, biological, and chemical methods.</Text>
-            <Text style={styles.bullet}>• Target breeding sites or the tree crown with recommended chemicals.</Text>
-            <Text style={styles.bullet}>• Follow safety and environmental precautions strictly.</Text>
+            <View style={styles.infoCard}>
+              <View style={styles.bulletList}>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Use insecticides only as directed under expert guidance.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Adopt IPM: combine cultural, biological, and chemical methods.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Target breeding sites or the tree crown with recommended chemicals.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Follow safety and environmental precautions strictly.</Text>
+                </View>
+              </View>
+            </View>
           </View>
         )}
 
@@ -343,17 +387,21 @@ export default function PreventionControlScreen() {
 
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
-          <Feather name="home" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
-          <Feather name="camera" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
-          <Feather name="clock" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} activeOpacity={0.7} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>History</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
-          <Feather name="user" size={24} color="#000" />
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} activeOpacity={0.7} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -361,49 +409,188 @@ export default function PreventionControlScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#ffffff' },
-  headerBar: {
-    paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
-    borderBottomColor: '#E5E7EB',
-    borderBottomWidth: 1,
+  safe: { 
+    flex: 1, 
+    backgroundColor: '#F9FAFB' 
   },
+  
+  /* App Bar */
   appBar: {
     paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
-  hamburger: { padding: 8 },
-  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2, borderRadius: 2 },
+  hamburger: {
+    padding: 8,
+    borderRadius: 12,
+  },
+  menuLineDark: {
+    width: 26,
+    height: 3,
+    backgroundColor: '#0F3D1E',
+    marginVertical: 3,
+    borderRadius: 2
+  },
   brandTitle: {
     color: '#0F3D1E',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
-  appBarSpacer: { width: 34, height: 34 },
-  logoBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#1F4D36', alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: '#F2C200' },
-  logoEmoji: { fontSize: 18 },
-  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
-  menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
+  logoBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1F4D36',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#F2C200',
+    shadowColor: '#F2C200',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  logoEmoji: { 
+    fontSize: 20 
+  },
+  
+  /* Menu Modal */
+  menuBackdrop: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.4)' 
+  },
+  menuBackdropTouch: {
+    ...StyleSheet.absoluteFillObject as any,
+  },
   menuSheet: {
-    position: 'absolute', top: 60, left: 12, backgroundColor: '#FFFFFF', borderRadius: 16, paddingVertical: 8, width: 220,
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 14, shadowOffset: { width: 0, height: 8 }, elevation: 8,
+    position: 'absolute',
+    top: 72,
+    left: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 12,
+    width: 240,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
-  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
-  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
-  contentWrap: { padding: 16, paddingBottom: 120 },
-  title: { fontSize: 22, fontWeight: '800', color: '#111827', marginTop: 8, marginBottom: 8 },
-  sectionHeading: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 12, marginBottom: -4, lineHeight: 18 },
-  bullet: { fontSize: 14, color: '#374151', lineHeight: 22, marginBottom: 6 },
-  imageCaption: { color: '#6B7280', fontSize: 12, marginTop: 2, marginBottom: 0 },
-  imageCaptionSub: { color: '#9CA3AF', fontSize: 11, marginTop: 2, marginBottom: 0 },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16
+  },
+  menuIcon: {
+    marginRight: 12
+  },
+  menuItemText: {
+    color: '#1F3D2A',
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 12,
+  },
+  
+  /* Content */
+  contentWrap: { 
+    padding: 16, 
+    paddingBottom: 120 
+  },
+  title: { 
+    fontSize: 26, 
+    fontWeight: '900', 
+    color: '#111827', 
+    marginTop: 8, 
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  sectionHeading: { 
+    fontSize: 18, 
+    fontWeight: '900', 
+    color: '#111827', 
+    marginTop: 20, 
+    marginBottom: 8, 
+    lineHeight: 24,
+    letterSpacing: 0.3,
+  },
+  bullet: { 
+    fontSize: 15, 
+    color: '#4B5563', 
+    lineHeight: 24, 
+    marginBottom: 10,
+    letterSpacing: 0.2,
+  },
+  bulletList: {
+    marginTop: 4,
+    gap: 8,
+  },
+  bulletItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  bulletDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#16A34A',
+    marginTop: 9,
+    flexShrink: 0,
+  },
+  bulletPoint: {
+    flex: 1,
+    fontSize: 15,
+    color: '#374151',
+    lineHeight: 24,
+    letterSpacing: 0.2,
+    fontWeight: '500',
+  },
+  contentSection: {
+    marginTop: 4,
+  },
+  infoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#E5EFE8',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  methodTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#047857',
+    marginBottom: 8,
+    letterSpacing: 0.3,
+  },
+  methodBody: {
+    fontSize: 15,
+    color: '#4B5563',
+    lineHeight: 22,
+    letterSpacing: 0.2,
+  },
+  imageCaption: { 
+    color: '#6B7280', 
+    fontSize: 12, 
+    marginTop: 2, 
+    marginBottom: 0 
+  },
   imageBg: {
     width: '100%',
     alignSelf: 'flex-start',
@@ -430,44 +617,95 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  photosCountText: { color: '#6B7280', fontSize: 12, fontWeight: '600' },
-  controlRow: { flexDirection: 'row', gap: 10, paddingRight: 4, marginBottom: 8 },
-  controlImage: { width: 220, height: 140, borderRadius: 10, backgroundColor: '#ffffff' },
-  footerBar: {
-    position: 'absolute', left: 0, right: 0, bottom: 0, backgroundColor: '#FFFFFF',
-    borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10, paddingHorizontal: 24,
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    width: '100%', flexWrap: 'nowrap', zIndex: 10,
+  photosCountText: { 
+    color: '#6B7280', 
+    fontSize: 12, 
+    fontWeight: '600' 
   },
-  footerItem: { flex: 1, alignItems: 'center' },
-  // Recommended box styles
-  recBox: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 10,
-    marginTop: 6,
-    marginBottom: 10,
-  },
-  recTitle: { fontSize: 16, fontWeight: '800', color: '#0F3D1E', marginBottom: 8 },
-  recRow: { flexDirection: 'row', gap: 10, paddingRight: 6 },
-  recCard: { width: 220 },
-  recImage: { width: '100%', height: 120, borderRadius: 10, backgroundColor: '#F3F4F6' },
-  recCaption: { marginTop: 6, color: '#374151', fontSize: 14 },
-  // Tabs styles
+  
+  /* Tabs */
   tabsRow: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    paddingVertical: 6,
-    marginBottom: 6,
-    paddingRight: 20, // Extra padding to ensure last tab is fully visible
+    paddingVertical: 8,
+    marginBottom: 12,
+    paddingRight: 20,
   },
-  tabItem: { paddingBottom: 2, flexShrink: 0 },
-  tabItemActive: { paddingBottom: 2, flexShrink: 0 },
-  tabText: { color: '#6B7280', fontSize: 14, fontWeight: '600' },
-  tabTextActive: { color: '#16A34A', fontSize: 14, fontWeight: '800' },
-  tabUnderline: { height: 3, backgroundColor: '#16A34A', borderRadius: 2, marginTop: 2, width: 22 },
-  infoHeading: { color: '#065F46', fontSize: 16, fontWeight: '800', marginTop: 8, marginBottom: 2 },
-  infoBody: { color: '#374151', fontSize: 14, lineHeight: 20, marginBottom: 6 },
+  tabItem: { 
+    paddingBottom: 4,
+    paddingHorizontal: 4,
+    flexShrink: 0 
+  },
+  tabItemActive: { 
+    paddingBottom: 4,
+    paddingHorizontal: 4,
+    flexShrink: 0 
+  },
+  tabText: { 
+    color: '#6B7280', 
+    fontSize: 15, 
+    fontWeight: '600',
+    letterSpacing: 0.2,
+  },
+  tabTextActive: { 
+    color: '#16A34A', 
+    fontSize: 15, 
+    fontWeight: '800',
+    letterSpacing: 0.2,
+  },
+  tabUnderline: { 
+    height: 3, 
+    backgroundColor: '#16A34A', 
+    borderRadius: 2, 
+    marginTop: 4, 
+    width: '100%',
+  },
+  infoHeading: { 
+    color: '#047857', 
+    fontSize: 17, 
+    fontWeight: '900', 
+    marginTop: 16, 
+    marginBottom: 6,
+    letterSpacing: 0.3,
+  },
+  infoBody: { 
+    color: '#4B5563', 
+    fontSize: 15, 
+    lineHeight: 22, 
+    marginBottom: 12,
+    letterSpacing: 0.2,
+  },
+  
+  /* Footer */
+  footerBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
+  },
+  footerItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  footerLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginTop: 4,
+  },
 });

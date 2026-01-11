@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import {
@@ -312,7 +312,7 @@ export default function HistoryScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* App Bar (white) */}
+      {/* App Bar */}
       <View style={styles.appBar}>
         <TouchableOpacity
           style={styles.hamburger}
@@ -328,6 +328,7 @@ export default function HistoryScreen() {
           <Text style={styles.logoEmoji}>🌴</Text>
         </View>
       </View>
+
       {/* Menu Modal */}
       <Modal
         visible={menuVisible}
@@ -342,15 +343,7 @@ export default function HistoryScreen() {
             onPress={() => setMenuVisible(false)}
           />
           <View style={styles.menuSheet}>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                router.push('/profile');
-              }}
-            >
-              <Text style={styles.menuItemText}>Profile</Text>
-            </TouchableOpacity>
+            <View style={styles.menuDivider} />
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -358,20 +351,10 @@ export default function HistoryScreen() {
                 router.push('/about-app');
               }}
             >
+              <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => {
-                setMenuVisible(false);
-                Alert.alert(
-                  'Settings',
-                  'Settings will be available soon.'
-                );
-              }}
-            >
-              <Text style={styles.menuItemText}>Settings</Text>
-            </TouchableOpacity>
+            <View style={styles.menuDivider} />
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => {
@@ -379,15 +362,13 @@ export default function HistoryScreen() {
                 router.replace('/');
               }}
             >
-              <Text
-                style={[styles.menuItemText, { color: '#DC2626' }]}
-              >
-                Logout
-              </Text>
+              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
+
       <Text style={styles.pageHeading}>History</Text>
 
       {/* List */}
@@ -456,30 +437,38 @@ export default function HistoryScreen() {
         <TouchableOpacity
           style={styles.footerItem}
           onPress={() => router.replace('/home')}
+          activeOpacity={0.7}
           accessibilityLabel="Go to Home"
         >
-          <Feather name="home" size={24} color="#000" />
+          <Feather name="home" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.footerItem}
           onPress={() => router.push('/camera')}
+          activeOpacity={0.7}
           accessibilityLabel="Open Camera"
         >
-          <Feather name="camera" size={24} color="#000" />
+          <Feather name="camera" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.footerItem}
           onPress={() => router.push('/history')}
+          activeOpacity={0.7}
           accessibilityLabel="View History"
         >
-          <Feather name="clock" size={24} color="#000" />
+          <Feather name="clock" size={24} color="#1F3D2A" />
+          <Text style={[styles.footerLabel, { color: '#1F3D2A', fontWeight: '700' }]}>History</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.footerItem}
           onPress={() => router.push('/profile')}
+          activeOpacity={0.7}
           accessibilityLabel="Open Profile"
         >
-          <Feather name="user" size={24} color="#000" />
+          <Feather name="user" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -487,60 +476,93 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
+  /* App Bar - Matching HomeScreen */
   appBar: {
     paddingTop: 48,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F9FAFB',
   },
-  hamburger: { padding: 8 },
+  hamburger: {
+    padding: 8,
+    borderRadius: 12,
+  },
   menuLineDark: {
-    width: 24,
+    width: 26,
     height: 3,
     backgroundColor: '#0F3D1E',
-    marginVertical: 2,
+    marginVertical: 3,
     borderRadius: 2,
   },
   brandTitle: {
     color: '#0F3D1E',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
-  appBarSpacer: { width: 34, height: 34 },
+  appBarSpacer: { width: 40, height: 40 },
   logoBadge: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#1F4D36',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 3,
     borderColor: '#F2C200',
+    shadowColor: '#F2C200',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
   },
-  logoEmoji: { fontSize: 18 },
-  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.25)' },
-  menuBackdropTouch: { ...(StyleSheet.absoluteFillObject as any) },
+  logoEmoji: { fontSize: 20 },
+  
+  /* Menu Modal - Matching HomeScreen */
+  menuBackdrop: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.4)' 
+  },
+  menuBackdropTouch: { 
+    ...(StyleSheet.absoluteFillObject as any) 
+  },
   menuSheet: {
     position: 'absolute',
-    top: 60,
-    left: 12,
+    top: 72,
+    left: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 8,
-    width: 220,
+    borderRadius: 20,
+    paddingVertical: 12,
+    width: 240,
     shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
   },
-  menuItem: { paddingHorizontal: 16, paddingVertical: 14 },
-  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700' },
-  menuDivider: { height: 1, backgroundColor: '#E5E7EB', marginVertical: 2 },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  menuIcon: {
+    marginRight: 12,
+  },
+  menuItemText: { 
+    color: '#1F3D2A', 
+    fontSize: 16, 
+    fontWeight: '600' 
+  },
+  menuDivider: { 
+    height: 1, 
+    backgroundColor: '#F3F4F6', 
+    marginHorizontal: 12 
+  },
+
   pageHeading: {
     color: '#0F3D1E',
     fontSize: 20,
@@ -624,22 +646,37 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '80%',
   },
+  
+  /* Footer - Matching HomeScreen */
   footerBar: {
     position: 'absolute',
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    borderTopColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    width: '100%',
-    flexWrap: 'nowrap',
-    zIndex: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
   },
-  footerItem: { flex: 1, alignItems: 'center' },
+  footerItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  footerLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginTop: 4,
+  },
 });

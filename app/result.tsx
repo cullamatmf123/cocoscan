@@ -1,12 +1,12 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { addHistoryItem } from '../services/historyService';
 
 interface ResultParams {
   id?: string;
-  fromHistory?: string; // '1' when opened from history
+  fromHistory?: string;
   imageUri?: string;
   photoBase64?: string;
   prediction?: string;
@@ -25,6 +25,7 @@ export default function ResultScreen() {
   const params = useLocalSearchParams() as Partial<ResultParams>;
   const savedRef = useRef(false);
   const [tab, setTab] = useState<'status' | 'pest'>('status');
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const {
     id,
@@ -75,11 +76,9 @@ export default function ResultScreen() {
     [prediction]
   );
 
-  // Save result to Firestore history once when screen mounts with data
   useEffect(() => {
     const saveToHistory = async () => {
-      if (savedRef.current) return; // avoid duplicates on rerenders
-      // If opened from history or an id already exists, do not save again
+      if (savedRef.current) return;
       if (fromHistory === '1' || (id && id.length > 0)) return;
       if (!imageUri && !photoBase64) return;
       
@@ -139,27 +138,13 @@ export default function ResultScreen() {
     });
   };
 
-  const handlePesticidePress = () => {
-    router.push({
-      pathname: '/about',
-      params: {
-        tab: 'pesticide',
-        imageUri,
-        photoBase64,
-        prediction,
-        details,
-        recommendations,
-      },
-    });
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
-      {/* Header */}
-      <View style={styles.headerBar}>
+      {/* App Bar */}
+      <View style={styles.appBar}>
         <TouchableOpacity
           style={styles.hamburger}
-          onPress={() => router.replace('/home')}
+          onPress={() => setMenuVisible(true)}
           accessibilityLabel="Open menu"
         >
           <View style={styles.menuLineDark} />
@@ -167,9 +152,34 @@ export default function ResultScreen() {
           <View style={styles.menuLineDark} />
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
-        {/* spacer to balance layout */}
-        <View style={{ width: 40 }} />
+        <View style={styles.logoBadge}>
+          <Text style={styles.logoEmoji}>🌴</Text>
+        </View>
       </View>
+
+      {/* Menu Modal */}
+      <Modal
+        visible={menuVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuVisible(false)}
+      >
+        <View style={styles.menuBackdrop}>
+          <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
+          <View style={styles.menuSheet}>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+              <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
+              <Text style={styles.menuItemText}>About</Text>
+            </TouchableOpacity>
+            <View style={styles.menuDivider} />
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
+              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Card */}
@@ -215,7 +225,6 @@ export default function ResultScreen() {
 
               {/* Status card */}
               <View style={styles.statusCard}>
-                {/* Thumb */}
                 <View style={{ marginRight: 10 }}>
                   {imageUri ? (
                     <Image source={{ uri: imageUri }} style={styles.statusThumb} />
@@ -225,7 +234,6 @@ export default function ResultScreen() {
                     <View style={[styles.statusThumb, { backgroundColor: '#E5E7EB' }]} />
                   )}
                 </View>
-                {/* Right content */}
                 <View style={{ flex: 1 }}>
                   <Text style={styles.statusTitle}>AI : {displayPrediction}</Text>
                   <View style={styles.statusChipsRow}>
@@ -371,28 +379,32 @@ export default function ResultScreen() {
         </View>
 
         {/* Scan Again button */}
-        <View style={{ paddingHorizontal: 16, marginTop: 8, marginBottom: 56 }}>
+        <View style={{ paddingHorizontal: 0, marginTop: 8, marginBottom: 20 }}>
           <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/camera')} accessibilityLabel="Scan Again">
             <Text style={styles.scanAgainText}>Scan Again</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Footer navigation */}
-        <View style={styles.footerBar}>
-          <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
-            <Feather name="home" size={24} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
-            <Feather name="camera" size={24} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
-            <Feather name="clock" size={24} color="#000" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} accessibilityLabel="Open Profile">
-            <Feather name="user" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
       </ScrollView>
+
+      {/* Footer navigation */}
+      <View style={styles.footerBar}>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+          <Feather name="home" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
+          <Feather name="camera" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Camera</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} activeOpacity={0.7} accessibilityLabel="View History">
+          <Feather name="clock" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>History</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} activeOpacity={0.7} accessibilityLabel="Open Profile">
+          <Feather name="user" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Profile</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -400,72 +412,133 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#f7f7f7',
+    backgroundColor: '#F9FAFB',
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerBar: {
-    height: 56,
-    backgroundColor: '#FFFFFF',
+  
+  /* App Bar */
+  appBar: {
+    paddingTop: 48,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    backgroundColor: '#F9FAFB',
   },
-  hamburger: { padding: 8 },
+  hamburger: {
+    padding: 8,
+    borderRadius: 12,
+  },
   menuLineDark: {
-    width: 24,
+    width: 26,
     height: 3,
     backgroundColor: '#0F3D1E',
-    marginVertical: 2,
-    borderRadius: 2,
+    marginVertical: 3,
+    borderRadius: 2
   },
   brandTitle: {
     color: '#0F3D1E',
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 1,
+    letterSpacing: 1.2,
   },
-  tabRow: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: 10 },
-  tabItem: { flex: 1, alignItems: 'center', paddingVertical: 6 },
-  tabText: { color: '#6B7280', fontWeight: '700' },
-  tabTextActive: { color: '#0F3D1E', fontWeight: '900' },
-  tabUnderline: { height: 3, backgroundColor: '#0F3D1E', width: 40, borderRadius: 2, marginTop: 4 },
-  statusDateHeader: { color: '#111827', fontWeight: '900', marginBottom: 8, marginTop: 4 },
-  statusCard: { backgroundColor: '#CFE6D2', borderRadius: 12, padding: 10, flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  statusThumb: { width: 56, height: 56, borderRadius: 8 },
-  statusTitle: { color: '#0F3D1E', fontWeight: '900', marginBottom: 6 },
-  statusChipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 2 },
-  statusChipText: { color: '#0F3D1E', fontSize: 12 },
+  logoBadge: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#1F4D36',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#F2C200',
+    shadowColor: '#F2C200',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  logoEmoji: { 
+    fontSize: 20 
+  },
+  
+  /* Menu Modal */
+  menuBackdrop: { 
+    flex: 1, 
+    backgroundColor: 'rgba(0,0,0,0.4)' 
+  },
+  menuBackdropTouch: {
+    ...StyleSheet.absoluteFillObject as any,
+  },
+  menuSheet: {
+    position: 'absolute',
+    top: 72,
+    left: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 12,
+    width: 240,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16
+  },
+  menuIcon: {
+    marginRight: 12
+  },
+  menuItemText: {
+    color: '#1F3D2A',
+    fontSize: 16,
+    fontWeight: '600'
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 12,
+  },
+  
+  /* Content */
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 110,
+  },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 16,
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
     elevation: 3,
-    marginBottom: 20,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
   cardTitle: {
     fontSize: 20,
     fontWeight: '800',
-    color: '#2d5a3d',
+    color: '#0F3D1E',
     marginBottom: 16,
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
-  imageStrip: { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  stripItem: { flex: 1, height: 120, borderRadius: 12, overflow: 'hidden', backgroundColor: '#f0f2f0' },
-  stripItemMiddle: { marginHorizontal: 2 },
-  imageFrame: { width: '100%', height: 240, backgroundColor: '#f0f2f0', borderRadius: 12, overflow: 'hidden', marginBottom: 16 },
+  imageFrame: { 
+    width: '100%', 
+    height: 240, 
+    backgroundColor: '#F9FAFB', 
+    borderRadius: 12, 
+    overflow: 'hidden', 
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   image: {
     width: '100%',
     height: '100%',
@@ -474,115 +547,250 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#F9FAFB',
   },
-  stripImage: { width: '100%', height: '100%' },
-  chipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+  
+  /* Tabs */
+  tabRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-around', 
     marginBottom: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: '#E5E7EB',
   },
-  chip: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    backgroundColor: '#E8F5E9',
+  tabItem: { 
+    flex: 1, 
+    alignItems: 'center', 
+    paddingVertical: 10 
   },
-  chipText: {
-    color: '#2d5a3d',
-    fontWeight: '600',
-    fontSize: 12,
-  },
-  chipHealthy: {
-    backgroundColor: '#E6F4EA',
-  },
-  chipWarn: {
-    backgroundColor: '#FFF1F0',
-  },
-  greenCardAlt: { backgroundColor: '#DFF3E2', borderRadius: 12, padding: 12, marginBottom: 10 },
-  greenDescTitle: { color: '#0F3D1E', fontWeight: '900', fontSize: 16 },
-  greenDescSub: { color: '#0F3D1E', fontStyle: 'italic', marginTop: 2 },
-  greenDescText: { color: '#0F3D1E', fontSize: 12, lineHeight: 18, marginTop: 8 },
-  greenCard: { backgroundColor: '#DFF3E2', borderRadius: 10, padding: 12, marginBottom: 10 },
-  greenTitle: { color: '#0F3D1E', fontWeight: '900', fontSize: 14 },
-  greenSub: { color: '#0F3D1E', fontStyle: 'italic', fontSize: 12 },
-  greenSmall: { color: '#0F3D1E', fontSize: 11, marginTop: 4 },
-  greenListTitle: { color: '#0F3D1E', fontWeight: '900', marginBottom: 4 },
-  greenListItem: { color: '#0F3D1E', fontSize: 12, lineHeight: 18 },
-  pestImg: { width: 140, height: 90, borderRadius: 10, marginRight: 8, backgroundColor: '#F3F4F6' },
-  buttonsCol: { gap: 12 },
-  btnShadow: {
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  primaryBtn: {
-    backgroundColor: '#FFD700',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  primaryBtnText: {
-    color: '#2d5a3d',
-    fontWeight: '800',
-    fontSize: 16,
-  },
-  secondaryBtn: {
-    backgroundColor: '#2d5a3d',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  secondaryBtnText: {
-    color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 16,
-  },
-  ghostBtn: {
-    backgroundColor: '#ffffff',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  ghostBtnText: {
-    color: '#1f2937',
+  tabText: { 
+    color: '#6B7280', 
     fontWeight: '700',
-    fontSize: 16,
+    fontSize: 15,
   },
-  resultTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 4 },
-  scientificName: { fontSize: 12, fontStyle: 'italic', color: '#374151', marginBottom: 10 },
-  sectionCard: { backgroundColor: '#DFF3E2', borderRadius: 10, padding: 12, marginBottom: 10 },
-  sectionTitle: { fontWeight: '800', color: '#111827', marginBottom: 6 },
-  sectionText: { color: '#111827', fontSize: 13, lineHeight: 18 },
-  bullet: { color: '#111827', fontSize: 13, lineHeight: 18 },
-  sectionHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionChevron: { fontSize: 22, fontWeight: '900', color: '#111827', paddingHorizontal: 6 },
-  scanAgainBtn: { backgroundColor: '#2d5a3d', paddingVertical: 14, borderRadius: 10, alignItems: 'center' },
-  scanAgainText: { color: '#ffffff', fontWeight: '800', fontSize: 14 },
-  recTile: { width: 160, marginRight: 10 },
-  recImage: { width: 160, height: 100, borderRadius: 10, backgroundColor: '#F3F4F6' },
-  recCaption: { fontSize: 12, color: '#111827', marginTop: 6 },
+  tabTextActive: { 
+    color: '#0F3D1E', 
+    fontWeight: '900',
+    fontSize: 15,
+  },
+  tabUnderline: { 
+    height: 3, 
+    backgroundColor: '#0F3D1E', 
+    width: 60, 
+    borderRadius: 2, 
+    marginTop: 8,
+    position: 'absolute',
+    bottom: -2,
+  },
+  
+  /* Status Tab */
+  statusDateHeader: { 
+    color: '#111827', 
+    fontWeight: '800', 
+    marginBottom: 10, 
+    marginTop: 4,
+    fontSize: 14,
+  },
+  statusCard: { 
+    backgroundColor: '#E8F5E9', 
+    borderRadius: 12, 
+    padding: 12, 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  statusThumb: { 
+    width: 60, 
+    height: 60, 
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  statusTitle: { 
+    color: '#0F3D1E', 
+    fontWeight: '900', 
+    marginBottom: 8,
+    fontSize: 15,
+  },
+  statusChipsRow: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 8, 
+    marginBottom: 6 
+  },
+  statusChipText: { 
+    color: '#0F3D1E', 
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  
+  /* Section Cards */
+  sectionCard: { 
+    backgroundColor: '#E8F5E9', 
+    borderRadius: 12, 
+    padding: 14, 
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  sectionTitle: { 
+    fontWeight: '800', 
+    color: '#0F3D1E', 
+    marginBottom: 0,
+    fontSize: 15,
+  },
+  sectionText: { 
+    color: '#1F3D2A', 
+    fontSize: 13, 
+    lineHeight: 20 
+  },
+  bullet: { 
+    color: '#1F3D2A', 
+    fontSize: 13, 
+    lineHeight: 20 
+  },
+  sectionHeaderRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'space-between' 
+  },
+  sectionChevron: { 
+    fontSize: 24, 
+    fontWeight: '900', 
+    color: '#0F3D1E', 
+    paddingHorizontal: 6 
+  },
+  
+  /* Recommended Pesticides */
+  recTile: { 
+    width: 140, 
+    marginRight: 10,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  recImage: { 
+    width: '100%', 
+    height: 90, 
+    borderRadius: 8, 
+    backgroundColor: '#F9FAFB',
+    marginBottom: 8,
+  },
+  recCaption: { 
+    fontSize: 11, 
+    color: '#111827', 
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  
+  /* Pest Info Tab */
+  greenCardAlt: { 
+    backgroundColor: '#E8F5E9', 
+    borderRadius: 12, 
+    padding: 14, 
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  greenDescTitle: { 
+    color: '#0F3D1E', 
+    fontWeight: '900', 
+    fontSize: 16 
+  },
+  greenDescSub: { 
+    color: '#0F3D1E', 
+    fontStyle: 'italic', 
+    marginTop: 4,
+    fontSize: 13,
+  },
+  greenDescText: { 
+    color: '#1F3D2A', 
+    fontSize: 13, 
+    lineHeight: 20, 
+    marginTop: 8 
+  },
+  greenCard: { 
+    backgroundColor: '#E8F5E9', 
+    borderRadius: 12, 
+    padding: 12, 
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#C8E6C9',
+  },
+  greenListTitle: { 
+    color: '#0F3D1E', 
+    fontWeight: '900', 
+    marginBottom: 8,
+    fontSize: 14,
+  },
+  greenListItem: { 
+    color: '#1F3D2A', 
+    fontSize: 12, 
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  pestImg: { 
+    width: 140, 
+    height: 90, 
+    borderRadius: 10, 
+    marginRight: 8, 
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  
+  /* Scan Again Button */
+  scanAgainBtn: { 
+    backgroundColor: '#3F7A4A', 
+    paddingVertical: 14, 
+    borderRadius: 24, 
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  scanAgainText: { 
+    color: '#FFFFFF', 
+    fontWeight: '800', 
+    fontSize: 16 
+  },
+  
+  /* Footer */
   footerBar: {
     position: 'absolute',
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
+    borderTopColor: '#F3F4F6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-around',
     alignItems: 'center',
-    width: '100%',
-    flexWrap: 'nowrap',
-    zIndex: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
   },
-  footerItem: { flex: 1, alignItems: 'center' },
+  footerItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+  },
+  footerLabel: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontWeight: '600',
+    marginTop: 4,
+  },
 });
