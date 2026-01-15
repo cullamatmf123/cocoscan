@@ -73,7 +73,7 @@ export default function AboutScreen() {
         <View style={styles.sectionCard}>
           <Text style={styles.sectionCardHeading}>Overview</Text>
           <Text style={styles.paragraph}>
-            The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest that primarily attacks coconut
+            The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a common and destructive pest that primarily attacks coconut
             palms and other palm species by boring into the crown to feed on sap, damaging young fronds and inhibiting
             leaf and flower development. Native to South and Southeast Asia, this beetle has spread to many tropical
             regions. Its rapid reproduction and adaptability make it a major threat to coconut productivity.

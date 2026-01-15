@@ -73,13 +73,7 @@ export default function AboutAppScreen() {
           </View>
         </View>
 
-        <View style={styles.imageRowBlock}>
-          <Image
-            source={require('../assets/images/design/control.jpg')}
-            style={styles.bannerImage}
-            resizeMode="cover"
-          />
-        </View>
+
 
         <View style={[styles.card, styles.cardShadow, styles.featuresCard]}>
           <View style={styles.sectionHeader}>

@@ -1,7 +1,7 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Alert, Dimensions, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Image, ImageBackground, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const SCREEN = Dimensions.get('window');
 
@@ -324,6 +324,33 @@ export default function PreventionControlScreen() {
                   <View style={styles.bulletDot} />
                   <Text style={styles.bulletPoint}>Use Oryctes rhinoceros nudivirus (OrNV) to infect and kill beetles naturally.</Text>
                 </View>
+                <View style={styles.infoCard}>
+                  <Text style={styles.methodTitle}>Method of Application of FungOryctes</Text>
+                 <ImageBackground
+                  source={require('../assets/images/design/FungOryctes.jpg')}
+                  style={{ width: '50%', height: 140, borderRadius: 12, overflow: 'hidden', marginTop: 8, marginBottom: 10,  alignSelf: 'center' }}
+                  imageStyle={{ borderRadius: 12, resizeMode: 'cover' }}
+                >
+                </ImageBackground> 
+                 <View style={styles.bulletList}>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+              <Text style={styles.bulletPoint}>An artificial breeding site is made by putting to-gether four, cut, one meter coconut logs. The cavity is filled to the brim with sawdust, coco peat, dry animal dung and other decomposed matter. At least one hundred grams (100g) of dried GMF is placed in two layers within the sawdust mixture.</Text>
+               </View>
+               <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+              <Text style={styles.bulletPoint}>The top is watered and covered with coconut fronds or banana leaves to maintain moisture and encourage fungal growth.</Text>
+               </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+              <Text style={styles.bulletPoint}>Four to five log traps per hectare are positioned along the edges and center of the plantation or near breeding areas.</Text>
+               </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+              <Text style={styles.bulletPoint}>If coconut stumps, saw dusts and fallen logs abound in the area and are starting to decom-pose, GMF can be applied directly to these breeding places. The media must be moist enough to encourage fungal growth.</Text>
+               </View>
+               </View>
+                </View>
               </View>
             </View>
           </View>
@@ -368,7 +395,7 @@ export default function PreventionControlScreen() {
               </View>
             </View>
           </View>
-         
+          
         )}
 
 
