@@ -332,6 +332,7 @@ export default function PreventionControlScreen() {
                   imageStyle={{ borderRadius: 12, resizeMode: 'cover' }}
                 >
                 </ImageBackground> 
+                  <Text style={styles.methodBody}>An environmentally friendly biological control method employs a highly effective green muscardine fungus to eliminate coconut rhinoceros beetles at all life stages. The fungus penetrates the beetle’s body, leading to mummification. White fungal growth becomes visible within approximately 10 days and subsequently turns green after about three days.</Text>
                  <View style={styles.bulletList}>
                 <View style={styles.bulletItem}>
                   <View style={styles.bulletDot} />
@@ -638,8 +639,10 @@ const styles = StyleSheet.create({
   },
   methodBody: {
     fontSize: 15,
-    color: '#4B5563',
+    color: '#374151',
+    fontWeight: '500',
     lineHeight: 22,
+    marginBottom: 12, // space before bullets
     letterSpacing: 0.2,
   },
   imageCaption: { 
