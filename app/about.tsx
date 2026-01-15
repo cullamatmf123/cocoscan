@@ -32,10 +32,6 @@ export default function AboutScreen() {
         <View style={styles.menuBackdrop}>
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/profile'); }}>
-              <Feather name="user" size={18} color="#111827" style={styles.menuIcon} />
-              <Text style={styles.menuItemText}>Profile</Text>
-            </TouchableOpacity>
             <View style={styles.menuDivider} />
             <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
               <Feather name="info" size={18} color="#111827" style={styles.menuIcon} />
@@ -212,9 +208,8 @@ export default function AboutScreen() {
           <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
-          <View style={styles.cameraButton}>
-            <Feather name="camera" size={26} color="#FFFFFF" />
-          </View>
+          <Feather name="camera" size={24} color="#6B7280" />
+          <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} accessibilityLabel="View History">
           <Feather name="clock" size={24} color="#6B7280" />
@@ -455,21 +450,5 @@ const styles = StyleSheet.create({
     color: '#6B7280', 
     fontWeight: '600',
     marginTop: 2,
-  },
-  cameraButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#0F3D1E',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 6,
-    marginTop: -28,
-    borderWidth: 4,
-    borderColor: '#FFFFFF',
   },
 });
