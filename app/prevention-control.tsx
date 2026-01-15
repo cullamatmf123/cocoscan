@@ -105,6 +105,7 @@ export default function PreventionControlScreen() {
         <Text style={styles.title}>Prevention</Text>
 
         <Text style={[styles.sectionHeading, { marginBottom: 8 }]}>Prevention & Control</Text>
+        <Text style={[styles.sectionHeading, { marginBottom: 6 }]}>Cultural Control</Text>
         <View style={styles.imageBg}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -6 }}>
             <View style={{ width: 6 }} />
@@ -276,6 +277,10 @@ export default function PreventionControlScreen() {
                   <View style={styles.bulletDot} />
                   <Text style={styles.bulletPoint}>Monitor after treatment to ensure populations stay low.</Text>
                 </View>
+                 <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Monitor after treatment to ensure populations stay low.</Text>
+                </View>
               </View>
             </View>
           </View>
@@ -288,6 +293,7 @@ export default function PreventionControlScreen() {
                 <View style={{ width: 6 }} />
                 {ornvGmfImages.map((item, idx) => (
                   <View key={`ornvgmf-${idx}`} style={{ marginRight: 10 }}>
+                    
                     <Image source={item.src} style={styles.preventionImage} resizeMode="cover" />
                     <Text style={styles.imageCaption}>{item.label}</Text>
                   </View>
@@ -303,8 +309,9 @@ export default function PreventionControlScreen() {
               <View style={styles.bulletList}>
                 <View style={styles.bulletItem}>
                   <View style={styles.bulletDot} />
-                  <Text style={styles.bulletPoint}>Use Oryctes rhinoceros nudivirus (OrNV) to infect and kill beetles naturally.</Text>
+                  <Text style={styles.bulletPoint}>Establishment of coconut log traps inoculated with Green Muscardine Fungus (GMF) granules.</Text>
                 </View>
+                
                 <View style={styles.bulletItem}>
                   <View style={styles.bulletDot} />
                   <Text style={styles.bulletPoint}>Apply Metarhizium anisopliae (green fungus) to breeding sites.</Text>
@@ -312,6 +319,10 @@ export default function PreventionControlScreen() {
                 <View style={styles.bulletItem}>
                   <View style={styles.bulletDot} />
                   <Text style={styles.bulletPoint}>Encourage natural predators such as birds or parasitic insects.</Text>
+                </View>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+                  <Text style={styles.bulletPoint}>Use Oryctes rhinoceros nudivirus (OrNV) to infect and kill beetles naturally.</Text>
                 </View>
               </View>
             </View>
@@ -334,13 +345,32 @@ export default function PreventionControlScreen() {
             </View>
             <View style={styles.infoCard}>
               <Text style={styles.methodTitle}>Log Trapping</Text>
-              <Text style={styles.methodBody}>Place decomposing coconut logs around plantations. Add attractants (e.g., sugar, yeast, or molasses) to lure adult beetles, and check regularly to destroy captured beetles.</Text>
+              <View style={styles.bulletList}>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+              <Text style={styles.bulletPoint}>Use fresh or decomposing coconut logs to attract adults for capture and to expose larvae in breeding material. Keep baits moist and service routinely.</Text>
+               </View>
+               <View style={styles.bulletList}>
+                <View style={styles.bulletItem}>
+                  <View style={styles.bulletDot} />
+               <Text style={styles.bulletPoint}>Log traps can be inspected two months after installation to check for beetle presence. Infected larvae may be transferred to another log traps to reinforce existing inoculum</Text>
+              </View>
+              </View>
+             
+             
 
               <Text style={[styles.methodTitle, { marginTop: 16 }]}>Pheromone Trapping</Text>
-              <Text style={styles.methodBody}>Use synthetic pheromones (e.g., ethyl 4-methyloctanoate) to attract adult beetles into traps. Suitable for monitoring and mass trapping in infested areas.</Text>
+              <View style={styles.bulletItem}>
+              <View style={styles.bulletDot} />
+              <Text style={styles.bulletPoint}>Deploy synthetic pheromone lures to detect populations early and reduce adults through mass trapping. Combine with sanitation for best results.</Text>
+              </View>
+              
+              </View>
             </View>
           </View>
+         
         )}
+
 
         {controlTab === 3 && (
           <View style={styles.contentSection}>
