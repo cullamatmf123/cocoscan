@@ -20,6 +20,8 @@ interface ResultParams {
   lightCondition?: string;
 }
 
+type ResultClass = 'healthy' | 'unhealthy' | 'beetle' | 'unknown';
+
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as Partial<ResultParams>;
@@ -53,28 +55,30 @@ export default function ResultScreen() {
     }
   }, [imageUri, photoBase64]);
 
-  const unhealthyType = React.useMemo(() => {
-    const d = (details || '').toLowerCase();
-    const signKeywords = ['sign', 'symptom', 'v-shaped', 'triangular', 'notch', 'bore hole', 'cuts', 'fronds', 'leaf'];
-    const presenceKeywords = ['presence', 'beetle', 'adult', 'larva', 'grub', 'found', 'seen', 'captured', 'detected'];
-    const hasSign = signKeywords.some(k => d.includes(k));
-    const hasPresence = presenceKeywords.some(k => d.includes(k));
-    if (hasSign) return 'sign';
-    if (hasPresence) return 'presence';
+  const resultClass: ResultClass = React.useMemo(() => {
+    const p = (prediction || '').toLowerCase();
+
+    if (!p) return 'unknown';
+    if (p.includes('oryctes') || p.includes('beetle')) return 'beetle';
+    if (p.includes('unhealthy') || p.includes('damage')) return 'unhealthy';
+    if (p.includes('healthy')) return 'healthy';
     return 'unknown';
-  }, [details]);
+  }, [prediction]);
 
   const displayPrediction = React.useMemo(() => {
-    if ((prediction || '').toLowerCase() === 'healthy') return 'Healthy';
-    if (unhealthyType === 'sign') return 'Unhealthy, Oryctes Rhinoceros Sign';
-    if (unhealthyType === 'presence') return 'Unhealthy: Oryctes Rhinoceros Detected';
-    return 'Unhealthy';
-  }, [prediction, unhealthyType]);
+    switch (resultClass) {
+      case 'healthy':
+        return 'Healthy';
+      case 'unhealthy':
+        return 'Unhealthy – Damage detected';
+      case 'beetle':
+        return 'Oryctes Rhinoceros detected';
+      default:
+        return prediction || 'Unknown';
+    }
+  }, [prediction, resultClass]);
 
-  const isHealthy = React.useMemo(
-    () => (prediction || '').toLowerCase() === 'healthy',
-    [prediction]
-  );
+  const isHealthy = resultClass === 'healthy';
 
   useEffect(() => {
     const saveToHistory = async () => {
@@ -319,14 +323,17 @@ export default function ResultScreen() {
             <>
               <View style={styles.greenCardAlt}>
                 <Text style={styles.greenDescTitle}>
-                  {isHealthy ? 'No Coconut Rhinoceros Beetle' : 'Coconut Rhinoceros Beetle'}
+                  {resultClass === 'healthy'
+                    ? 'No Coconut Rhinoceros Beetle'
+                    : 'Coconut Rhinoceros Beetle'}
                 </Text>
-                {!isHealthy && (
+                {resultClass !== 'healthy' && (
                   <>
                     <Text style={styles.greenDescSub}>Oryctes Rhinoceros</Text>
                     <Text style={styles.greenDescText}>
-                      A destructive coconut pest beetle that bores into the crowns and trunks of palm trees,
-                      causing severe damage and reduced yield.
+                      {resultClass === 'beetle'
+                        ? 'An Oryctes rhinoceros beetle was detected on the coconut palm in this scan.'
+                        : 'The model detected unhealthy regions on the coconut palm consistent with stress, disease, or damage. The beetle itself was not clearly visible.'}
                     </Text>
                   </>
                 )}

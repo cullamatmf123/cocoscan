@@ -5,70 +5,147 @@ import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface HealthPrediction {
-  prediction: string;
-  confidence: number;
+  // Three main classes from your backend + fallback string
+  prediction: 'Healthy' | 'Unhealthy' | 'Oryctes Rhinoceros' | string;
+  confidence: number; // 0–100
   analysis?: {
     details: string;
     recommendations: string;
   };
 }
 
+const HF_API_URL =
+  'https://cullamatmf123-oryctes-rhinoceros-detector.hf.space/analyze-image';
+
+const getMimeTypeFromUri = (uri: string): string => {
+  const lower = uri.toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.heic')) return 'image/heic';
+  return 'image/jpeg';
+};
+
 /**
- * Simulates coconut health classification locally
- * Provides realistic detection results without external API calls
- * Detection logic: Random simulation with weighted probabilities
+ * Calls the Hugging Face backend API to classify coconut health.
+ * Backend returns JSON like:
+ *
+ * Beetle detected:
+ * {
+ *   "prediction": "Unhealthy (Beetle Detected)",
+ *   "health_status": "unhealthy",
+ *   "beetle_detected": true,
+ *   "damage_detected": true,
+ *   "confidence": 97,
+ *   "analysis": { ... },
+ *   ...
+ * }
+ *
+ * Damage only:
+ * {
+ *   "prediction": "Unhealthy (Damage Detected)",
+ *   "health_status": "unhealthy",
+ *   "beetle_detected": false,
+ *   "damage_detected": true,
+ *   "confidence": 88,
+ *   "analysis": { ... },
+ *   ...
+ * }
+ *
+ * Healthy:
+ * {
+ *   "prediction": "Healthy",
+ *   "health_status": "healthy",
+ *   "beetle_detected": false,
+ *   "damage_detected": false,
+ *   "confidence": 95,
+ *   "analysis": { ... },
+ *   ...
+ * }
  */
 const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
+  console.log('🌐 Sending image to Hugging Face API...');
+  console.log('🖼️ Image URI:', imageUri);
+
+  const formData = new FormData();
+  formData.append('file', {
+    uri: imageUri,
+    name: 'coconut.jpg',
+    type: getMimeTypeFromUri(imageUri),
+  } as any);
+
   try {
-    console.log('🌐 Uploading image to AI API...');
-    console.log('🖼️ Analyzing image:', imageUri);
-
-    const formData = new FormData();
-    formData.append('file', {
-      uri: imageUri,
-      name: 'image.jpg',
-      type: 'image/jpeg',
-    } as any);
-
-    const response = await fetch(
-      'https://cullamatmf123-oryctes-rhinoceros-detector.hf.space/analyze-image',
-      {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    const response = await fetch(HF_API_URL, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Do NOT set Content-Type manually; RN sets the proper multipart boundary
+        Accept: 'application/json',
+      },
+    });
 
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      throw new Error(`API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    const data: any = await response.json();
+    console.log('✅ HF API response:', data);
 
-    console.log('✅ AI API response:', data);
+    const healthStatus = (data.health_status ?? '').toString().toLowerCase();
+    const beetleDetected: boolean = !!data.beetle_detected;
+    const damageDetected: boolean = !!data.damage_detected;
+    const rawPrediction: string = (data.prediction ?? '').toString();
+
+    // Normalize to the 3 classes for the app
+    let prediction: HealthPrediction['prediction'];
+
+    if (beetleDetected) {
+      // Oryctes rhinoceros beetle box detected
+      prediction = 'Oryctes Rhinoceros';
+    } else if (damageDetected || healthStatus === 'unhealthy') {
+      // Unhealthy / damage boxes but no beetle
+      prediction = 'Unhealthy';
+    } else {
+      // No unhealthy / beetle detections
+      prediction = 'Healthy';
+    }
+
+    // Confidence: backend already returns 0–100 integer, but keep fallback
+    let confidence = 95;
+    if (typeof data.confidence === 'number') {
+      confidence = data.confidence;
+    }
+
+    const analysis =
+      data.analysis ??
+      {
+        details:
+          prediction === 'Healthy'
+            ? 'No Oryctes rhinoceros beetle or unhealthy regions detected above the configured confidence threshold.'
+            : prediction === 'Unhealthy'
+            ? 'The model detected unhealthy regions on the coconut palm consistent with stress, disease, or damage.'
+            : 'Oryctes rhinoceros beetle detected on the coconut palm.',
+        recommendations:
+          prediction === 'Healthy'
+            ? 'Tree appears healthy. Continue regular monitoring.'
+            : prediction === 'Unhealthy'
+            ? 'Inspect the affected area for pests, disease, or nutrient deficiency and apply appropriate treatment.'
+            : 'IMMEDIATE ACTION RECOMMENDED: Inspect affected fronds and apply beetle-specific pest management (traps, biological control, or approved insecticides) according to local guidelines.',
+      };
 
     return {
-      prediction: data.prediction ?? 'Healthy',
-      confidence:
-        typeof data.confidence === 'number'
-          ? Math.round(data.confidence)
-          : 95,
-      analysis: data.analysis ?? {
-        details: 'No additional analysis provided by AI.',
-        recommendations: 'Continue monitoring your coconut regularly.',
-      },
+      prediction,
+      confidence,
+      analysis,
     };
   } catch (error) {
     console.error('❌ API analysis failed:', error);
-    // Default to Healthy on any error
+    // Safe fallback if API or network fails
     return {
       prediction: 'Healthy',
       confidence: 95,
       analysis: {
-        details: 'AI analysis failed, defaulting to safe result',
-        recommendations: 'Please retry or check internet connection.',
+        details: 'AI analysis failed (network or server error).',
+        recommendations: 'Please check your internet connection and try again.',
       },
     };
   }
@@ -79,7 +156,7 @@ export default function CameraScreen() {
   const [aiLoading, setAiLoading] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<any>(null);
   const [healthPrediction, setHealthPrediction] = useState<HealthPrediction | null>(null);
-  
+
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
 
@@ -94,13 +171,13 @@ export default function CameraScreen() {
 
   const handleTakePhoto = async () => {
     if (aiLoading || !cameraRef.current) return;
-    
+
     try {
       setAiLoading(true);
       console.log('📷 Capturing photo...');
-      
+
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,  // Optimized for analysis
+        quality: 0.8, // Optimized for analysis
         base64: false,
         exif: false,
         skipProcessing: false,
@@ -115,20 +192,21 @@ export default function CameraScreen() {
       console.log('✅ Photo captured successfully:', photo.uri);
       console.log('📐 Photo size:', photo.width, 'x', photo.height);
 
-      // DIRECT ANALYSIS - No preview, no crop, immediate local analysis
-      console.log('🔬 Starting immediate local analysis...');
+      console.log('🔬 Sending to Hugging Face for analysis...');
       const healthResult = await classifyHealth(photo.uri);
-      console.log('🏥 Analysis result:', healthResult.prediction, healthResult.confidence + '%');
-      
-      setHealthPrediction(healthResult);
-      setCapturedPhoto({ 
-        ...photo, 
-        healthResult 
-      });
+      console.log(
+        '🏥 Analysis result:',
+        healthResult.prediction,
+        healthResult.confidence + '%',
+      );
 
+      setHealthPrediction(healthResult);
+      setCapturedPhoto({
+        ...photo,
+        healthResult,
+      });
     } catch (error) {
       console.error('❌ Camera capture error:', error);
-      setAiLoading(false);
     } finally {
       setAiLoading(false);
     }
@@ -136,11 +214,11 @@ export default function CameraScreen() {
 
   const handlePickImage = async () => {
     if (aiLoading) return;
-    
+
     try {
       setAiLoading(true);
       console.log('📱 Requesting gallery permission...');
-      
+
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
         console.log('❌ Gallery permission denied');
@@ -151,8 +229,8 @@ export default function CameraScreen() {
       console.log('📂 Opening gallery...');
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false,  // NO CROPPING/EDITING - Direct analysis
-        quality: 0.8,  // Good quality for analysis
+        allowsEditing: false, // Direct analysis, no cropping
+        quality: 0.8,
         allowsMultipleSelection: false,
       });
 
@@ -164,21 +242,24 @@ export default function CameraScreen() {
 
       const selectedImage = result.assets[0];
       console.log('✅ Image selected:', selectedImage.uri);
-      console.log('📐 Original dimensions:', selectedImage.width, 'x', selectedImage.height);
+      console.log(
+        '📐 Original dimensions:',
+        selectedImage.width,
+        'x',
+        selectedImage.height,
+      );
 
-      // DIRECT ANALYSIS - No cropping, no editing
-      console.log('🔬 Starting immediate analysis...');
+      console.log('🔬 Sending to Hugging Face for analysis...');
       const healthResult = await classifyHealth(selectedImage.uri);
       console.log('🏥 Analysis complete:', healthResult);
-      
+
       setHealthPrediction(healthResult);
-      setCapturedPhoto({ 
+      setCapturedPhoto({
         uri: selectedImage.uri,
         width: selectedImage.width,
         height: selectedImage.height,
-        healthResult 
+        healthResult,
       });
-
     } catch (error) {
       console.error('❌ Gallery picker error:', error);
     } finally {
@@ -195,8 +276,9 @@ export default function CameraScreen() {
           prediction: capturedPhoto.healthResult.prediction,
           confidence: capturedPhoto.healthResult.confidence.toString(),
           details: capturedPhoto.healthResult.analysis?.details || '',
-          recommendations: capturedPhoto.healthResult.analysis?.recommendations || ''
-        }
+          recommendations:
+            capturedPhoto.healthResult.analysis?.recommendations || '',
+        },
       });
     }
   };
@@ -240,21 +322,27 @@ export default function CameraScreen() {
           style={styles.previewImage}
           resizeMode="contain"
         />
-        
+
         {capturedPhoto.healthResult && (
           <View style={styles.healthOverlay}>
-            <Text style={[
-              styles.healthStatus,
-              { 
-                color: capturedPhoto.healthResult.prediction === 'Healthy' 
-                  ? '#4CAF50' 
-                  : '#F44336' 
-              }
-            ]}>
+            <Text
+              style={[
+                styles.healthStatus,
+                {
+                  color:
+                    capturedPhoto.healthResult.prediction === 'Healthy'
+                      ? '#4CAF50'
+                      : '#F44336',
+                },
+              ]}
+            >
               {(() => {
                 const hr: HealthPrediction = capturedPhoto.healthResult;
                 if (hr.prediction === 'Healthy') return '✅ Healthy';
-                if (hr.prediction === 'Unhealthy') return '⚠️ Unhealthy - Oryctes Rhinoceros Detected';
+                if (hr.prediction === 'Unhealthy')
+                  return '⚠️ Unhealthy – Damage detected';
+                if (hr.prediction === 'Oryctes Rhinoceros')
+                  return '🪲 Oryctes Rhinoceros detected';
                 return hr.prediction;
               })()}
             </Text>
@@ -270,14 +358,14 @@ export default function CameraScreen() {
             )}
           </View>
         )}
-        
+
         <View style={styles.previewButtonsContainer}>
           <TouchableOpacity style={styles.retakeButton} onPress={handleRetake}>
             <Text style={styles.retakeText}>Retake</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.doneButton} 
+
+          <TouchableOpacity
+            style={styles.doneButton}
             onPress={handleDone}
             disabled={aiLoading}
           >
@@ -290,12 +378,8 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <CameraView
-        style={styles.camera}
-        facing="back"
-        ref={cameraRef}
-      />
-      
+      <CameraView style={styles.camera} facing="back" ref={cameraRef} />
+
       <View style={styles.controlsContainer}>
         <TouchableOpacity
           style={[styles.captureButton, styles.captureCenter]}
@@ -312,12 +396,32 @@ export default function CameraScreen() {
         >
           <View style={styles.galleryIconContainer}>
             <View style={styles.galleryIconRow}>
-              <View style={[styles.galleryIconSquare, styles.galleryIconSquareTopLeft]} />
-              <View style={[styles.galleryIconSquare, styles.galleryIconSquareTopRight]} />
+              <View
+                style={[
+                  styles.galleryIconSquare,
+                  styles.galleryIconSquareTopLeft,
+                ]}
+              />
+              <View
+                style={[
+                  styles.galleryIconSquare,
+                  styles.galleryIconSquareTopRight,
+                ]}
+              />
             </View>
             <View style={styles.galleryIconRow}>
-              <View style={[styles.galleryIconSquare, styles.galleryIconSquareBottomLeft]} />
-              <View style={[styles.galleryIconSquare, styles.galleryIconSquareBottomRight]} />
+              <View
+                style={[
+                  styles.galleryIconSquare,
+                  styles.galleryIconSquareBottomLeft,
+                ]}
+              />
+              <View
+                style={[
+                  styles.galleryIconSquare,
+                  styles.galleryIconSquareBottomRight,
+                ]}
+              />
             </View>
           </View>
         </TouchableOpacity>
