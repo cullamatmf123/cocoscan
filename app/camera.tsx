@@ -2,11 +2,24 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { BackHandler, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  BackHandler,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+type CocoClass =
+  | 'unspecified'
+  | 'crb infestation'
+  | 'unhealthy'
+  | 'oryctes rhinoceros'
+  | 'healthy';
 
 interface HealthPrediction {
-  // Three main classes from your backend + fallback string
-  prediction: 'Healthy' | 'Unhealthy' | 'Oryctes Rhinoceros' | string;
+  prediction: CocoClass;
   confidence: number; // 0–100
   analysis?: {
     details: string;
@@ -14,8 +27,9 @@ interface HealthPrediction {
   };
 }
 
-const HF_API_URL =
-  'https://cullamatmf123-oryctes-rhinoceros-detector.hf.space/analyze-image';
+const SPACE_ROOT = 'https://cullamatmf123-capstone-cocoscan.hf.space';
+const GRADIO_API_PREFIX = '/gradio_api';
+const GRADIO_FN = 'predict_on_image';
 
 const getMimeTypeFromUri = (uri: string): string => {
   const lower = uri.toLowerCase();
@@ -25,129 +39,236 @@ const getMimeTypeFromUri = (uri: string): string => {
   return 'image/jpeg';
 };
 
-/**
- * Calls the Hugging Face backend API to classify coconut health.
- * Backend returns JSON like:
- *
- * Beetle detected:
- * {
- *   "prediction": "Unhealthy (Beetle Detected)",
- *   "health_status": "unhealthy",
- *   "beetle_detected": true,
- *   "damage_detected": true,
- *   "confidence": 97,
- *   "analysis": { ... },
- *   ...
- * }
- *
- * Damage only:
- * {
- *   "prediction": "Unhealthy (Damage Detected)",
- *   "health_status": "unhealthy",
- *   "beetle_detected": false,
- *   "damage_detected": true,
- *   "confidence": 88,
- *   "analysis": { ... },
- *   ...
- * }
- *
- * Healthy:
- * {
- *   "prediction": "Healthy",
- *   "health_status": "healthy",
- *   "beetle_detected": false,
- *   "damage_detected": false,
- *   "confidence": 95,
- *   "analysis": { ... },
- *   ...
- * }
- */
-const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
-  console.log('🌐 Sending image to Hugging Face API...');
-  console.log('🖼️ Image URI:', imageUri);
+const normalizePrediction = (
+  className: string,
+): HealthPrediction['prediction'] => {
+  const c = String(className || '')
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  if (!c) return 'unspecified';
+
+  if (c.includes('oryctes') || c.includes('rhinoceros'))
+    return 'oryctes rhinoceros';
+
+  // Rename "other pest damage" to "unhealthy" in the app
+  if (c.includes('other') && c.includes('pest')) return 'unhealthy';
+
+  // Keep: Rename "unhealthy" from HF to "crb infestation" in the app
+  if (c.includes('unhealthy')) return 'crb infestation';
+
+  if (c.includes('healthy')) return 'healthy';
+
+  if (c === 'unspecified' || c === 'unknown') return 'unspecified';
+
+  return 'unspecified';
+};
+
+const safeJson = async (res: Response): Promise<any | null> => {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+};
+
+const safeText = async (res: Response): Promise<string> => {
+  try {
+    return await res.text();
+  } catch {
+    return '';
+  }
+};
+
+const parseGradioHtmlToPrediction = (
+  html: string,
+): { className: string; confidence01: number } => {
+  const safe = String(html || '');
+
+  const classMatch =
+    safe.match(/Predicted Class\s*:\s*([A-Z _-]+)/i) ||
+    safe.match(/PREDICTED CLASS\s*:\s*([A-Z _-]+)/i);
+
+  const confMatch =
+    safe.match(/Confidence\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*%/i) ||
+    safe.match(/CONFIDENCE\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*%/i);
+
+  const clsRaw = classMatch?.[1] ? classMatch[1].trim() : 'unspecified';
+  const confPct = confMatch?.[1] ? Number(confMatch[1]) : 0;
+
+  const className = clsRaw.toLowerCase().replace(/\s+/g, ' ').trim();
+  const confidence01 = isFinite(confPct)
+    ? Math.max(0, Math.min(1, confPct / 100))
+    : 0;
+
+  return { className, confidence01 };
+};
+
+const uploadToGradio = async (imageUri: string): Promise<string | null> => {
+  const url = `${SPACE_ROOT}${GRADIO_API_PREFIX}/upload`;
 
   const formData = new FormData();
-  formData.append('file', {
+  formData.append('files', {
     uri: imageUri,
     name: 'coconut.jpg',
     type: getMimeTypeFromUri(imageUri),
   } as any);
 
+  let res: Response;
   try {
-    const response = await fetch(HF_API_URL, {
+    res = await fetch(url, {
       method: 'POST',
+      headers: { Accept: 'application/json' },
       body: formData,
-      headers: {
-        // Do NOT set Content-Type manually; RN sets the proper multipart boundary
-        Accept: 'application/json',
-      },
     });
+  } catch {
+    return null;
+  }
 
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
+  if (!res.ok) return null;
 
-    const data: any = await response.json();
-    console.log('✅ HF API response:', data);
+  const data: any = await safeJson(res);
 
-    const healthStatus = (data.health_status ?? '').toString().toLowerCase();
-    const beetleDetected: boolean = !!data.beetle_detected;
-    const damageDetected: boolean = !!data.damage_detected;
-    const rawPrediction: string = (data.prediction ?? '').toString();
+  const path =
+    (Array.isArray(data) && data[0]) ||
+    data?.[0] ||
+    data?.files?.[0] ||
+    data?.paths?.[0] ||
+    null;
 
-    // Normalize to the 3 classes for the app
-    let prediction: HealthPrediction['prediction'];
+  if (!path || typeof path !== 'string') return null;
+  return path;
+};
 
-    if (beetleDetected) {
-      // Oryctes rhinoceros beetle box detected
-      prediction = 'Oryctes Rhinoceros';
-    } else if (damageDetected || healthStatus === 'unhealthy') {
-      // Unhealthy / damage boxes but no beetle
-      prediction = 'Unhealthy';
-    } else {
-      // No unhealthy / beetle detections
-      prediction = 'Healthy';
-    }
+const callGradio = async (uploadedPath: string): Promise<string | null> => {
+  const url = `${SPACE_ROOT}${GRADIO_API_PREFIX}/call/${GRADIO_FN}`;
 
-    // Confidence: backend already returns 0–100 integer, but keep fallback
-    let confidence = 95;
-    if (typeof data.confidence === 'number') {
-      confidence = data.confidence;
-    }
-
-    const analysis =
-      data.analysis ??
+  const payload = {
+    data: [
       {
-        details:
-          prediction === 'Healthy'
-            ? 'No Oryctes rhinoceros beetle or unhealthy regions detected above the configured confidence threshold.'
-            : prediction === 'Unhealthy'
-            ? 'The model detected unhealthy regions on the coconut palm consistent with stress, disease, or damage.'
-            : 'Oryctes rhinoceros beetle detected on the coconut palm.',
-        recommendations:
-          prediction === 'Healthy'
-            ? 'Tree appears healthy. Continue regular monitoring.'
-            : prediction === 'Unhealthy'
-            ? 'Inspect the affected area for pests, disease, or nutrient deficiency and apply appropriate treatment.'
-            : 'IMMEDIATE ACTION RECOMMENDED: Inspect affected fronds and apply beetle-specific pest management (traps, biological control, or approved insecticides) according to local guidelines.',
-      };
+        path: uploadedPath,
+        meta: { _type: 'gradio.FileData' },
+      },
+    ],
+  };
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    return null;
+  }
+
+  if (!res.ok) return null;
+
+  const data: any = await safeJson(res);
+
+  const eventId =
+    data?.event_id ||
+    data?.eventId ||
+    data?.id ||
+    (typeof data === 'string' ? data : null);
+
+  if (!eventId || typeof eventId !== 'string') return null;
+  return eventId;
+};
+
+const getGradioResultHtml = async (eventId: string): Promise<string | null> => {
+  const url = `${SPACE_ROOT}${GRADIO_API_PREFIX}/call/${GRADIO_FN}/${eventId}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'GET',
+      headers: { Accept: 'text/event-stream' },
+    });
+  } catch {
+    return null;
+  }
+
+  if (!res.ok) return null;
+
+  const sse = await safeText(res);
+  if (!sse) return null;
+
+  const lines = sse
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const dataLines = lines.filter((l) => l.startsWith('data:'));
+  if (dataLines.length === 0) return null;
+
+  const last = dataLines[dataLines.length - 1].replace(/^data:\s*/, '');
+
+  let parsed: any = null;
+  try {
+    parsed = JSON.parse(last);
+  } catch {
+    parsed = null;
+  }
+
+  const out = parsed?.[0]?.data ?? parsed?.data ?? parsed;
+  const html = Array.isArray(out) ? out?.[1] : null;
+
+  if (typeof html !== 'string') return null;
+  return html;
+};
+
+const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
+  const fallback: HealthPrediction = {
+    prediction: 'unspecified',
+    confidence: 0,
+    analysis: {
+      details: 'No prediction available.',
+      recommendations: 'Try again with a clearer photo and good lighting.',
+    },
+  };
+
+  try {
+    const uploadedPath = await uploadToGradio(imageUri);
+    if (!uploadedPath) return fallback;
+
+    const eventId = await callGradio(uploadedPath);
+    if (!eventId) return fallback;
+
+    const html = await getGradioResultHtml(eventId);
+    if (!html) return fallback;
+
+    const { className, confidence01 } = parseGradioHtmlToPrediction(html);
+    const prediction = normalizePrediction(className);
+    const confidence = Math.max(
+      0,
+      Math.min(100, Math.round(confidence01 * 100)),
+    );
+
+    const details = `Detected: ${prediction}`;
+    const recommendations =
+      prediction === 'healthy'
+        ? 'No action needed.'
+        : prediction === 'unspecified'
+          ? 'Try retaking the photo (better lighting / closer image).'
+          : 'Please consult an agricultural expert.';
 
     return {
       prediction,
       confidence,
-      analysis,
-    };
-  } catch (error) {
-    console.error('❌ API analysis failed:', error);
-    // Safe fallback if API or network fails
-    return {
-      prediction: 'Healthy',
-      confidence: 95,
       analysis: {
-        details: 'AI analysis failed (network or server error).',
-        recommendations: 'Please check your internet connection and try again.',
+        details,
+        recommendations,
       },
     };
+  } catch {
+    return fallback;
   }
 };
 
@@ -155,7 +276,8 @@ export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [aiLoading, setAiLoading] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<any>(null);
-  const [healthPrediction, setHealthPrediction] = useState<HealthPrediction | null>(null);
+  const [healthPrediction, setHealthPrediction] =
+    useState<HealthPrediction | null>(null);
 
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
@@ -174,39 +296,23 @@ export default function CameraScreen() {
 
     try {
       setAiLoading(true);
-      console.log('📷 Capturing photo...');
 
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8, // Optimized for analysis
+        quality: 0.8,
         base64: false,
         exif: false,
         skipProcessing: false,
       });
 
-      if (!photo?.uri) {
-        console.error('❌ Photo capture failed - no URI');
-        setAiLoading(false);
-        return;
-      }
+      if (!photo?.uri) return;
 
-      console.log('✅ Photo captured successfully:', photo.uri);
-      console.log('📐 Photo size:', photo.width, 'x', photo.height);
-
-      console.log('🔬 Sending to Hugging Face for analysis...');
       const healthResult = await classifyHealth(photo.uri);
-      console.log(
-        '🏥 Analysis result:',
-        healthResult.prediction,
-        healthResult.confidence + '%',
-      );
 
       setHealthPrediction(healthResult);
       setCapturedPhoto({
         ...photo,
         healthResult,
       });
-    } catch (error) {
-      console.error('❌ Camera capture error:', error);
     } finally {
       setAiLoading(false);
     }
@@ -217,41 +323,21 @@ export default function CameraScreen() {
 
     try {
       setAiLoading(true);
-      console.log('📱 Requesting gallery permission...');
 
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (status !== 'granted') {
-        console.log('❌ Gallery permission denied');
-        setAiLoading(false);
-        return;
-      }
+      if (status !== 'granted') return;
 
-      console.log('📂 Opening gallery...');
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: false, // Direct analysis, no cropping
+        allowsEditing: false,
         quality: 0.8,
         allowsMultipleSelection: false,
       });
 
-      if (result.canceled || !result.assets?.[0]?.uri) {
-        console.log('❌ No image selected or cancelled');
-        setAiLoading(false);
-        return;
-      }
+      if (result.canceled || !result.assets?.[0]?.uri) return;
 
       const selectedImage = result.assets[0];
-      console.log('✅ Image selected:', selectedImage.uri);
-      console.log(
-        '📐 Original dimensions:',
-        selectedImage.width,
-        'x',
-        selectedImage.height,
-      );
-
-      console.log('🔬 Sending to Hugging Face for analysis...');
       const healthResult = await classifyHealth(selectedImage.uri);
-      console.log('🏥 Analysis complete:', healthResult);
 
       setHealthPrediction(healthResult);
       setCapturedPhoto({
@@ -260,8 +346,6 @@ export default function CameraScreen() {
         height: selectedImage.height,
         healthResult,
       });
-    } catch (error) {
-      console.error('❌ Gallery picker error:', error);
     } finally {
       setAiLoading(false);
     }
@@ -306,8 +390,13 @@ export default function CameraScreen() {
           <Text style={styles.iconText}>📷</Text>
           <Text style={styles.messageText}>Camera permission is required</Text>
           <Text style={styles.subText}>to scan coconuts for pests</Text>
-          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-            <Text style={styles.permissionButtonText}>Grant Camera Permission</Text>
+          <TouchableOpacity
+            style={styles.permissionButton}
+            onPress={requestPermission}
+          >
+            <Text style={styles.permissionButtonText}>
+              Grant Camera Permission
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -329,33 +418,39 @@ export default function CameraScreen() {
               style={[
                 styles.healthStatus,
                 {
-                  color:
-                    capturedPhoto.healthResult.prediction === 'Healthy'
-                      ? '#4CAF50'
-                      : '#F44336',
+                  color: (() => {
+                    const p: CocoClass = capturedPhoto.healthResult.prediction;
+                    if (p === 'healthy') return '#4CAF50';
+                    if (p === 'crb infestation') return '#F44336';
+                    if (p === 'oryctes rhinoceros') return '#8E44AD';
+                    if (p === 'unhealthy') return '#3498DB';
+                    return '#F39C12'; // unspecified
+                  })(),
                 },
               ]}
             >
               {(() => {
-                const hr: HealthPrediction = capturedPhoto.healthResult;
-                if (hr.prediction === 'Healthy') return '✅ Healthy';
-                if (hr.prediction === 'Unhealthy')
-                  return '⚠️ Unhealthy – Damage detected';
-                if (hr.prediction === 'Oryctes Rhinoceros')
-                  return '🪲 Oryctes Rhinoceros detected';
-                return hr.prediction;
+                const p: CocoClass = capturedPhoto.healthResult.prediction;
+                if (p === 'healthy') return '✅ Healthy';
+                if (p === 'crb infestation') return '❌ CRB infestation';
+                if (p === 'oryctes rhinoceros') return '🪲 Oryctes Rhinoceros';
+                if (p === 'unhealthy') return '⚠️ Unhealthy';
+                return '⚠️ Unspecified';
               })()}
             </Text>
-            {capturedPhoto.healthResult.prediction !== 'Healthy' && (
+
+            {capturedPhoto.healthResult.prediction !== 'healthy' && (
               <Text style={styles.healthConfidence}>
                 {capturedPhoto.healthResult.confidence}% confidence
               </Text>
             )}
-            {capturedPhoto.healthResult.analysis && (
-              <Text style={styles.healthDetails}>
-                {capturedPhoto.healthResult.analysis.details}
-              </Text>
-            )}
+
+            {capturedPhoto.healthResult.prediction !== 'healthy' &&
+              capturedPhoto.healthResult.analysis && (
+                <Text style={styles.healthDetails}>
+                  {capturedPhoto.healthResult.analysis.details}
+                </Text>
+              )}
           </View>
         )}
 
@@ -565,13 +660,6 @@ const styles = StyleSheet.create({
   loadingContent: {
     alignItems: 'center',
     padding: 20,
-  },
-  loadingSubText: {
-    fontSize: 16,
-    color: '#fff',
-    opacity: 0.8,
-    marginTop: 5,
-    textAlign: 'center',
   },
   previewContainer: {
     flex: 1,
