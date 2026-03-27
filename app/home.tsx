@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   heroImage: { 
     width: '100%', 
-    height: 110 
+    height: 150 
   },
   cardRow: { 
     flexDirection: 'row', 

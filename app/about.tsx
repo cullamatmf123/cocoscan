@@ -1,28 +1,256 @@
-import { Feather } from '@expo/vector-icons';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Dimensions,
+  Image,
+  Modal,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HERO_HEIGHT = 450;
+
+const HERO_IMAGES = [
+  require('../assets/images/design/homepage.png'),
+  require('../assets/images/design/CRB.jpg'),
+  require('../assets/images/design/crb(2).png'),
+  require('../assets/images/design/crb(3).png'),
+  require('../assets/images/design/crb(4).png'),
+];
 
 export default function AboutScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
-  return (
-    <SafeAreaView style={styles.safe}>
-      {/* Header with hamburger */}
-      <View style={styles.headerBar}>
-        <TouchableOpacity
-          style={styles.hamburger}
-          onPress={() => setMenuVisible(true)}
-          accessibilityLabel="Open menu"
-        >
-          <View style={styles.menuLineDark} />
-          <View style={styles.menuLineDark} />
-          <View style={styles.menuLineDark} />
-        </TouchableOpacity>
-        <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={styles.logoBadge}><Text style={styles.logoEmoji}>🌴</Text></View>
-      </View>
+  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<'signs' | 'symptoms'>('signs');
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [zoomedImage, setZoomedImage] = useState<any>(null);
 
-      {/* Menu Modal */}
+  const handleHeroScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    if (index !== activeSlide) setActiveSlide(index);
+  };
+
+  return (
+    <View style={styles.root}>
+
+      {/* ── EVERYTHING IN ONE SCROLL ── */}
+      <ScrollView
+        style={styles.mainScroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.mainScrollContent}
+      >
+        {/* ── HERO + HEADER ── */}
+        <View style={styles.heroContainer}>
+          {/* Carousel images */}
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={handleHeroScroll}
+            onMomentumScrollEnd={handleHeroScroll}
+            scrollEventThrottle={8}
+            style={StyleSheet.absoluteFillObject}
+          >
+            {HERO_IMAGES.map((src, i) => (
+              <View key={i} style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}>
+                <Image source={src} style={styles.heroBg} resizeMode="cover" />
+                <View style={styles.heroOverlay} />
+              </View>
+            ))}
+          </ScrollView>
+
+          {/* ── REPLACED HEADER (HomeScreen style) ── */}
+          <SafeAreaView style={styles.headerSafe}>
+            <View style={styles.appBar}>
+              <TouchableOpacity
+                style={styles.hamburger}
+                onPress={() => setMenuVisible(true)}
+                accessibilityLabel="Open menu"
+              >
+                <View style={styles.menuLineDark} />
+                <View style={styles.menuLineDark} />
+                <View style={styles.menuLineDark} />
+              </TouchableOpacity>
+              <Text style={styles.brandTitle}>COCOSCAN</Text>
+              <View style={styles.logoBadge}>
+                <Text style={styles.logoEmoji}>🌴</Text>
+              </View>
+            </View>
+          </SafeAreaView>
+
+          {/* Hero text at bottom of hero */}
+          <View style={styles.heroTextBlock}>
+            <Text style={styles.heroTitle}>What is Oryctes{'\n'}Rhinoceros?</Text>
+            <Text style={styles.heroSubtitle}>Tap to learn more about this coconut pest</Text>
+            <View style={styles.dotsRow}>
+              {HERO_IMAGES.map((_, i) => (
+                <View key={i} style={[styles.dot, i === activeSlide && styles.dotActive]} />
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* ── WHITE SHEET ── */}
+        <View style={styles.sheetCard}>
+
+          {/* Title + Scientific name */}
+          <Text style={styles.beetleTitle}>Coconut Rhinoceros Beetle</Text>
+          <View style={styles.scientificBadge}>
+            <Text style={styles.scientificLabel}>SCIENTIFIC NAME</Text>
+            <Text style={styles.scientificName}>Oryctes Rhinoceros</Text>
+          </View>
+
+          {/* Overview Accordion */}
+          <View style={styles.accordionCard}>
+            <TouchableOpacity
+              style={styles.accordionHeader}
+              onPress={() => setOverviewOpen(v => !v)}
+              activeOpacity={0.75}
+            >
+              <View style={styles.accordionLeft}>
+                <View style={styles.iconCircle}>
+                  <Feather name="book-open" size={16} color="#0F3D1E" />
+                </View>
+                <Text style={styles.accordionTitle}>Overview</Text>
+              </View>
+              <Feather
+                name={overviewOpen ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#6B7280"
+              />
+            </TouchableOpacity>
+
+            {overviewOpen && (
+              <View style={styles.accordionBody}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.paragraph}>
+                  The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest of coconut
+                  and other palm trees. It damages plants by boring into the crown to feed on sap,
+                  causing V-shaped cuts in leaves, reduced growth, and lower yields. Severe infestations
+                  can kill young palms. Native to South and Southeast Asia, it has spread widely due to
+                  its rapid reproduction and adaptability, making early detection and control crucial.
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Tab Buttons */}
+          <View style={styles.tabRow}>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'signs' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('signs')}
+            >
+              <Text style={[styles.tabBtnText, activeTab === 'signs' && styles.tabBtnTextActive]}>
+                Sign
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tabBtn, activeTab === 'symptoms' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('symptoms')}
+            >
+              <Text style={[styles.tabBtnText, activeTab === 'symptoms' && styles.tabBtnTextActive]}>
+                Symptoms
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* ── SIGNS TAB ── */}
+          {activeTab === 'signs' && (
+            <View style={styles.tabContent}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.photoRow}
+              >
+                {[
+                  require('../assets/images/design/v-cut-sign.jpg'),
+                  require('../assets/images/design/sign(2).png'),
+                  require('../assets/images/design/v-cut(2).jpg'),
+                  require('../assets/images/design/sign(3).jpg'),
+                ].map((src, i) => (
+                  <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                    <Image source={src} style={styles.signImage} resizeMode="cover" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.sectionSubHeader}>
+                <View style={styles.iconCircleSmall}>
+                  <Feather name="eye" size={14} color="#0F3D1E" />
+                </View>
+                <Text style={styles.sectionSubTitle}>Signs of Infestation</Text>
+              </View>
+
+              <View style={styles.bulletList}>
+                {[
+                  'V-shaped cuts, holes, or notched/missing tissue on fronds and leaflet margins',
+                  'Boreholes on the crown or trunk with frass (fibrous debris) at entry points or leaf bases',
+                  'Damaged or broken spear leaf',
+                ].map((text, i) => (
+                  <View key={i} style={styles.bulletItem}>
+                    <View style={styles.bulletDot} />
+                    <Text style={styles.bulletText}>{text}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {/* ── SYMPTOMS TAB ── */}
+          {activeTab === 'symptoms' && (
+            <View style={styles.tabContent}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.photoRow}
+              >
+                {[
+                  require('../assets/images/design/Symptoms(2).jpg'),
+                  require('../assets/images/design/Symptoms(3).jpg'),
+                  require('../assets/images/design/Symptoms(3).jpg'),
+                  require('../assets/images/design/Symptoms(4).jpg'),
+                ].map((src, i) => (
+                  <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                    <Image source={src} style={styles.signImage} resizeMode="cover" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              <View style={styles.sectionSubHeader}>
+                <View style={styles.iconCircleSmall}>
+                  <Feather name="alert-circle" size={14} color="#0F3D1E" />
+                </View>
+                <Text style={styles.sectionSubTitle}>Damage Symptoms</Text>
+              </View>
+
+              <View style={styles.bulletList}>
+                {[
+                  'Distorted or stunted fronds, reduced canopy density, and overall decline in vigor and nut yield',
+                  'Secondary infections in damaged crown tissue',
+                  'Severe, repeated attacks may lead to palm death (especially in young palms)',
+                ].map((text, i) => (
+                  <View key={i} style={styles.bulletItem}>
+                    <View style={styles.bulletDot} />
+                    <Text style={styles.bulletText}>{text}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          <View style={{ height: 110 }} />
+        </View>
+      </ScrollView>
+
+      {/* ── MENU MODAL ── */}
       <Modal
         visible={menuVisible}
         transparent
@@ -30,182 +258,68 @@ export default function AboutScreen() {
         onRequestClose={() => setMenuVisible(false)}
       >
         <View style={styles.menuBackdrop}>
-          <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
+          <TouchableOpacity
+            style={styles.menuBackdropTouch}
+            activeOpacity={1}
+            onPress={() => setMenuVisible(false)}
+          />
           <View style={styles.menuSheet}>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
-              <Feather name="info" size={18} color="#111827" style={styles.menuIcon} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => { setMenuVisible(false); router.push('/about-app'); }}
+            >
+              <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
-              <Feather name="log-out" size={18} color="#DC2626" style={styles.menuIcon} />
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => { setMenuVisible(false); router.replace('/'); }}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
               <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-      {/* Content */}
-      <ScrollView contentContainerStyle={styles.contentWrap} showsVerticalScrollIndicator={false}>
-        {/* Hero Section */}
-        <View style={styles.heroSection}>
-          <View style={styles.titleRow}>
-            <View style={styles.titleContainer}>
-              <Text style={styles.title}>Coconut Rhinoceros Beetle</Text>
-              <View style={styles.scientificNameBadge}>
-                <Text style={styles.scientificLabel}>Scientific Name</Text>
-                <Text style={styles.scientificName}>Oryctes Rhinoceros</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Photos Slider */}
-          <View style={styles.photoStripWrap}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.photoRow}
+      {/* ── LIGHTBOX MODAL ── */}
+      <Modal
+        visible={!!zoomedImage}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setZoomedImage(null)}
+      >
+        <View style={styles.lightboxBackdrop}>
+          <SafeAreaView style={styles.lightboxTopBar}>
+            <TouchableOpacity
+              style={styles.lightboxBackBtn}
+              onPress={() => setZoomedImage(null)}
+              accessibilityLabel="Go back"
             >
-              <Image source={require('../assets/images/design/homepage.png')} style={styles.photo} resizeMode="cover" />
-              <Image source={require('../assets/images/design/CRB.jpg')} style={styles.photo} resizeMode="cover" />
-              <Image source={require('../assets/images/design/crb(2).png')} style={styles.photo} resizeMode="cover" />
-              <Image source={require('../assets/images/design/crb(3).png')} style={styles.photo} resizeMode="cover" />
-              <Image source={require('../assets/images/design/crb(4).png')} style={styles.photo} resizeMode="cover" />
-            </ScrollView>
-            <View style={styles.photosCountChip}>
-              <Feather name="image" size={12} color="#6B7280" />
-              <Text style={styles.photosCountText}>5 photos</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Overview */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <Feather name="book-open" size={18} color="#0F3D1E" />
-            </View>
-            <Text style={styles.sectionCardHeading}>Overview</Text>
-          </View>
-          <Text style={styles.paragraph}>
-            The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a common and destructive pest that primarily attacks coconut
-            palms and other palm species by boring into the crown to feed on sap, damaging young fronds and inhibiting
-            leaf and flower development. Native to South and Southeast Asia, this beetle has spread to many tropical
-            regions. Its rapid reproduction and adaptability make it a major threat to coconut productivity.
-          </Text>
-          <Text style={styles.paragraph}>
-            Adults boring into the crown and spear leaf can repeatedly wound the growing point, causing the familiar
-            V-shaped cuts, canopy decline, and substantial yield losses; severe or sustained attacks may kill young
-            palms. Outbreaks spread quickly where breeding sites and favorable weather persist, making early detection
-            and control essential.
-          </Text>
-        </View>
-
-        {/* Signs */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <Feather name="eye" size={18} color="#0F3D1E" />
-            </View>
-            <Text style={styles.sectionCardHeading}>Signs of Infestation</Text>
-          </View>
-          
-          <View style={styles.photoStripWrap}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.signsRow}
+              <Feather name="arrow-left" size={20} color="#FFFFFF" />
+              <Text style={styles.lightboxBackText}>Back</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.lightboxCloseBtn}
+              onPress={() => setZoomedImage(null)}
+              accessibilityLabel="Close"
             >
-              <Image source={require('../assets/images/design/v-cut-sign.jpg')} style={styles.signImage} resizeMode="cover" />
-              <Image source={require('../assets/images/design/sign(2).png')} style={styles.signImage} resizeMode="cover" />
-              <Image source={require('../assets/images/design/v-cut(2).jpg')} style={styles.signImage} resizeMode="cover" />
-              <Image source={require('../assets/images/design/sign(3).jpg')} style={styles.signImage} resizeMode="cover" />
-            </ScrollView>
-            <View style={styles.photosCountChip}>
-              <Feather name="image" size={12} color="#6B7280" />
-              <Text style={styles.photosCountText}>4 photos</Text>
-            </View>
-          </View>
-
-          <View style={styles.bulletList}>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>V-shaped cuts or holes on young, unopened fronds</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Boreholes visible on the crown or trunk</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Frass (fibrous debris) around leaf bases and at bore entry</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Notched or missing tissues along leaflet margins</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Damaged or broken spear leaf</Text>
-            </View>
-          </View>
+              <Feather name="x" size={22} color="#FFFFFF" />
+            </TouchableOpacity>
+          </SafeAreaView>
+          {zoomedImage && (
+            <Image source={zoomedImage} style={styles.lightboxImage} resizeMode="contain" />
+          )}
         </View>
+      </Modal>
 
-        {/* Symptoms */}
-        <View style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <View style={styles.iconCircle}>
-              <Feather name="alert-circle" size={18} color="#0F3D1E" />
-            </View>
-            <Text style={styles.sectionCardHeading}>Damage Symptoms</Text>
-          </View>
-          
-          <View style={styles.photoStripWrap}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.signsRow}
-            >
-              <Image source={require('../assets/images/design/Symptoms(2).jpg')} style={styles.signImage} resizeMode="cover" />
-              <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
-              <Image source={require('../assets/images/design/Symptoms(3).jpg')} style={styles.signImage} resizeMode="cover" />
-              <Image source={require('../assets/images/design/Symptoms(4).jpg')} style={styles.signImage} resizeMode="cover" />
-            </ScrollView>
-            <View style={styles.photosCountChip}>
-              <Feather name="image" size={12} color="#6B7280" />
-              <Text style={styles.photosCountText}>4 photos</Text>
-            </View>
-          </View>
-
-          <View style={styles.bulletList}>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Distorted or stunted emerging fronds; reduced canopy density</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Declining vigor and reduced nut yield over time</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Secondary infections in damaged crown tissue</Text>
-            </View>
-            <View style={styles.bulletItem}>
-              <View style={styles.bulletDot} />
-              <Text style={styles.bulletText}>Severe, repeated attacks may lead to palm death (especially young palms)</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={{ height: 100 }} />
-      </ScrollView>
-
-      {/* Footer navigation */}
+      {/* ── FOOTER NAV ── */}
       <View style={styles.footerBar}>
         <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} accessibilityLabel="Go to Home">
-          <Feather name="home" size={24} color="#6B7280" />
-          <Text style={styles.footerLabel}>Home</Text>
+          <Feather name="home" size={24} color="#0F3D1E" />
+          <Text style={[styles.footerLabel, styles.footerLabelActive]}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} accessibilityLabel="Open Camera">
           <Feather name="camera" size={24} color="#6B7280" />
@@ -220,218 +334,349 @@ export default function AboutScreen() {
           <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F9FAFB' },
-  headerBar: {
+  root: { flex: 1, backgroundColor: '#111827' },
+
+  /* ─── MAIN SCROLL ─── */
+  mainScroll: { flex: 1 },
+  mainScrollContent: { paddingBottom: 0 },
+
+  /* ─── HERO CAROUSEL ─── */
+  heroContainer: {
+    width: SCREEN_WIDTH,
+    height: HERO_HEIGHT,
+    position: 'relative',
+  },
+  heroBg: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+  },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.52)',
+  },
+
+  /* ── REPLACED HEADER STYLES (HomeScreen style) ── */
+  headerSafe: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  appBar: {
     paddingTop: 48,
     paddingHorizontal: 20,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomColor: '#E5E7EB',
-    borderBottomWidth: 1,
-    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    backgroundColor: 'transparent',
   },
-  hamburger: { padding: 8, zIndex: 10 },
-  menuLineDark: { width: 24, height: 3, backgroundColor: '#0F3D1E', marginVertical: 2.5, borderRadius: 2 },
+  hamburger: {
+    padding: 8,
+    borderRadius: 12,
+  },
+  menuLineDark: {
+    width: 26,
+    height: 3,
+    backgroundColor: '#ffffff',
+    marginVertical: 3,
+    borderRadius: 2,
+  },
   brandTitle: {
-    color: '#0F3D1E',
+    color: '#ffffff',
     fontSize: 22,
     fontWeight: '900',
-    letterSpacing: 1.5,
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    textAlign: 'center',
-    zIndex: 1,
-    pointerEvents: 'none',
+    letterSpacing: 1.2,
   },
-  logoBadge: { 
-    width: 38, 
-    height: 38, 
-    borderRadius: 19, 
-    backgroundColor: '#1F4D36', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    borderWidth: 3, 
-    borderColor: '#F2C200',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  logoEmoji: { fontSize: 20 },
-  
-  contentWrap: { padding: 20, paddingBottom: 32 },
-  
-  heroSection: { marginBottom: 8 },
-  titleRow: { marginBottom: 16 },
-  titleContainer: { gap: 10 },
-  title: { fontSize: 26, fontWeight: '900', color: '#111827', lineHeight: 32 },
-  scientificNameBadge: { 
-    backgroundColor: '#F0FDF4', 
-    paddingHorizontal: 14, 
-    paddingVertical: 8, 
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-    alignSelf: 'flex-start',
-  },
-  scientificLabel: { fontSize: 10, color: '#166534', fontWeight: '600', marginBottom: 2, textTransform: 'uppercase', letterSpacing: 0.5 },
-  scientificName: { fontSize: 15, color: '#0F3D1E', fontWeight: '700', fontStyle: 'italic' },
-  
-  photoStripWrap: { position: 'relative', marginTop: 6 },
-  photoRow: { flexDirection: 'row', gap: 14, paddingRight: 6 },
-  photo: { 
-    width: 240, 
-    height: 140, 
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  signsRow: { flexDirection: 'row', gap: 12, marginBottom: 16, paddingRight: 6 },
-  signImage: { 
-    width: 200, 
-    height: 120, 
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
-  },
-  photosCountChip: {
-    position: 'absolute',
-    right: 16,
-    bottom: 12,
-    backgroundColor: 'rgba(255,255,255,0.96)',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  photosCountText: { color: '#374151', fontSize: 12, fontWeight: '700' },
-  
-  sectionCard: { 
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 18, 
-    padding: 18, 
-    borderWidth: 1, 
-    borderColor: '#E5E7EB', 
-    marginTop: 12, 
-    marginBottom: 12, 
-    shadowColor: '#000', 
-    shadowOpacity: 0.04, 
-    shadowRadius: 12, 
-    shadowOffset: { width: 0, height: 4 }, 
-    elevation: 2 
-  },
-  sectionHeader: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 12, 
-    marginBottom: 14 
-  },
-  iconCircle: {
+  logoBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#1F4D36',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: '#F2C200',
+    shadowColor: '#F2C200',
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 4,
+  },
+  logoEmoji: { fontSize: 20 },
+
+  /* Hero text */
+  heroTextBlock: {
+    position: 'absolute',
+    bottom: 28,
+    left: 20,
+    right: 20,
+  },
+  heroTitle: {
+    color: '#FFFFFF',
+    fontSize: 26,
+    fontWeight: '900',
+    lineHeight: 34,
+    marginBottom: 6,
+    textShadowColor: 'rgba(0,0,0,0.4)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
+  },
+  heroSubtitle: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontWeight: '500',
+    marginBottom: 14,
+  },
+  dotsRow: { flexDirection: 'row', gap: 7, alignItems: 'center' },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: 'rgba(255,255,255,0.4)',
+  },
+  dotActive: {
+    backgroundColor: '#F2C200',
+    width: 22,
+    borderRadius: 4,
+  },
+
+  /* ─── WHITE SHEET ─── */
+  sheetCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -24,
+    padding: 22,
+    paddingBottom: 32,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 8,
+    minHeight: 600,
+  },
+
+  /* Title & Scientific Name */
+  beetleTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: 10,
+  },
+  scientificBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1.5,
+    borderColor: '#86EFAC',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    marginBottom: 20,
+  },
+  scientificLabel: {
+    fontSize: 9,
+    color: '#166534',
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  scientificName: {
+    fontSize: 14,
+    color: '#0F3D1E',
+    fontWeight: '700',
+    fontStyle: 'italic',
+  },
+
+  /* ─── ACCORDION ─── */
+  accordionCard: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 14,
+    marginBottom: 20,
+    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOpacity: 0.03,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  accordionLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#F0FDF4',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#BBF7D0',
   },
-  sectionCardHeading: { fontSize: 18, fontWeight: '900', color: '#111827', flex: 1 },
-  
-  paragraph: { 
-    fontSize: 15, 
-    color: '#374151', 
-    lineHeight: 24, 
-    marginBottom: 12,
-    letterSpacing: 0.2,
+  iconCircleSmall: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F0FDF4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: '#BBF7D0',
   },
-  
-  bulletList: { gap: 10 },
-  bulletItem: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  bulletDot: { 
-    width: 7, 
-    height: 7, 
-    borderRadius: 3.5, 
-    backgroundColor: '#0F3D1E', 
-    marginTop: 7,
-  },
-  bulletText: { 
-    flex: 1, 
-    fontSize: 15, 
-    color: '#374151', 
+  accordionTitle: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  dividerLine: { height: 1, backgroundColor: '#F3F4F6' },
+  accordionBody: { paddingHorizontal: 16, paddingBottom: 16 },
+  paragraph: {
+    fontSize: 14,
+    color: '#374151',
     lineHeight: 22,
-    letterSpacing: 0.2,
+    marginTop: 12,
+    letterSpacing: 0.15,
   },
-  
-  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.3)' },
+
+  /* ─── TAB BUTTONS ─── */
+  tabRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 20,
+  },
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
+    backgroundColor: '#F9FAFB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tabBtnActive: {
+    backgroundColor: '#0F3D1E',
+    borderColor: '#0F3D1E',
+  },
+  tabBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  tabBtnTextActive: { color: '#FFFFFF' },
+
+  /* ─── TAB CONTENT ─── */
+  tabContent: {},
+  photoRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingRight: 6,
+    marginBottom: 16,
+  },
+  signImage: {
+    width: 180,
+    height: 110,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  sectionSubHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 12,
+  },
+  sectionSubTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#111827',
+  },
+
+  /* ─── BULLET LIST ─── */
+  bulletList: { gap: 8 },
+  bulletItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: '#F8FFF9',
+    borderWidth: 1,
+    borderColor: '#D1FAE5',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  bulletDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0F3D1E',
+    flexShrink: 0,
+    marginTop: 6,
+  },
+  bulletText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 21,
+    letterSpacing: 0.15,
+  },
+
+  /* ─── MENU MODAL ─── */
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
   menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
   menuSheet: {
-    position: 'absolute', 
-    top: 72, 
-    left: 16, 
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 18, 
-    paddingVertical: 6, 
-    width: 220,
-    shadowColor: '#000', 
-    shadowOpacity: 0.25, 
-    shadowRadius: 16, 
-    shadowOffset: { width: 0, height: 8 }, 
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-  },
-  menuItem: { 
-    paddingHorizontal: 18, 
-    paddingVertical: 16, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    gap: 14 
-  },
-  menuIcon: { width: 20 },
-  menuItemText: { color: '#111827', fontSize: 16, fontWeight: '700', flex: 1 },
-  menuDivider: { height: 1, backgroundColor: '#F3F4F6', marginHorizontal: 12 },
-  
-  footerBar: {
-    position: 'absolute', 
-    left: 0, 
-    right: 0, 
-    bottom: 0, 
+    position: 'absolute',
+    top: 72,
+    left: 16,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1, 
-    borderTopColor: '#E5E7EB', 
-    paddingVertical: 8, 
+    borderRadius: 20,
+    paddingVertical: 12,
+    width: 240,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  menuIcon: { marginRight: 12 },
+  menuItemText: { color: '#1F3D2A', fontSize: 16, fontWeight: '600' },
+  menuDivider: { height: 1, backgroundColor: '#F3F4F6', marginHorizontal: 12 },
+
+  /* ─── FOOTER NAV ─── */
+  footerBar: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingVertical: 8,
     paddingHorizontal: 8,
-    flexDirection: 'row', 
-    justifyContent: 'space-around', 
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.08,
@@ -439,16 +684,64 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -4 },
     elevation: 8,
   },
-  footerItem: { 
-    flex: 1, 
-    alignItems: 'center', 
+  footerItem: {
+    flex: 1,
+    alignItems: 'center',
     gap: 4,
     paddingVertical: 4,
   },
-  footerLabel: { 
-    fontSize: 11, 
-    color: '#6B7280', 
+  footerLabel: {
+    fontSize: 11,
+    color: '#6B7280',
     fontWeight: '600',
     marginTop: 2,
+  },
+  footerLabelActive: { color: '#0F3D1E' },
+
+  /* ─── LIGHTBOX ─── */
+  lightboxBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.96)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lightboxTopBar: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 10,
+    zIndex: 10,
+  },
+  lightboxBackBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  lightboxBackText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  lightboxCloseBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lightboxImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH,
   },
 });

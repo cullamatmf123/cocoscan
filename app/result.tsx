@@ -20,7 +20,12 @@ interface ResultParams {
   lightCondition?: string;
 }
 
-type ResultClass = 'healthy' | 'unhealthy' | 'beetle' | 'unknown';
+type CocoClass =
+  | 'unspecified'
+  | 'crb infestation'
+  | 'unhealthy'
+  | 'oryctes rhinoceros'
+  | 'healthy';
 
 export default function ResultScreen() {
   const router = useRouter();
@@ -55,30 +60,59 @@ export default function ResultScreen() {
     }
   }, [imageUri, photoBase64]);
 
-  const resultClass: ResultClass = React.useMemo(() => {
-    const p = (prediction || '').toLowerCase();
-
-    if (!p) return 'unknown';
-    if (p.includes('oryctes') || p.includes('beetle')) return 'beetle';
-    if (p.includes('unhealthy') || p.includes('damage')) return 'unhealthy';
-    if (p.includes('healthy')) return 'healthy';
-    return 'unknown';
+  // Normalize incoming prediction string to CocoClass
+  const resultClass: CocoClass = React.useMemo(() => {
+    const p = (prediction || '').toLowerCase().trim();
+    if (!p) return 'unspecified';
+    if (p === 'oryctes rhinoceros' || p.includes('oryctes') || p.includes('rhinoceros')) return 'oryctes rhinoceros';
+    if (p === 'crb infestation' || p.includes('crb')) return 'crb infestation';
+    if (p === 'unhealthy' || p.includes('unhealthy')) return 'unhealthy';
+    if (p === 'healthy' || p.includes('healthy')) return 'healthy';
+    return 'unspecified';
   }, [prediction]);
 
-  const displayPrediction = React.useMemo(() => {
+  // Human-readable label
+  const displayPrediction = React.useMemo((): string => {
     switch (resultClass) {
-      case 'healthy':
-        return 'Healthy';
-      case 'unhealthy':
-        return 'Unhealthy – Damage detected';
-      case 'beetle':
-        return 'Oryctes Rhinoceros detected';
-      default:
-        return prediction || 'Unknown';
+      case 'healthy':            return 'Healthy';
+      case 'crb infestation':    return 'CRB Infestation – Signs & Symptoms Detected';
+      case 'oryctes rhinoceros': return 'Oryctes Rhinoceros Detected';
+      case 'unhealthy':          return 'Unhealthy – Non-CRB Pest/Disease Detected';
+      case 'unspecified':
+      default:                   return 'Unspecified – No Coconut Issue Detected';
     }
-  }, [prediction, resultClass]);
+  }, [resultClass]);
 
-  const isHealthy = resultClass === 'healthy';
+  // Status color per class
+  const statusColor = React.useMemo((): string => {
+    switch (resultClass) {
+      case 'healthy':            return '#4CAF50';
+      case 'crb infestation':    return '#F44336';
+      case 'oryctes rhinoceros': return '#8E44AD';
+      case 'unhealthy':          return '#3498DB';
+      case 'unspecified':
+      default:                   return '#F39C12';
+    }
+  }, [resultClass]);
+
+  // Status emoji + label
+  const statusLabel = React.useMemo((): string => {
+    switch (resultClass) {
+      case 'healthy':            return '✅ Healthy';
+      case 'crb infestation':    return '❌ CRB Infestation';
+      case 'oryctes rhinoceros': return '🪲 Oryctes Rhinoceros';
+      case 'unhealthy':          return '⚠️ Unhealthy';
+      case 'unspecified':
+      default:                   return '❓ Unspecified';
+    }
+  }, [resultClass]);
+
+  const isHealthy    = resultClass === 'healthy';
+  const isUnspecified = resultClass === 'unspecified';
+  // CRB-related: either the beetle itself or visible infestation damage
+  const isCrbRelated = resultClass === 'crb infestation' || resultClass === 'oryctes rhinoceros';
+  // Any class that warrants pest/disease action
+  const needsAction  = !isHealthy && !isUnspecified;
 
   useEffect(() => {
     const saveToHistory = async () => {
@@ -141,6 +175,114 @@ export default function ResultScreen() {
       },
     });
   };
+
+  // ── Pest Info tab helpers ────────────────────────────────────────────────
+
+  const pestInfoTitle = React.useMemo((): string => {
+    switch (resultClass) {
+      case 'crb infestation':    return 'CRB Infestation Signs & Symptoms';
+      case 'oryctes rhinoceros': return 'Coconut Rhinoceros Beetle (Oryctes Rhinoceros)';
+      case 'unhealthy':          return 'Non-CRB Pest / Disease Detected';
+      case 'healthy':            return 'No Pest or Disease Detected';
+      case 'unspecified':
+      default:                   return 'Not a Coconut Issue';
+    }
+  }, [resultClass]);
+
+  const pestInfoSubtitle = React.useMemo((): string | null => {
+    switch (resultClass) {
+      case 'crb infestation':    return 'Oryctes rhinoceros – infestation damage';
+      case 'oryctes rhinoceros': return 'Oryctes rhinoceros – beetle present';
+      case 'unhealthy':          return 'Non-CRB pathogen or pest';
+      default:                   return null;
+    }
+  }, [resultClass]);
+
+  const pestInfoDesc = React.useMemo((): string | null => {
+    switch (resultClass) {
+      case 'crb infestation':
+        return 'The scan detected visible signs and symptoms of CRB infestation on the coconut palm. The Oryctes rhinoceros beetle itself was not visible, but characteristic damage patterns were identified.';
+      case 'oryctes rhinoceros':
+        return 'An Oryctes rhinoceros (Coconut Rhinoceros Beetle) was detected in the image. The beetle may be present with or without visible infestation damage on the palm.';
+      case 'unhealthy':
+        return 'The coconut palm shows signs of a pest or disease not related to CRB. No Oryctes rhinoceros beetle or CRB infestation patterns were detected. Consult an agricultural expert for diagnosis.';
+      case 'unspecified':
+        return 'The scanned image does not appear to be a coconut tree or any related coconut pest/disease.';
+      default:
+        return null;
+    }
+  }, [resultClass]);
+
+  const signsItems = React.useMemo((): string[] => {
+    switch (resultClass) {
+      case 'crb infestation':
+        return [
+          '• V-shaped cuts on fronds',
+          '• Triangular leaf notches',
+          '• Bore holes in the crown',
+          '• Sawdust-like frass near entry points',
+        ];
+      case 'oryctes rhinoceros':
+        return [
+          '• Visible beetle on/near the palm crown',
+          '• V-shaped cuts on fronds',
+          '• Bore holes in the crown',
+          '• Sawdust-like frass near entry points',
+        ];
+      case 'unhealthy':
+        return [
+          '• Discoloration or lesions on leaves',
+          '• Abnormal spots or patches',
+          '• Signs inconsistent with CRB damage',
+        ];
+      default:
+        return [];
+    }
+  }, [resultClass]);
+
+  const symptomsItems = React.useMemo((): string[] => {
+    switch (resultClass) {
+      case 'crb infestation':
+        return [
+          '• Stunted or deformed emerging fronds',
+          '• Yellowing of newly opened leaves',
+          '• Reduced nut production',
+          '• Possible death from repeated attack',
+        ];
+      case 'oryctes rhinoceros':
+        return [
+          '• Stunted or deformed fronds',
+          '• Yellowing of emerging leaf',
+          '• Possible death from repeated attack',
+          '• Progressive crown damage if untreated',
+        ];
+      case 'unhealthy':
+        return [
+          '• Wilting or drooping fronds',
+          '• Yellowing or browning unrelated to CRB',
+          '• Reduced vigor of the palm',
+        ];
+      default:
+        return [];
+    }
+  }, [resultClass]);
+
+  // Section title helpers
+  const preventionTitle = React.useMemo((): string => {
+    if (isHealthy) return 'Prevention to Maintain Healthy Coconut';
+    if (isUnspecified) return 'No Prevention & Control Needed';
+    if (resultClass === 'unhealthy') return 'No Prevention & Control Needed';
+    return 'Prevention & Control';
+  }, [resultClass, isHealthy, isUnspecified]);
+
+  const pesticidesTitle = React.useMemo((): string => {
+    if (isHealthy) return 'No Recommended Pesticides';
+    if (isUnspecified) return 'No Recommended Pesticides';
+    if (resultClass === 'unhealthy') return 'No Recommended Pesticides';
+    return 'Recommended Pesticides';
+  }, [resultClass, isHealthy, isUnspecified]);
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -221,7 +363,7 @@ export default function ResultScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Status tab content */}
+          {/* ── Status Tab ── */}
           {tab === 'status' && (
             <>
               {/* Date header */}
@@ -239,7 +381,10 @@ export default function ResultScreen() {
                   )}
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.statusTitle}>AI : {displayPrediction}</Text>
+                  <Text style={[styles.statusTitle, { color: statusColor }]}>
+                    {statusLabel}
+                  </Text>
+                  <Text style={styles.statusSubtitle}>{displayPrediction}</Text>
                   <View style={styles.statusChipsRow}>
                     <Text style={styles.statusChipText}>🌤️ {weather || 'Not specified'}</Text>
                     <Text style={styles.statusChipText}>🌡️ {temperature || 'Not specified'}°C</Text>
@@ -249,52 +394,69 @@ export default function ResultScreen() {
                 </View>
               </View>
 
-              <View style={styles.sectionCard}>
-                <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>
-                    {isHealthy ? 'No Prevention & Control' : 'Prevention & Control'}
-                  </Text>
-                  <TouchableOpacity onPress={handlePreventionPress} accessibilityLabel="Open Prevention & Control details" activeOpacity={0.8}>
-                    <Text style={styles.sectionChevron}>›</Text>
-                  </TouchableOpacity>
-                </View>
-                {!isHealthy && (
-                  <>
-                    <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
-                    <View style={{ gap: 6 }}>
-                      <Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text>
-                      <Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text>
-                      <Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text>
-                      <Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text>
-                      <Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text>
-                    </View>
-                    <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
-                    <View style={{ gap: 6 }}>
-                      <Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text>
-                      <Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text>
-                      <Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text>
-                      <Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text>
-                      <Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text>
-                    </View>
-                  </>
-                )}
-              </View>
+              {/* Prevention & Control — hidden for unspecified and unhealthy */}
+              {(isHealthy || isCrbRelated) && (
+                <View style={styles.sectionCard}>
+                  <View style={styles.sectionHeaderRow}>
+                    <Text style={styles.sectionTitle}>{preventionTitle}</Text>
+                    <TouchableOpacity onPress={handlePreventionPress} accessibilityLabel="Open Prevention & Control details" activeOpacity={0.8}>
+                      <Text style={styles.sectionChevron}>›</Text>
+                    </TouchableOpacity>
+                  </View>
 
-              {/* Recommended Pesticides */}
-              <View style={styles.sectionCard}>
-                <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>
-                    {isHealthy ? 'No Recommended Pesticides' : 'Recommended Pesticides'}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => router.push('/pesticides')}
-                    accessibilityLabel="Open full pesticide recommendations"
-                    activeOpacity={0.8}
-                  >
-                    <Text style={styles.sectionChevron}>›</Text>
-                  </TouchableOpacity>
+                  {/* Healthy: tips to keep it healthy */}
+                  {isHealthy && (
+                    <>
+                      <Text style={[styles.sectionText, { marginTop: 6, lineHeight: 20 }]}>
+                        Your coconut palm appears healthy! Follow these practices to keep it that way:
+                      </Text>
+                      <View style={{ gap: 6, marginTop: 6 }}>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Regularly inspect the crown and fronds for early signs of pest activity.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Maintain proper fertilization and irrigation for optimal palm vigor.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Remove and dispose of dead organic matter around the base to prevent breeding sites.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Use pheromone traps nearby to monitor and deter Oryctes rhinoceros beetles.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Keep the plantation clean and well-drained to reduce disease and pest risk.</Text></View>
+                      </View>
+                    </>
+                  )}
+
+                  {/* CRB-related: full prevention & control bullets */}
+                  {isCrbRelated && (
+                    <>
+                      <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
+                      <View style={{ gap: 6 }}>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text></View>
+                      </View>
+                      <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
+                      <View style={{ gap: 6 }}>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text></View>
+                      </View>
+                    </>
+                  )}
                 </View>
-                {!isHealthy && (
+              )}
+
+              {/* Recommended Pesticides — only for CRB-related */}
+              {isCrbRelated && (
+                <View style={styles.sectionCard}>
+                  <View style={styles.sectionHeaderRow}>
+                    <Text style={styles.sectionTitle}>{pesticidesTitle}</Text>
+                    <TouchableOpacity
+                      onPress={() => router.push('/pesticides')}
+                      accessibilityLabel="Open full pesticide recommendations"
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.sectionChevron}>›</Text>
+                    </TouchableOpacity>
+                  </View>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 6 }}>
                     <View style={styles.recTile}>
                       <Image source={require('../assets/images/design/Karate-front.webp')} style={styles.recImage} />
@@ -313,60 +475,68 @@ export default function ResultScreen() {
                       <Text style={styles.recCaption}>Chlorantraniliprole</Text>
                     </View>
                   </ScrollView>
-                )}
-              </View>
+                </View>
+              )}
+
+              {/* Unhealthy only: disclaimer note */}
+              {resultClass === 'unhealthy' && (
+                <View style={styles.disclaimerCard}>
+                  <Text style={styles.disclaimerIcon}>📋</Text>
+                  <Text style={styles.disclaimerText}>
+                    <Text style={styles.disclaimerBold}>Note: </Text>
+                    The condition detected does not appear to be CRB-related. The specific pest or disease affecting this coconut palm requires expert diagnosis. Please consult your local agricultural extension office or a licensed plant pathologist for accurate identification and appropriate treatment recommendations.
+                  </Text>
+                </View>
+              )}
+
+              {/* Unspecified: not identified card */}
+              {isUnspecified && (
+                <View style={styles.unspecifiedCard}>
+                  <Text style={styles.unspecifiedIcon}>🔍</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.unspecifiedTitle}>Image Not Identified</Text>
+                    <Text style={styles.unspecifiedText}>
+                      The scanned image was not recognized as a coconut tree or any related pest/disease. This may be an unrelated object. Please try again with a clear photo of a coconut palm for accurate results.
+                    </Text>
+                  </View>
+                </View>
+              )}
             </>
           )}
 
-          {/* Pest Info tab content */}
+          {/* ── Pest Info Tab ── */}
           {tab === 'pest' && (
             <>
               <View style={styles.greenCardAlt}>
-                <Text style={styles.greenDescTitle}>
-                  {resultClass === 'healthy'
-                    ? 'No Coconut Rhinoceros Beetle'
-                    : 'Coconut Rhinoceros Beetle'}
-                </Text>
-                {resultClass !== 'healthy' && (
-                  <>
-                    <Text style={styles.greenDescSub}>Oryctes Rhinoceros</Text>
-                    <Text style={styles.greenDescText}>
-                      {resultClass === 'beetle'
-                        ? 'An Oryctes rhinoceros beetle was detected on the coconut palm in this scan.'
-                        : 'The model detected unhealthy regions on the coconut palm consistent with stress, disease, or damage. The beetle itself was not clearly visible.'}
-                    </Text>
-                  </>
+                <Text style={styles.greenDescTitle}>{pestInfoTitle}</Text>
+                {pestInfoSubtitle && (
+                  <Text style={styles.greenDescSub}>{pestInfoSubtitle}</Text>
+                )}
+                {pestInfoDesc && (
+                  <Text style={styles.greenDescText}>{pestInfoDesc}</Text>
                 )}
               </View>
-              
-              <View style={{ flexDirection: 'row', gap: 10 }}>
-                <View style={[styles.greenCard, { flex: 1 }]}> 
-                  <Text style={styles.greenListTitle}>
-                    {isHealthy ? 'No Sign' : 'Signs'}
-                  </Text>
-                  {!isHealthy && (
-                    <>
-                      <Text style={styles.greenListItem}>• V-shaped cuts on fronds</Text>
-                      <Text style={styles.greenListItem}>• Triangular leaf notches</Text>
-                      <Text style={styles.greenListItem}>• Bore holes in crown</Text>
-                    </>
-                  )}
-                </View>
-                <View style={[styles.greenCard, { flex: 1 }]}> 
-                  <Text style={styles.greenListTitle}>
-                    {isHealthy ? 'No Symptoms' : 'Symptoms'}
-                  </Text>
-                  {!isHealthy && (
-                    <>
-                      <Text style={styles.greenListItem}>• Stunted or deformed fronds</Text>
-                      <Text style={styles.greenListItem}>• Yellowing of emerging leaf</Text>
-                      <Text style={styles.greenListItem}>• Possible death from repeated attack</Text>
-                    </>
-                  )}
-                </View>
-              </View>
 
-              {!isHealthy && (
+              {/* Signs & Symptoms — only when there's data */}
+              {needsAction && (
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                  <View style={[styles.greenCard, { flex: 1 }]}>
+                    <Text style={styles.greenListTitle}>Signs</Text>
+                    {signsItems.map((item, i) => (
+                      <Text key={i} style={styles.greenListItem}>{item}</Text>
+                    ))}
+                  </View>
+                  <View style={[styles.greenCard, { flex: 1 }]}>
+                    <Text style={styles.greenListTitle}>Symptoms</Text>
+                    {symptomsItems.map((item, i) => (
+                      <Text key={i} style={styles.greenListItem}>{item}</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Images — only for CRB-related classes */}
+              {isCrbRelated && (
                 <>
                   <View style={[styles.sectionHeaderRow, { marginTop: 10 }]}>
                     <Text style={styles.sectionTitle}>Images</Text>
@@ -599,14 +769,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   statusCard: { 
-    backgroundColor: '#E8F5E9', 
+    backgroundColor: '#FFFFFF', 
     borderRadius: 12, 
     padding: 12, 
     flexDirection: 'row', 
     alignItems: 'center', 
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: '#D1D5DB',
   },
   statusThumb: { 
     width: 60, 
@@ -616,10 +786,16 @@ const styles = StyleSheet.create({
     borderColor: '#FFFFFF',
   },
   statusTitle: { 
-    color: '#0F3D1E', 
     fontWeight: '900', 
-    marginBottom: 8,
+    marginBottom: 2,
     fontSize: 15,
+  },
+  statusSubtitle: {
+    color: '#374151',
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
+    marginBottom: 8,
   },
   statusChipsRow: { 
     flexDirection: 'row', 
@@ -635,12 +811,12 @@ const styles = StyleSheet.create({
   
   /* Section Cards */
   sectionCard: { 
-    backgroundColor: '#E8F5E9', 
+    backgroundColor: '#FFFFFF', 
     borderRadius: 12, 
     padding: 14, 
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: '#D1D5DB',
   },
   sectionTitle: { 
     fontWeight: '800', 
@@ -657,6 +833,14 @@ const styles = StyleSheet.create({
     color: '#1F3D2A', 
     fontSize: 13, 
     lineHeight: 20 
+  },
+  bulletCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   sectionHeaderRow: { 
     flexDirection: 'row', 
@@ -696,12 +880,12 @@ const styles = StyleSheet.create({
   
   /* Pest Info Tab */
   greenCardAlt: { 
-    backgroundColor: '#E8F5E9', 
+    backgroundColor: '#FFFFFF', 
     borderRadius: 12, 
     padding: 14, 
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: '#D1D5DB',
   },
   greenDescTitle: { 
     color: '#0F3D1E', 
@@ -721,12 +905,12 @@ const styles = StyleSheet.create({
     marginTop: 8 
   },
   greenCard: { 
-    backgroundColor: '#E8F5E9', 
+    backgroundColor: '#FFFFFF', 
     borderRadius: 12, 
     padding: 12, 
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#C8E6C9',
+    borderColor: '#D1D5DB',
   },
   greenListTitle: { 
     color: '#0F3D1E', 
@@ -768,6 +952,66 @@ const styles = StyleSheet.create({
     fontSize: 16 
   },
   
+  /* Disclaimer Note */
+  disclaimerCard: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#F59E0B',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  disclaimerIcon: {
+    fontSize: 18,
+    marginTop: 1,
+  },
+  disclaimerText: {
+    flex: 1,
+    color: '#78350F',
+    fontSize: 13,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  disclaimerBold: {
+    fontWeight: '800',
+    fontStyle: 'normal',
+  },
+
+  /* Unspecified Not Identified card */
+  unspecifiedCard: {
+    backgroundColor: '#F0F4FF',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#6B7280',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  unspecifiedIcon: {
+    fontSize: 22,
+    marginTop: 1,
+  },
+  unspecifiedTitle: {
+    color: '#1F2937',
+    fontWeight: '800',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  unspecifiedText: {
+    color: '#4B5563',
+    fontSize: 13,
+    lineHeight: 20,
+  },
+
   /* Footer */
   footerBar: {
     position: 'absolute',

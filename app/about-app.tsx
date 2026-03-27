@@ -16,7 +16,7 @@ export default function AboutAppScreen() {
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
         <View style={styles.logoBadge}>
-          <Text style={styles.logoEmoji}>🥥</Text>
+         <Text style={styles.logoEmoji}>🌴</Text>
         </View>
       </View>
 
