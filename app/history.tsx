@@ -173,67 +173,33 @@ export default function HistoryScreen() {
     });
   };
 
+  // ── UI ONLY: maps prediction label to a human-readable subtitle ──────────
+  const getSubtitle = (prediction: string): string => {
+    const pred = (prediction || '').toLowerCase().trim();
+
+    if (pred === 'unspecified' || pred.startsWith('unspecified')) {
+      return 'Unspecified';
+    }
+    if (pred === 'healthy' || pred.startsWith('healthy')) {
+      return 'No CRB infestation';
+    }
+    if (pred === 'unhealthy' || pred.startsWith('unhealthy')) {
+      return 'Not CRB infestation';
+    }
+    if (pred.includes('crb infestation') || pred.includes('crb')) {
+      return 'CRB has signs & symptoms';
+    }
+    if (pred.includes('oryctes rhinoceros') || pred.includes('oryctes')) {
+      return 'has Presence of CRB';
+    }
+    // Fallback — show raw prediction text
+    return prediction;
+  };
+
   const renderItem = ({ item, index }: { item: HistoryItem; index: number }) => {
     const prev = items[index - 1];
     const showHeader =
       index === 0 || !isSameDay(prev?.timestamp, item.timestamp);
-
-    const getSubtitle = () => {
-      const predRaw = item.prediction || '';
-      const pred = predRaw.toLowerCase();
-      const detailsText = (item.details || '').toLowerCase();
-
-      // Healthy
-      if (pred === 'healthy' || pred.startsWith('healthy')) {
-        return 'No Oryctes Rhinoceros detected';
-      }
-
-      // Detect signs vs beetle presence (same idea as ResultScreen)
-      const signKeywords = [
-        'sign',
-        'symptom',
-        'v-shaped',
-        'triangular',
-        'notch',
-        'bore hole',
-        'cuts',
-        'fronds',
-        'leaf',
-      ];
-      const presenceKeywords = [
-        'presence',
-        'beetle',
-        'adult',
-        'larva',
-        'grub',
-        'found',
-        'seen',
-        'captured',
-        'detected',
-      ];
-
-      const hasSign = signKeywords.some((k) => detailsText.includes(k));
-      const hasPresence = presenceKeywords.some((k) =>
-        detailsText.includes(k)
-      );
-
-      // Unhealthy (non-beetle) → sign only
-      if (hasSign && !hasPresence) {
-        return 'Sign of Oryctes Rhinoceros detected';
-      }
-
-      // Unhealthy (beetle detect) → beetle presence
-      if (hasPresence) {
-        return 'Oryctes Rhinoceros detected';
-      }
-
-      // Fallback for generic "unhealthy" predictions
-      if (pred.startsWith('unhealthy')) {
-        return 'Oryctes Rhinoceros detected';
-      }
-
-      return item.details || ' ';
-    };
 
     return (
       <View>
@@ -242,13 +208,7 @@ export default function HistoryScreen() {
             <Text style={styles.dateHeader}>
               {formatDateHeader(item.timestamp)}
             </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 12,
-              }}
-            >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               {deleteMode && (
                 <TouchableOpacity
                   onPress={handleSelectAll}
@@ -280,7 +240,9 @@ export default function HistoryScreen() {
             <Text style={styles.itemTitle}>
               {item.prediction || 'Unknown'}
             </Text>
-            <Text style={styles.itemSub}>{getSubtitle()}</Text>
+            <Text style={styles.itemSub}>
+              {getSubtitle(item.prediction || '')}
+            </Text>
           </View>
           <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
           {deleteMode && (
@@ -302,16 +264,14 @@ export default function HistoryScreen() {
 
   if (loading) {
     return (
-      <View
-        style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
-      >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#2d5a3d" />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: '#F9FAFB' }}>
       {/* App Bar */}
       <View style={styles.appBar}>
         <TouchableOpacity
@@ -351,7 +311,12 @@ export default function HistoryScreen() {
                 router.push('/about-app');
               }}
             >
-              <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
+              <Ionicons
+                name="information-circle-outline"
+                size={20}
+                color="#1F3D2A"
+                style={styles.menuIcon}
+              />
               <Text style={styles.menuItemText}>About</Text>
             </TouchableOpacity>
             <View style={styles.menuDivider} />
@@ -362,8 +327,15 @@ export default function HistoryScreen() {
                 router.replace('/');
               }}
             >
-              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
-              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
+              <Ionicons
+                name="log-out-outline"
+                size={20}
+                color="#DC2626"
+                style={styles.menuIcon}
+              />
+              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>
+                Logout
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -386,13 +358,41 @@ export default function HistoryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={loadHistory} />
         }
         ListEmptyComponent={
-          <Text style={{ textAlign: 'center', color: '#6b7280' }}>
-            No history yet.
-          </Text>
+          <View style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingVertical: 60,
+            paddingHorizontal: 20,
+          }}>
+            <Feather
+              name="inbox"
+              size={48}
+              color="#9CA3AF"
+              style={{ marginBottom: 16 }}
+            />
+            <Text style={{
+              textAlign: 'center',
+              color: '#6B7280',
+              fontSize: 16,
+              fontWeight: '600',
+              marginBottom: 8,
+            }}>
+              No history yet
+            </Text>
+            <Text style={{
+              textAlign: 'center',
+              color: '#9CA3AF',
+              fontSize: 14,
+              lineHeight: 20,
+            }}>
+              Start scanning coconut palms to see your detection history here
+            </Text>
+          </View>
         }
       />
 
-      {/* Confirm modal */}
+      {/* Confirm Delete Modal */}
       <Modal
         transparent
         visible={confirmVisible}
@@ -401,31 +401,15 @@ export default function HistoryScreen() {
       >
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text
-              style={{
-                fontWeight: '900',
-                color: '#111827',
-                marginBottom: 8,
-              }}
-            >
+            <Text style={{ fontWeight: '900', color: '#111827', marginBottom: 8 }}>
               Delete selected?
             </Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                justifyContent: 'flex-end',
-                gap: 12,
-              }}
-            >
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 12 }}>
               <TouchableOpacity onPress={() => setConfirmVisible(false)}>
-                <Text style={{ color: '#111827', fontWeight: '700' }}>
-                  Cancel
-                </Text>
+                <Text style={{ color: '#111827', fontWeight: '700' }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={handleDeleteSelected}>
-                <Text style={{ color: '#B91C1C', fontWeight: '700' }}>
-                  Delete
-                </Text>
+                <Text style={{ color: '#B91C1C', fontWeight: '700' }}>Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -459,7 +443,9 @@ export default function HistoryScreen() {
           accessibilityLabel="View History"
         >
           <Feather name="clock" size={24} color="#1F3D2A" />
-          <Text style={[styles.footerLabel, { color: '#1F3D2A', fontWeight: '700' }]}>History</Text>
+          <Text style={[styles.footerLabel, { color: '#1F3D2A', fontWeight: '700' }]}>
+            History
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.footerItem}
@@ -476,7 +462,7 @@ export default function HistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  /* App Bar - Matching HomeScreen */
+  /* App Bar */
   appBar: {
     paddingTop: 48,
     paddingHorizontal: 20,
@@ -520,14 +506,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logoEmoji: { fontSize: 20 },
-  
-  /* Menu Modal - Matching HomeScreen */
-  menuBackdrop: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.4)' 
+
+  /* Menu Modal */
+  menuBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
-  menuBackdropTouch: { 
-    ...(StyleSheet.absoluteFillObject as any) 
+  menuBackdropTouch: {
+    ...(StyleSheet.absoluteFillObject as any),
   },
   menuSheet: {
     position: 'absolute',
@@ -549,20 +535,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  menuIcon: {
-    marginRight: 12,
+  menuIcon: { marginRight: 12 },
+  menuItemText: {
+    color: '#1F3D2A',
+    fontSize: 16,
+    fontWeight: '600',
   },
-  menuItemText: { 
-    color: '#1F3D2A', 
-    fontSize: 16, 
-    fontWeight: '600' 
-  },
-  menuDivider: { 
-    height: 1, 
-    backgroundColor: '#F3F4F6', 
-    marginHorizontal: 12 
+  menuDivider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginHorizontal: 12,
   },
 
+  /* Page */
   pageHeading: {
     color: '#0F3D1E',
     fontSize: 20,
@@ -571,6 +556,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     alignSelf: 'center',
   },
+
+  /* List items */
   dateHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -609,16 +596,6 @@ const styles = StyleSheet.create({
   thumbFallback: { alignItems: 'center', justifyContent: 'center' },
   itemTitle: { color: '#111827', fontWeight: '900', fontSize: 16 },
   itemSub: { color: '#6b7280', fontSize: 13, fontStyle: 'italic' },
-  cardRight: { alignItems: 'center', justifyContent: 'space-between' },
-  actionFab: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: '#16A34A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
   timeText: { color: '#6B7280', fontSize: 12, fontWeight: '700' },
   check: {
     width: 20,
@@ -634,6 +611,8 @@ const styles = StyleSheet.create({
     borderColor: '#2d5a3d',
     borderWidth: 0,
   },
+
+  /* Confirm modal */
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
@@ -646,8 +625,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: '80%',
   },
-  
-  /* Footer - Matching HomeScreen */
+
+  /* Footer */
   footerBar: {
     position: 'absolute',
     bottom: 0,
