@@ -27,7 +27,7 @@ interface HealthPrediction {
   };
 }
 
-const SPACE_ROOT = 'https://cullamatmf123-capstone-cocoscan.hf.space';
+const SPACE_ROOT = 'https://cullamatmf123-capstone-final.hf.space';
 const GRADIO_API_PREFIX = '/gradio_api';
 const GRADIO_FN = 'predict_on_image';
 
@@ -50,18 +50,15 @@ const normalizePrediction = (
 
   if (!c) return 'unspecified';
 
+  if (c === 'healthy') return 'healthy';
+  if (c === 'unhealthy') return 'unhealthy';
+  if (c === 'unspecified' || c === 'unknown') return 'unspecified';
+
+  if (c === 'crb infestation') return 'crb infestation';
+
+  if (c === 'oryctes rhinoceros') return 'oryctes rhinoceros';
   if (c.includes('oryctes') || c.includes('rhinoceros'))
     return 'oryctes rhinoceros';
-
-  // Rename "other pest damage" to "unhealthy" in the app
-  if (c.includes('other') && c.includes('pest')) return 'unhealthy';
-
-  // Keep: Rename "unhealthy" from HF to "crb infestation" in the app
-  if (c.includes('unhealthy')) return 'crb infestation';
-
-  if (c.includes('healthy')) return 'healthy';
-
-  if (c === 'unspecified' || c === 'unknown') return 'unspecified';
 
   return 'unspecified';
 };
