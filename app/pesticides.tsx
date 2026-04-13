@@ -502,7 +502,7 @@ const s = StyleSheet.create({
   },
   dots: { flexDirection: 'row', gap: 6, alignItems: 'center' },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.35)' },
-  dotActive: { backgroundColor: '#FFFFFF', width: 20, borderRadius: 3 },
+  dotActive: { backgroundColor: '#F2C200', width: 20, borderRadius: 3 },
 
   // Sheet
   sheet: {
