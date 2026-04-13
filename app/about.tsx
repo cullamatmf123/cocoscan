@@ -28,8 +28,8 @@ const HERO_IMAGES = [
 
 export default function AboutScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
-  const [overviewOpen, setOverviewOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState<'signs' | 'symptoms'>('signs');
+  const [signsOpen, setSignsOpen] = useState(false);
+  const [symptomsOpen, setSymptomsOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [zoomedImage, setZoomedImage] = useState<any>(null);
 
@@ -67,7 +67,7 @@ export default function AboutScreen() {
             ))}
           </ScrollView>
 
-          {/* ── REPLACED HEADER (HomeScreen style) ── */}
+          {/* ── HEADER ── */}
           <SafeAreaView style={styles.headerSafe}>
             <View style={styles.appBar}>
               <TouchableOpacity
@@ -108,143 +108,141 @@ export default function AboutScreen() {
             <Text style={styles.scientificName}>Oryctes Rhinoceros</Text>
           </View>
 
-          {/* Overview Accordion */}
+          {/* Overview Card */}
           <View style={styles.accordionCard}>
-            <TouchableOpacity
-              style={styles.accordionHeader}
-              onPress={() => setOverviewOpen(v => !v)}
-              activeOpacity={0.75}
-            >
+            <View style={styles.accordionHeader}>
               <View style={styles.accordionLeft}>
                 <View style={styles.iconCircle}>
                   <Feather name="book-open" size={16} color="#0F3D1E" />
                 </View>
                 <Text style={styles.accordionTitle}>Overview</Text>
               </View>
+            </View>
+            <View style={styles.accordionBody}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.paragraph}>
+                The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest of coconut
+                and other palm trees. It damages plants by boring into the crown to feed on sap,
+                causing V-shaped cuts in leaves, reduced growth, and lower yields. Severe infestations
+                can kill young palms. Native to South and Southeast Asia, it has spread widely due to
+                its rapid reproduction and adaptability, making early detection and control crucial.
+              </Text>
+            </View>
+          </View>
+
+          {/* ── SIGNS ACCORDION ── */}
+          <View style={styles.accordionCard}>
+            <TouchableOpacity
+              style={styles.accordionHeader}
+              onPress={() => setSignsOpen(v => !v)}
+              activeOpacity={0.75}
+            >
+              <View style={styles.accordionLeft}>
+                <View style={styles.iconCircle}>
+                  <Feather name="eye" size={16} color="#0F3D1E" />
+                </View>
+                <Text style={styles.accordionTitle}>Signs of Infestation</Text>
+              </View>
               <Feather
-                name={overviewOpen ? 'chevron-up' : 'chevron-down'}
+                name={signsOpen ? 'chevron-up' : 'chevron-down'}
                 size={20}
                 color="#6B7280"
               />
             </TouchableOpacity>
 
-            {overviewOpen && (
+            {signsOpen && (
               <View style={styles.accordionBody}>
                 <View style={styles.dividerLine} />
-                <Text style={styles.paragraph}>
-                  The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest of coconut
-                  and other palm trees. It damages plants by boring into the crown to feed on sap,
-                  causing V-shaped cuts in leaves, reduced growth, and lower yields. Severe infestations
-                  can kill young palms. Native to South and Southeast Asia, it has spread widely due to
-                  its rapid reproduction and adaptability, making early detection and control crucial.
-                </Text>
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.photoRow}
+                >
+                  {[
+                    require('../assets/images/design/v-cut-sign.jpg'),
+                    require('../assets/images/design/sign(2).png'),
+                    require('../assets/images/design/v-cut(2).jpg'),
+                    require('../assets/images/design/sign(3).jpg'),
+                  ].map((src, i) => (
+                    <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                      <Image source={src} style={styles.signImage} resizeMode="cover" />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <View style={styles.bulletList}>
+                  {[
+                    'V-shaped cuts, holes, or notched/missing tissue on fronds and leaflet margins',
+                    'Boreholes on the crown or trunk with frass (fibrous debris) at entry points or leaf bases',
+                    'Damaged or broken spear leaf',
+                  ].map((text, i) => (
+                    <View key={i} style={styles.bulletItem}>
+                      <View style={styles.bulletDot} />
+                      <Text style={styles.bulletText}>{text}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
             )}
           </View>
 
-          {/* Tab Buttons */}
-          <View style={styles.tabRow}>
+          {/* ── SYMPTOMS ACCORDION ── */}
+          <View style={styles.accordionCard}>
             <TouchableOpacity
-              style={[styles.tabBtn, activeTab === 'signs' && styles.tabBtnActive]}
-              onPress={() => setActiveTab('signs')}
+              style={styles.accordionHeader}
+              onPress={() => setSymptomsOpen(v => !v)}
+              activeOpacity={0.75}
             >
-              <Text style={[styles.tabBtnText, activeTab === 'signs' && styles.tabBtnTextActive]}>
-                Sign
-              </Text>
+              <View style={styles.accordionLeft}>
+                <View style={styles.iconCircle}>
+                  <Feather name="alert-circle" size={16} color="#0F3D1E" />
+                </View>
+                <Text style={styles.accordionTitle}>Damage Symptoms</Text>
+              </View>
+              <Feather
+                name={symptomsOpen ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#6B7280"
+              />
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tabBtn, activeTab === 'symptoms' && styles.tabBtnActive]}
-              onPress={() => setActiveTab('symptoms')}
-            >
-              <Text style={[styles.tabBtnText, activeTab === 'symptoms' && styles.tabBtnTextActive]}>
-                Symptoms
-              </Text>
-            </TouchableOpacity>
+
+            {symptomsOpen && (
+              <View style={styles.accordionBody}>
+                <View style={styles.dividerLine} />
+
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.photoRow}
+                >
+                  {[
+                    require('../assets/images/design/Symptoms(2).jpg'),
+                    require('../assets/images/design/Symptoms(3).jpg'),
+                    require('../assets/images/design/Symptoms(3).jpg'),
+                    require('../assets/images/design/Symptoms(4).jpg'),
+                  ].map((src, i) => (
+                    <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                      <Image source={src} style={styles.signImage} resizeMode="cover" />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+
+                <View style={styles.bulletList}>
+                  {[
+                    'Distorted or stunted fronds, reduced canopy density, and overall decline in vigor and nut yield',
+                    'Secondary infections in damaged crown tissue',
+                    'Severe, repeated attacks may lead to palm death (especially in young palms)',
+                  ].map((text, i) => (
+                    <View key={i} style={styles.bulletItem}>
+                      <View style={styles.bulletDot} />
+                      <Text style={styles.bulletText}>{text}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
           </View>
-
-          {/* ── SIGNS TAB ── */}
-          {activeTab === 'signs' && (
-            <View style={styles.tabContent}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.photoRow}
-              >
-                {[
-                  require('../assets/images/design/v-cut-sign.jpg'),
-                  require('../assets/images/design/sign(2).png'),
-                  require('../assets/images/design/v-cut(2).jpg'),
-                  require('../assets/images/design/sign(3).jpg'),
-                ].map((src, i) => (
-                  <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
-                    <Image source={src} style={styles.signImage} resizeMode="cover" />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <View style={styles.sectionSubHeader}>
-                <View style={styles.iconCircleSmall}>
-                  <Feather name="eye" size={14} color="#0F3D1E" />
-                </View>
-                <Text style={styles.sectionSubTitle}>Signs of Infestation</Text>
-              </View>
-
-              <View style={styles.bulletList}>
-                {[
-                  'V-shaped cuts, holes, or notched/missing tissue on fronds and leaflet margins',
-                  'Boreholes on the crown or trunk with frass (fibrous debris) at entry points or leaf bases',
-                  'Damaged or broken spear leaf',
-                ].map((text, i) => (
-                  <View key={i} style={styles.bulletItem}>
-                    <View style={styles.bulletDot} />
-                    <Text style={styles.bulletText}>{text}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* ── SYMPTOMS TAB ── */}
-          {activeTab === 'symptoms' && (
-            <View style={styles.tabContent}>
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.photoRow}
-              >
-                {[
-                  require('../assets/images/design/Symptoms(2).jpg'),
-                  require('../assets/images/design/Symptoms(3).jpg'),
-                  require('../assets/images/design/Symptoms(3).jpg'),
-                  require('../assets/images/design/Symptoms(4).jpg'),
-                ].map((src, i) => (
-                  <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
-                    <Image source={src} style={styles.signImage} resizeMode="cover" />
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-
-              <View style={styles.sectionSubHeader}>
-                <View style={styles.iconCircleSmall}>
-                  <Feather name="alert-circle" size={14} color="#0F3D1E" />
-                </View>
-                <Text style={styles.sectionSubTitle}>Damage Symptoms</Text>
-              </View>
-
-              <View style={styles.bulletList}>
-                {[
-                  'Distorted or stunted fronds, reduced canopy density, and overall decline in vigor and nut yield',
-                  'Secondary infections in damaged crown tissue',
-                  'Severe, repeated attacks may lead to palm death (especially in young palms)',
-                ].map((text, i) => (
-                  <View key={i} style={styles.bulletItem}>
-                    <View style={styles.bulletDot} />
-                    <Text style={styles.bulletText}>{text}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
 
           <View style={{ height: 110 }} />
         </View>
@@ -361,7 +359,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.52)',
   },
 
-  /* ── REPLACED HEADER STYLES (HomeScreen style) ── */
+  /* ── HEADER STYLES ── */
   headerSafe: {
     position: 'absolute',
     top: 0,
@@ -500,7 +498,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 14,
-    marginBottom: 20,
+    marginBottom: 14,
     overflow: 'hidden',
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
@@ -539,52 +537,20 @@ const styles = StyleSheet.create({
   },
   accordionTitle: { fontSize: 16, fontWeight: '800', color: '#111827' },
   dividerLine: { height: 1, backgroundColor: '#F3F4F6' },
-  accordionBody: { paddingHorizontal: 16, paddingBottom: 16 },
+  accordionBody: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 12 },
   paragraph: {
     fontSize: 14,
     color: '#374151',
     lineHeight: 22,
-    marginTop: 12,
     letterSpacing: 0.15,
   },
 
-  /* ─── TAB BUTTONS ─── */
-  tabRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 20,
-  },
-  tabBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#F9FAFB',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabBtnActive: {
-    backgroundColor: '#0F3D1E',
-    borderColor: '#0F3D1E',
-  },
-  tabBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6B7280',
-    textAlign: 'center',
-    lineHeight: 16,
-  },
-  tabBtnTextActive: { color: '#FFFFFF' },
-
-  /* ─── TAB CONTENT ─── */
-  tabContent: {},
+  /* ─── PHOTO ROW ─── */
   photoRow: {
     flexDirection: 'row',
     gap: 12,
     paddingRight: 6,
-    marginBottom: 16,
+    marginBottom: 14,
   },
   signImage: {
     width: 180,
@@ -595,17 +561,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
-  },
-  sectionSubHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
-  sectionSubTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#111827',
   },
 
   /* ─── BULLET LIST ─── */

@@ -303,29 +303,6 @@ const helpStyles = StyleSheet.create({
 // ─── LOG TRAP ACCORDION DATA ────────────────────────────────────────────────
 const logTrapSections: AccordionSection[] = [
   {
-    id: 'lt-overview',
-    title: 'Overview & Purpose',
-    content: (
-      <View style={{ gap: 6 }}>
-        <Text style={{ fontSize: 13, color: '#374151', lineHeight: 19 }}>
-          Log traps exploit the CRB's natural preference for decaying organic matter as breeding and feeding sites. When placed strategically, they lure adult beetles away from productive palms and concentrate them for removal or biological control inoculation.
-        </Text>
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-          {[
-            { label: 'Setup Time', value: '2–3 hrs' },
-            { label: 'Lifespan', value: '6–12 mos' },
-            { label: 'Coverage', value: '4–5 / ha' },
-          ].map((stat, i) => (
-            <View key={i} style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' }}>
-              <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F3D1E' }}>{stat.value}</Text>
-              <Text style={{ fontSize: 10, color: '#065F46', fontWeight: '600', marginTop: 2, textAlign: 'center' }}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    ),
-  },
-  {
     id: 'lt-materials',
     title: 'Materials Required',
     content: (
@@ -424,29 +401,6 @@ const logTrapSections: AccordionSection[] = [
 // ─── PHEROMONE TRAP ACCORDION DATA ─────────────────────────────────────────
 const pheromoneTrapSections: AccordionSection[] = [
   {
-    id: 'pt-overview',
-    title: 'Overview & Purpose',
-    content: (
-      <View style={{ gap: 6 }}>
-        <Text style={{ fontSize: 13, color: '#374151', lineHeight: 19 }}>
-          Pheromone traps use a synthetic chemical lure — ethyl 4-methyloctanoate — that mimics the aggregation pheromone naturally produced by CRB adults. This chemical signal attracts both male and female beetles to the trap where they are captured and killed or removed.
-        </Text>
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
-          {[
-            { label: 'Lure Lifespan', value: '4–8 wks' },
-            { label: 'Check Every', value: '2 wks' },
-            { label: 'Deploy At', value: '1–2 m ht.' },
-          ].map((stat, i) => (
-            <View key={i} style={{ flex: 1, backgroundColor: '#FFFFFF', borderRadius: 10, padding: 10, alignItems: 'center', borderWidth: 1, borderColor: '#E5E7EB' }}>
-              <Text style={{ fontSize: 17, fontWeight: '900', color: '#0F3D1E' }}>{stat.value}</Text>
-              <Text style={{ fontSize: 10, color: '#065F46', fontWeight: '600', marginTop: 2, textAlign: 'center' }}>{stat.label}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
-    ),
-  },
-  {
     id: 'pt-materials',
     title: 'Materials Required',
     content: (
@@ -542,7 +496,7 @@ export default function PreventionControlScreen() {
   const [activeTab, setActiveTab] = useState(0);
   const [controlTab, setControlTab] = useState(0);
   const [activeSlide, setActiveSlide] = useState(0);
-  const [zoomedImage, setZoomedImage] = useState<any>(null);
+  const [zoomedImage, setZoomedImage] = useState<{ src: any; label?: string } | null>(null);
   const contentRef = useRef<ScrollView>(null);
 
   const sanitationImages = [
@@ -585,30 +539,13 @@ export default function PreventionControlScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
-      {/* ── APP BAR (HomeScreen style) ── */}
-      <View style={styles.appBar}>
-        <TouchableOpacity
-          style={styles.hamburger}
-          onPress={() => setMenuVisible(true)}
-          accessibilityLabel="Open menu"
-        >
-          <View style={styles.menuLineDark} />
-          <View style={styles.menuLineDark} />
-          <View style={styles.menuLineDark} />
-        </TouchableOpacity>
-        <Text style={styles.brandTitle}>COCOSCAN</Text>
-        <View style={styles.logoBadge}>
-          <Text style={styles.logoEmoji}>🌴</Text>
-        </View>
-      </View>
-
+    <View style={styles.root}>
       <ScrollView
         style={styles.mainScroll}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainScrollContent}
       >
-        {/* ── HERO ── */}
+        {/* ── HERO (app bar lives inside here so it scrolls away) ── */}
         <View style={styles.heroContainer}>
           <ScrollView
             horizontal pagingEnabled showsHorizontalScrollIndicator={false}
@@ -616,13 +553,33 @@ export default function PreventionControlScreen() {
             scrollEventThrottle={8} style={StyleSheet.absoluteFillObject}
           >
             {HERO_IMAGES.map((src, i) => (
-              <TouchableOpacity key={i} activeOpacity={0.92} onPress={() => setZoomedImage(src)} style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}>
+              <TouchableOpacity key={i} activeOpacity={0.92} onPress={() => setZoomedImage({ src })} style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}>
                 <Image source={src} style={styles.heroBg} resizeMode="cover" />
                 <View style={styles.heroOverlay} />
               </TouchableOpacity>
             ))}
           </ScrollView>
 
+          {/* ── APP BAR — same pattern as About screen ── */}
+          <SafeAreaView style={styles.headerSafe}>
+            <View style={styles.appBar}>
+              <TouchableOpacity
+                style={styles.hamburger}
+                onPress={() => setMenuVisible(true)}
+                accessibilityLabel="Open menu"
+              >
+                <View style={styles.menuLineDark} />
+                <View style={styles.menuLineDark} />
+                <View style={styles.menuLineDark} />
+              </TouchableOpacity>
+              <Text style={styles.brandTitle}>COCOSCAN</Text>
+              <View style={styles.logoBadge}>
+                <Text style={styles.logoEmoji}>🌴</Text>
+              </View>
+            </View>
+          </SafeAreaView>
+
+          {/* Hero text */}
           <View style={styles.heroTextBlock}>
             <View style={styles.heroBadge}>
               <Feather name="shield" size={11} color="#F2C200" />
@@ -650,7 +607,7 @@ export default function PreventionControlScreen() {
           <View style={styles.imageStrip}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
               {sanitationImages.map((src, idx) => (
-                <TouchableOpacity key={idx} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                <TouchableOpacity key={idx} onPress={() => setZoomedImage({ src })} activeOpacity={0.85}>
                   <Image source={src} style={styles.stripImage} resizeMode="cover" />
                 </TouchableOpacity>
               ))}
@@ -748,7 +705,7 @@ export default function PreventionControlScreen() {
               <View style={styles.imageStrip}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
                   {controlMechanicalImages.map((src, idx) => (
-                    <TouchableOpacity key={idx} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                    <TouchableOpacity key={idx} onPress={() => setZoomedImage({ src })} activeOpacity={0.85}>
                       <Image source={src} style={styles.stripImage} resizeMode="cover" />
                     </TouchableOpacity>
                   ))}
@@ -780,7 +737,7 @@ export default function PreventionControlScreen() {
               <View style={styles.imageStrip}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
                   {ornvGmfImages.map((item, idx) => (
-                    <TouchableOpacity key={idx} onPress={() => setZoomedImage(item.src)} activeOpacity={0.85}>
+                    <TouchableOpacity key={idx} onPress={() => setZoomedImage({ src: item.src, label: item.label })} activeOpacity={0.85}>
                       <View>
                         <Image source={item.src} style={styles.stripImage} resizeMode="cover" />
                         <Text style={styles.imageCaption}>{item.label}</Text>
@@ -838,7 +795,7 @@ export default function PreventionControlScreen() {
               <View style={styles.imageStrip}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
                   {monitoringImages.map((src, idx) => (
-                    <TouchableOpacity key={idx} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
+                    <TouchableOpacity key={idx} onPress={() => setZoomedImage({ src })} activeOpacity={0.85}>
                       <Image source={src} style={styles.stripImage} resizeMode="cover" />
                     </TouchableOpacity>
                   ))}
@@ -856,6 +813,32 @@ export default function PreventionControlScreen() {
                   <Text style={trappingStyles.methodHeaderSub}>Biological control — attract, trap & infect with GMF</Text>
                 </View>
               </View>
+
+              {/* Log Trap — Overview (always visible) */}
+              <View style={overviewCardStyles.card}>
+                <View style={overviewCardStyles.titleRow}>
+                  <View style={overviewCardStyles.iconBadge}>
+                    <Feather name="info" size={14} color="#FFFFFF" />
+                  </View>
+                  <Text style={overviewCardStyles.title}>Overview & Purpose</Text>
+                </View>
+                <Text style={overviewCardStyles.body}>
+                  Log traps exploit the CRB's natural preference for decaying organic matter as breeding and feeding sites. When placed strategically, they lure adult beetles away from productive palms and concentrate them for removal or biological control inoculation.
+                </Text>
+                <View style={overviewCardStyles.statsRow}>
+                  {[
+                    { label: 'Setup Time', value: '2–3 hrs' },
+                    { label: 'Lifespan', value: '6–12 mos' },
+                    { label: 'Coverage', value: '4–5 / ha' },
+                  ].map((stat, i) => (
+                    <View key={i} style={overviewCardStyles.statBox}>
+                      <Text style={overviewCardStyles.statValue}>{stat.value}</Text>
+                      <Text style={overviewCardStyles.statLabel}>{stat.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
               {logTrapSections.map(section => (
                 <AccordionItem key={section.id} section={section} />
               ))}
@@ -867,6 +850,32 @@ export default function PreventionControlScreen() {
                   <Text style={trappingStyles.methodHeaderSub}>Chemical lure — monitor populations & mass-trap adults</Text>
                 </View>
               </View>
+
+              {/* Pheromone Trap — Overview (always visible) */}
+              <View style={overviewCardStyles.card}>
+                <View style={overviewCardStyles.titleRow}>
+                  <View style={overviewCardStyles.iconBadge}>
+                    <Feather name="info" size={14} color="#FFFFFF" />
+                  </View>
+                  <Text style={overviewCardStyles.title}>Overview & Purpose</Text>
+                </View>
+                <Text style={overviewCardStyles.body}>
+                  Pheromone traps use a synthetic chemical lure — ethyl 4-methyloctanoate — that mimics the aggregation pheromone naturally produced by CRB adults. This chemical signal attracts both male and female beetles to the trap where they are captured and killed or removed.
+                </Text>
+                <View style={overviewCardStyles.statsRow}>
+                  {[
+                    { label: 'Lure Lifespan', value: '4–8 wks' },
+                    { label: 'Check Every', value: '2 wks' },
+                    { label: 'Deploy At', value: '1–2 m ht.' },
+                  ].map((stat, i) => (
+                    <View key={i} style={overviewCardStyles.statBox}>
+                      <Text style={overviewCardStyles.statValue}>{stat.value}</Text>
+                      <Text style={overviewCardStyles.statLabel}>{stat.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
               {pheromoneTrapSections.map(section => (
                 <AccordionItem key={section.id} section={section} />
               ))}
@@ -879,7 +888,7 @@ export default function PreventionControlScreen() {
               <View style={styles.imageStrip}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
                   {chemicalImages.map((item, idx) => (
-                    <TouchableOpacity key={idx} onPress={() => setZoomedImage(item.src)} activeOpacity={0.85}>
+                    <TouchableOpacity key={idx} onPress={() => setZoomedImage({ src: item.src, label: item.label })} activeOpacity={0.85}>
                       <View>
                         <Image source={item.src} style={styles.stripImage} resizeMode="cover" />
                         <Text style={styles.imageCaption}>{item.label}</Text>
@@ -934,16 +943,17 @@ export default function PreventionControlScreen() {
       {/* LIGHTBOX */}
       <Modal visible={!!zoomedImage} transparent animationType="fade" onRequestClose={() => setZoomedImage(null)}>
         <View style={styles.lightboxBackdrop}>
-          <SafeAreaView style={styles.lightboxTopBar}>
-            <TouchableOpacity style={styles.lightboxBackBtn} onPress={() => setZoomedImage(null)}>
-              <Feather name="arrow-left" size={20} color="#FFFFFF" />
-              <Text style={styles.lightboxBackText}>Back</Text>
-            </TouchableOpacity>
+          <View style={styles.lightboxContent}>
             <TouchableOpacity style={styles.lightboxCloseBtn} onPress={() => setZoomedImage(null)}>
-              <Feather name="x" size={22} color="#FFFFFF" />
+              <Feather name="x" size={20} color="#FFFFFF" />
             </TouchableOpacity>
-          </SafeAreaView>
-          {zoomedImage && <Image source={zoomedImage} style={styles.lightboxImage} resizeMode="contain" />}
+            {zoomedImage && (
+              <Image source={zoomedImage.src} style={styles.lightboxImage} resizeMode="contain" />
+            )}
+            {zoomedImage?.label && (
+              <Text style={styles.lightboxCaption}>{zoomedImage.label}</Text>
+            )}
+          </View>
         </View>
       </Modal>
 
@@ -966,9 +976,71 @@ export default function PreventionControlScreen() {
           <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
+
+// ─── OVERVIEW CARD STYLES (always-visible, non-collapsible) ────────────────
+const overviewCardStyles = StyleSheet.create({
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+    padding: 14,
+    marginBottom: 10,
+    gap: 10,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  iconBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#0F3D1E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F3D1E',
+    letterSpacing: 0.2,
+  },
+  body: {
+    fontSize: 13,
+    color: '#374151',
+    lineHeight: 19,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 10,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  statValue: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#0F3D1E',
+  },
+  statLabel: {
+    fontSize: 10,
+    color: '#065F46',
+    fontWeight: '600',
+    marginTop: 2,
+    textAlign: 'center',
+  },
+});
 
 // ─── TRAPPING-SPECIFIC STYLES ───────────────────────────────────────────────
 const trappingStyles = StyleSheet.create({
@@ -1002,19 +1074,24 @@ const trappingStyles = StyleSheet.create({
 
 // ─── STYLES ─────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  /* App Bar — HomeScreen style */
-  appBar: {
-    position: 'absolute',   // ✅ add this
+  root: { flex: 1, backgroundColor: '#111827' },
+
+  mainScroll: { flex: 1 },
+  mainScrollContent: { paddingBottom: 0 },
+
+  /* ── HERO ── */
+  heroContainer: { width: SCREEN_WIDTH, height: HERO_HEIGHT, position: 'relative' },
+  heroBg: { position: 'absolute', width: '100%', height: '100%' },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(5,30,12,0.62)' },
+
+  /* ── APP BAR inside hero (same as About screen) ── */
+  headerSafe: {
+    position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    zIndex: 100,            // ✅ ensure it's above hero
-    elevation: 10,          // ✅ for Android
-
+  },
+  appBar: {
     paddingTop: 48,
     paddingHorizontal: 20,
     paddingBottom: 16,
@@ -1023,10 +1100,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: 'transparent',
   },
-  hamburger: {
-    padding: 8,
-    borderRadius: 12,
-  },
+  hamburger: { padding: 8, borderRadius: 12 },
   menuLineDark: {
     width: 26,
     height: 3,
@@ -1056,13 +1130,6 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logoEmoji: { fontSize: 20 },
-
-  mainScroll: { flex: 1 },
-  mainScrollContent: { paddingBottom: 0 },
-
-  heroContainer: { width: SCREEN_WIDTH, height: HERO_HEIGHT, position: 'relative' },
-  heroBg: { position: 'absolute', width: '100%', height: '100%' },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(5,30,12,0.62)' },
 
   heroTextBlock: { position: 'absolute', bottom: 28, left: 20, right: 20 },
   heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(242,194,0,0.18)', borderWidth: 1, borderColor: 'rgba(242,194,0,0.5)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 10 },
