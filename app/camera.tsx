@@ -13,10 +13,9 @@ import {
 
 type CocoClass =
   | 'unspecified'
-  | 'crb infestation'
-  | 'unhealthy'
-  | 'oryctes rhinoceros'
-  | 'healthy';
+  | 'infested by CRB'
+  | 'infestation from other pest'
+  | 'not infested';
 
 interface HealthPrediction {
   prediction: CocoClass;
@@ -27,7 +26,7 @@ interface HealthPrediction {
   };
 }
 
-const SPACE_ROOT = 'https://cullamatmf123-capstone-final.hf.space';
+const SPACE_ROOT = 'https://cullamatmf123-augment-capstone.hf.space';
 const GRADIO_API_PREFIX = '/gradio_api';
 const GRADIO_FN = 'predict_on_image';
 
@@ -50,15 +49,11 @@ const normalizePrediction = (
 
   if (!c) return 'unspecified';
 
-  if (c === 'healthy') return 'healthy';
-  if (c === 'unhealthy') return 'unhealthy';
+  if (c === 'not infested' || c === ('healthy' as string)) return 'not infested';
+  if (c === 'infestation from other pest' || c === ('unhealthy' as string)) return 'infestation from other pest';
   if (c === 'unspecified' || c === 'unknown') return 'unspecified';
 
-  if (c === 'crb infestation') return 'crb infestation';
-
-  if (c === 'oryctes rhinoceros') return 'oryctes rhinoceros';
-  if (c.includes('oryctes') || c.includes('rhinoceros'))
-    return 'oryctes rhinoceros';
+  if (c === 'infested by crb' || c === ('crb infestation' as string)) return 'infested by CRB';
 
   return 'unspecified';
 };
@@ -250,7 +245,7 @@ const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
 
     const details = `Detected: ${prediction}`;
     const recommendations =
-      prediction === 'healthy'
+      prediction === 'not infested'
         ? 'No action needed.'
         : prediction === 'unspecified'
           ? 'Try retaking the photo (better lighting / closer image).'
@@ -417,10 +412,9 @@ export default function CameraScreen() {
                 {
                   color: (() => {
                     const p: CocoClass = capturedPhoto.healthResult.prediction;
-                    if (p === 'healthy') return '#4CAF50';
-                    if (p === 'crb infestation') return '#F44336';
-                    if (p === 'oryctes rhinoceros') return '#8E44AD';
-                    if (p === 'unhealthy') return '#3498DB';
+                    if (p === 'not infested') return '#4CAF50';
+                    if (p === 'infested by CRB') return '#F44336';
+                    if (p === 'infestation from other pest') return '#3498DB';
                     return '#F39C12'; // unspecified
                   })(),
                 },
@@ -428,21 +422,20 @@ export default function CameraScreen() {
             >
               {(() => {
                 const p: CocoClass = capturedPhoto.healthResult.prediction;
-                if (p === 'healthy') return '✅ Healthy';
-                if (p === 'crb infestation') return '❌ CRB infestation';
-                if (p === 'oryctes rhinoceros') return '🪲 Oryctes Rhinoceros';
-                if (p === 'unhealthy') return '⚠️ Unhealthy';
+                if (p === 'not infested') return '✅ Not infested';
+                if (p === 'infested by CRB') return '❌ Infested by CRB';
+                if (p === 'infestation from other pest') return '⚠️ Infestation from other pest';
                 return '⚠️ Unspecified';
               })()}
             </Text>
 
-            {capturedPhoto.healthResult.prediction !== 'healthy' && (
+            {capturedPhoto.healthResult.prediction !== 'not infested' && (
               <Text style={styles.healthConfidence}>
                 {capturedPhoto.healthResult.confidence}% confidence
               </Text>
             )}
 
-            {capturedPhoto.healthResult.prediction !== 'healthy' &&
+            {capturedPhoto.healthResult.prediction !== 'not infested' &&
               capturedPhoto.healthResult.analysis && (
                 <Text style={styles.healthDetails}>
                   {capturedPhoto.healthResult.analysis.details}

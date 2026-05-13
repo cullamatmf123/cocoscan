@@ -180,17 +180,14 @@ export default function HistoryScreen() {
     if (pred === 'unspecified' || pred.startsWith('unspecified')) {
       return 'Unspecified';
     }
-    if (pred === 'healthy' || pred.startsWith('healthy')) {
+    if (pred === 'not infested' || pred.startsWith('not infested')) {
       return 'No CRB infestation';
     }
-    if (pred === 'unhealthy' || pred.startsWith('unhealthy')) {
+    if (pred === 'infestation from other pest' || pred.startsWith('infestation from other pest')) {
       return 'Not CRB infestation';
     }
-    if (pred.includes('crb infestation') || pred.includes('crb')) {
+    if (pred.includes('infested by crb') || pred.includes('crb')) {
       return 'CRB has signs & symptoms';
-    }
-    if (pred.includes('oryctes rhinoceros') || pred.includes('oryctes')) {
-      return 'has Presence of CRB';
     }
     // Fallback — show raw prediction text
     return prediction;

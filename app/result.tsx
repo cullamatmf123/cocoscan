@@ -22,10 +22,9 @@ interface ResultParams {
 
 type CocoClass =
   | 'unspecified'
-  | 'crb infestation'
-  | 'unhealthy'
-  | 'oryctes rhinoceros'
-  | 'healthy';
+  | 'infested by CRB'
+  | 'infestation from other pest'
+  | 'not infested';
 
 export default function ResultScreen() {
   const router = useRouter();
@@ -64,20 +63,18 @@ export default function ResultScreen() {
   const resultClass: CocoClass = React.useMemo(() => {
     const p = (prediction || '').toLowerCase().trim();
     if (!p) return 'unspecified';
-    if (p === 'oryctes rhinoceros' || p.includes('oryctes') || p.includes('rhinoceros')) return 'oryctes rhinoceros';
-    if (p === 'crb infestation' || p.includes('crb')) return 'crb infestation';
-    if (p === 'unhealthy' || p.includes('unhealthy')) return 'unhealthy';
-    if (p === 'healthy' || p.includes('healthy')) return 'healthy';
+    if (p === 'infested by CRB' || p.includes('crb') || p.includes('oryctes') || p.includes('rhinoceros')) return 'infested by CRB';
+    if (p === 'infestation from other pest' || p.includes('infestation from other pest')) return 'infestation from other pest';
+    if (p === 'not infested' || p.includes('not infested')) return 'not infested';
     return 'unspecified';
   }, [prediction]);
 
   // Human-readable label
   const displayPrediction = React.useMemo((): string => {
     switch (resultClass) {
-      case 'healthy':            return 'Healthy';
-      case 'crb infestation':    return 'CRB Infestation – Signs & Symptoms Detected';
-      case 'oryctes rhinoceros': return 'Oryctes Rhinoceros Detected';
-      case 'unhealthy':          return 'Unhealthy – Non-CRB Pest/Disease Detected';
+      case 'not infested':            return 'Not Infested';
+      case 'infested by CRB':    return 'Infested by CRB – Signs & Symptoms Detected';
+      case 'infestation from other pest':          return 'Infestation from Other Pest – Non-CRB Pest/Disease Detected';
       case 'unspecified':
       default:                   return 'Unspecified – No Coconut Issue Detected';
     }
@@ -86,10 +83,9 @@ export default function ResultScreen() {
   // Status color per class
   const statusColor = React.useMemo((): string => {
     switch (resultClass) {
-      case 'healthy':            return '#4CAF50';
-      case 'crb infestation':    return '#F44336';
-      case 'oryctes rhinoceros': return '#8E44AD';
-      case 'unhealthy':          return '#3498DB';
+      case 'not infested':            return '#4CAF50';
+      case 'infested by CRB':    return '#F44336';
+      case 'infestation from other pest':          return '#3498DB';
       case 'unspecified':
       default:                   return '#F39C12';
     }
@@ -98,20 +94,17 @@ export default function ResultScreen() {
   // Status emoji + label
   const statusLabel = React.useMemo((): string => {
     switch (resultClass) {
-      case 'healthy':            return '✅ Healthy';
-      case 'crb infestation':    return '❌ CRB Infestation';
-      case 'oryctes rhinoceros': return '🪲 Oryctes Rhinoceros';
-      case 'unhealthy':          return '⚠️ Unhealthy';
+      case 'not infested':            return '✅ Not Infested';
+      case 'infested by CRB':    return '❌ Infested by CRB';
+      case 'infestation from other pest':          return '⚠️ Infestation from Other Pest';
       case 'unspecified':
       default:                   return '❓ Unspecified';
     }
   }, [resultClass]);
 
-  const isHealthy    = resultClass === 'healthy';
+  const isHealthy    = resultClass === 'not infested';
   const isUnspecified = resultClass === 'unspecified';
-  // CRB-related: either the beetle itself or visible infestation damage
-  const isCrbRelated = resultClass === 'crb infestation' || resultClass === 'oryctes rhinoceros';
-  // Any class that warrants pest/disease action
+  const isCrbRelated = resultClass === 'infested by CRB';
   const needsAction  = !isHealthy && !isUnspecified;
 
   useEffect(() => {
@@ -180,10 +173,9 @@ export default function ResultScreen() {
 
   const pestInfoTitle = React.useMemo((): string => {
     switch (resultClass) {
-      case 'crb infestation':    return 'CRB Infestation Signs & Symptoms';
-      case 'oryctes rhinoceros': return 'Coconut Rhinoceros Beetle (Oryctes Rhinoceros)';
-      case 'unhealthy':          return 'Non-CRB Pest / Disease Detected';
-      case 'healthy':            return 'No Pest or Disease Detected';
+      case 'infested by CRB':    return 'Infested by CRB – Signs & Symptoms';
+      case 'infestation from other pest':          return 'Infestation from Other Pest / Disease Detected';
+      case 'not infested':            return 'No Pest or Disease Detected';
       case 'unspecified':
       default:                   return 'Not a Coconut Issue';
     }
@@ -191,21 +183,18 @@ export default function ResultScreen() {
 
   const pestInfoSubtitle = React.useMemo((): string | null => {
     switch (resultClass) {
-      case 'crb infestation':    return 'Oryctes rhinoceros – infestation damage';
-      case 'oryctes rhinoceros': return 'Oryctes rhinoceros – beetle present';
-      case 'unhealthy':          return 'Non-CRB pathogen or pest';
+      case 'infested by CRB':    return 'Oryctes rhinoceros – infestation damage';
+      case 'infestation from other pest':          return 'Non-CRB pathogen or pest';
       default:                   return null;
     }
   }, [resultClass]);
 
   const pestInfoDesc = React.useMemo((): string | null => {
     switch (resultClass) {
-      case 'crb infestation':
+      case 'infested by CRB':
         return 'The scan detected visible signs and symptoms of CRB infestation on the coconut palm. The Oryctes rhinoceros beetle itself was not visible, but characteristic damage patterns were identified.';
-      case 'oryctes rhinoceros':
-        return 'An Oryctes rhinoceros (Coconut Rhinoceros Beetle) was detected in the image. The beetle may be present with or without visible infestation damage on the palm.';
-      case 'unhealthy':
-        return 'The coconut palm shows signs of a pest or disease not related to CRB. No Oryctes rhinoceros beetle or CRB infestation patterns were detected. Consult an agricultural expert for diagnosis.';
+      case 'infestation from other pest':
+        return 'The coconut palm shows signs of infestation from another pest or disease not related to CRB. No Oryctes rhinoceros beetle or CRB infestation patterns were detected. Consult an agricultural expert for diagnosis.';
       case 'unspecified':
         return 'The scanned image does not appear to be a coconut tree or any related coconut pest/disease.';
       default:
@@ -215,21 +204,14 @@ export default function ResultScreen() {
 
   const signsItems = React.useMemo((): string[] => {
     switch (resultClass) {
-      case 'crb infestation':
+      case 'infested by CRB':
         return [
           '• V-shaped cuts on fronds',
           '• Triangular leaf notches',
           '• Bore holes in the crown',
           '• Sawdust-like frass near entry points',
         ];
-      case 'oryctes rhinoceros':
-        return [
-          '• Visible beetle on/near the palm crown',
-          '• V-shaped cuts on fronds',
-          '• Bore holes in the crown',
-          '• Sawdust-like frass near entry points',
-        ];
-      case 'unhealthy':
+      case 'infestation from other pest':
         return [
           '• Discoloration or lesions on leaves',
           '• Abnormal spots or patches',
@@ -242,21 +224,14 @@ export default function ResultScreen() {
 
   const symptomsItems = React.useMemo((): string[] => {
     switch (resultClass) {
-      case 'crb infestation':
+      case 'infested by CRB':
         return [
           '• Stunted or deformed emerging fronds',
           '• Yellowing of newly opened leaves',
           '• Reduced nut production',
           '• Possible death from repeated attack',
         ];
-      case 'oryctes rhinoceros':
-        return [
-          '• Stunted or deformed fronds',
-          '• Yellowing of emerging leaf',
-          '• Possible death from repeated attack',
-          '• Progressive crown damage if untreated',
-        ];
-      case 'unhealthy':
+      case 'infestation from other pest':
         return [
           '• Wilting or drooping fronds',
           '• Yellowing or browning unrelated to CRB',
@@ -271,14 +246,14 @@ export default function ResultScreen() {
   const preventionTitle = React.useMemo((): string => {
     if (isHealthy) return 'Prevention to Maintain Healthy Coconut';
     if (isUnspecified) return 'No Prevention & Control Needed';
-    if (resultClass === 'unhealthy') return 'No Prevention & Control Needed';
+    if (resultClass === 'infestation from other pest') return 'No Prevention & Control Needed';
     return 'Prevention & Control';
   }, [resultClass, isHealthy, isUnspecified]);
 
   const pesticidesTitle = React.useMemo((): string => {
     if (isHealthy) return 'No Recommended Pesticides';
     if (isUnspecified) return 'No Recommended Pesticides';
-    if (resultClass === 'unhealthy') return 'No Recommended Pesticides';
+    if (resultClass === 'infestation from other pest') return 'No Recommended Pesticides';
     return 'Recommended Pesticides';
   }, [resultClass, isHealthy, isUnspecified]);
 
@@ -479,7 +454,7 @@ export default function ResultScreen() {
               )}
 
               {/* Unhealthy only: disclaimer note */}
-              {resultClass === 'unhealthy' && (
+              {resultClass === 'infestation from other pest' && (
                 <View style={styles.disclaimerCard}>
                   <Text style={styles.disclaimerIcon}>📋</Text>
                   <Text style={styles.disclaimerText}>
