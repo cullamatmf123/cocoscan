@@ -12,9 +12,8 @@ import {
 } from 'react-native';
 
 type CocoClass =
-  | 'unspecified'
   | 'infested by CRB'
-  | 'infestation from other pest'
+  | 'other damage or abnormalities'
   | 'not infested';
 
 interface HealthPrediction {
@@ -26,7 +25,8 @@ interface HealthPrediction {
   };
 }
 
-const SPACE_ROOT = 'https://cullamatmf123-augment-capstone.hf.space';
+// ✅ Updated to new Gradio space
+const SPACE_ROOT = 'https://cullamatmf123-cocoscaniey.hf.space';
 const GRADIO_API_PREFIX = '/gradio_api';
 const GRADIO_FN = 'predict_on_image';
 
@@ -47,15 +47,20 @@ const normalizePrediction = (
     .replace(/\s+/g, ' ')
     .trim();
 
-  if (!c) return 'unspecified';
+  if (!c) return 'not infested';
 
-  if (c === 'not infested' || c === ('healthy' as string)) return 'not infested';
-  if (c === 'infestation from other pest' || c === ('unhealthy' as string)) return 'infestation from other pest';
-  if (c === 'unspecified' || c === 'unknown') return 'unspecified';
+  if (c === 'not infested' || c === 'healthy') return 'not infested';
+  if (
+    c === 'infestation from other pest' ||
+    c === 'unhealthy' ||
+    c === 'other damage or abnormalities' ||
+    c === 'other pest damage'
+  )
+    return 'other damage or abnormalities';
+  if (c === 'infested by crb' || c === 'crb infestation')
+    return 'infested by CRB';
 
-  if (c === 'infested by crb' || c === ('crb infestation' as string)) return 'infested by CRB';
-
-  return 'unspecified';
+  return 'not infested';
 };
 
 const safeJson = async (res: Response): Promise<any | null> => {
@@ -108,15 +113,21 @@ const uploadToGradio = async (imageUri: string): Promise<string | null> => {
     type: getMimeTypeFromUri(imageUri),
   } as any);
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
   let res: Response;
   try {
     res = await fetch(url, {
       method: 'POST',
       headers: { Accept: 'application/json' },
       body: formData,
+      signal: controller.signal,
     });
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) return null;
@@ -146,6 +157,9 @@ const callGradio = async (uploadedPath: string): Promise<string | null> => {
     ],
   };
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+
   let res: Response;
   try {
     res = await fetch(url, {
@@ -155,9 +169,12 @@ const callGradio = async (uploadedPath: string): Promise<string | null> => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(payload),
+      signal: controller.signal,
     });
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) return null;
@@ -177,14 +194,20 @@ const callGradio = async (uploadedPath: string): Promise<string | null> => {
 const getGradioResultHtml = async (eventId: string): Promise<string | null> => {
   const url = `${SPACE_ROOT}${GRADIO_API_PREFIX}/call/${GRADIO_FN}/${eventId}`;
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
   let res: Response;
   try {
     res = await fetch(url, {
       method: 'GET',
       headers: { Accept: 'text/event-stream' },
+      signal: controller.signal,
     });
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 
   if (!res.ok) return null;
@@ -218,11 +241,11 @@ const getGradioResultHtml = async (eventId: string): Promise<string | null> => {
 
 const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
   const fallback: HealthPrediction = {
-    prediction: 'unspecified',
+    prediction: 'not infested',
     confidence: 0,
     analysis: {
-      details: 'No prediction available.',
-      recommendations: 'Try again with a clearer photo and good lighting.',
+      details: 'Analysis failed. Could not reach the server.',
+      recommendations: 'Check your connection and try again with a clearer photo.',
     },
   };
 
@@ -246,10 +269,8 @@ const classifyHealth = async (imageUri: string): Promise<HealthPrediction> => {
     const details = `Detected: ${prediction}`;
     const recommendations =
       prediction === 'not infested'
-        ? 'No action needed.'
-        : prediction === 'unspecified'
-          ? 'Try retaking the photo (better lighting / closer image).'
-          : 'Please consult an agricultural expert.';
+        ? 'No action needed. The coconut appears healthy.'
+        : 'Please consult an agricultural expert for further assessment.';
 
     return {
       prediction,
@@ -286,9 +307,8 @@ export default function CameraScreen() {
   const handleTakePhoto = async () => {
     if (aiLoading || !cameraRef.current) return;
 
+    setAiLoading(true);
     try {
-      setAiLoading(true);
-
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
         base64: false,
@@ -313,9 +333,8 @@ export default function CameraScreen() {
   const handlePickImage = async () => {
     if (aiLoading) return;
 
+    setAiLoading(true);
     try {
-      setAiLoading(true);
-
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') return;
 
@@ -414,8 +433,8 @@ export default function CameraScreen() {
                     const p: CocoClass = capturedPhoto.healthResult.prediction;
                     if (p === 'not infested') return '#4CAF50';
                     if (p === 'infested by CRB') return '#F44336';
-                    if (p === 'infestation from other pest') return '#3498DB';
-                    return '#F39C12'; // unspecified
+                    if (p === 'other damage or abnormalities') return '#3498DB';
+                    return '#4CAF50';
                   })(),
                 },
               ]}
@@ -424,8 +443,9 @@ export default function CameraScreen() {
                 const p: CocoClass = capturedPhoto.healthResult.prediction;
                 if (p === 'not infested') return '✅ Not infested';
                 if (p === 'infested by CRB') return '❌ Infested by CRB';
-                if (p === 'infestation from other pest') return '⚠️ Infestation from other pest';
-                return '⚠️ Unspecified';
+                if (p === 'other damage or abnormalities')
+                  return '⚠️ Other damage or abnormalities';
+                return '✅ Not infested';
               })()}
             </Text>
 
