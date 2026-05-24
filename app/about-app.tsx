@@ -18,7 +18,7 @@ export default function AboutAppScreen() {
         </TouchableOpacity>
         <Text style={styles.brandTitle}>COCOSCAN</Text>
         <View style={styles.logoBadge}>
-         <Text style={styles.logoEmoji}>🌴</Text>
+          <Text style={styles.logoEmoji}>🌴</Text>
         </View>
       </View>
 
@@ -47,6 +47,7 @@ export default function AboutAppScreen() {
       </Modal>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
         {/* Hero Section */}
         <View style={styles.heroWrapper}>
           <ImageBackground
@@ -59,8 +60,10 @@ export default function AboutAppScreen() {
               <View style={styles.heroIconBadge}>
                 <Ionicons name="shield-checkmark" size={28} color="#F2C200" />
               </View>
-              <Text style={styles.heroTitle}>Protecting Your Palms</Text>
-              <Text style={styles.heroSubtitle}>I'm here to help growers detect and prevent CRB damage with AI-powered insights.</Text>
+              <Text style={styles.heroTitle}>Classifying CRB Infestation</Text>
+              <Text style={styles.heroSubtitle}>
+                AI-powered visual classification of Oryctes rhinoceros infestation in dwarf coconut trees — right from your mobile device.
+              </Text>
             </View>
           </ImageBackground>
         </View>
@@ -69,11 +72,10 @@ export default function AboutAppScreen() {
         <View style={styles.aboutCard}>
           <View style={styles.aboutHeader}>
             <View style={styles.iconCircle}>
-              <Ionicons name="information-circle" size={22} color="#0F3D1E" />
+              <Ionicons name="information-circle" size={22} color="#1F7A3E" />
             </View>
             <Text style={styles.aboutTitle}>About CocoScan</Text>
           </View>
-          
           <View style={styles.aboutContent}>
             <Image
               source={require('../assets/images/design/capture-crb.png')}
@@ -82,12 +84,52 @@ export default function AboutAppScreen() {
             />
             <View style={styles.aboutTextCol}>
               <Text style={styles.paragraph}>
-                CocoScan helps growers quickly assess dwarf coconut trees by scanning coconut rhinoceros beetle (Oryctes rhinoceros) damage using their device camera.
+                CocoScan is a mobile application that classifies the condition of dwarf coconut trees based on visual indicators of Coconut Rhinoceros Beetle (Oryctes rhinoceros) infestation using a YOLOv8-based image classification model.
               </Text>
               <Text style={styles.paragraph}>
-                The app provides AI-powered predictions with confidence scores, and links to prevention, control, and pesticide recommendations, empowering you to act confidently in the field.
+                The system classifies coconut tree images into four categories: Infested by CRB, Not Infested, Infestation from Other Pest, and Unspecified — with a model accuracy of 98.57%.
               </Text>
             </View>
+          </View>
+        </View>
+
+        {/* Classification Categories */}
+        <View style={[styles.card, styles.cardShadow]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="git-branch-outline" size={20} color="#1F7A3E" />
+            </View>
+            <Text style={styles.sectionTitle}>Classification Categories</Text>
+          </View>
+
+          <View style={styles.featuresList}>
+            {[
+              {
+                icon: 'bug-outline',
+                title: 'Infested by CRB',
+                desc: 'Trees showing visible CRB indicators such as V-shaped leaf cuts, boreholes, and observable infestation symptoms associated with Oryctes rhinoceros.',
+              },
+              {
+                icon: 'leaf-outline',
+                title: 'Not Infested',
+                desc: 'Healthy coconut trees that do not exhibit visible signs of CRB infestation.',
+              },
+              {
+                icon: 'alert-circle-outline',
+                title: 'Other Damage or Abnormalities',
+                desc: 'Coconut trees exhibiting symptoms not directly attributable to CRB, including unrelated forms of damage or abnormal conditions.',
+              },
+            ].map((f, i) => (
+              <View key={i} style={styles.featureItem}>
+                <View style={styles.featureIconWrapper}>
+                  <Ionicons name={f.icon as any} size={20} color="#1F7A3E" />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>{f.title}</Text>
+                  <Text style={styles.featureDesc}>{f.desc}</Text>
+                </View>
+              </View>
+            ))}
           </View>
         </View>
 
@@ -95,61 +137,29 @@ export default function AboutAppScreen() {
         <View style={[styles.card, styles.cardShadow]}>
           <View style={styles.sectionHeader}>
             <View style={styles.iconCircle}>
-              <Ionicons name="list" size={20} color="#0F3D1E" />
+              <Ionicons name="list" size={20} color="#1F7A3E" />
             </View>
             <Text style={styles.sectionTitle}>Key Features</Text>
           </View>
-          
+
           <View style={styles.featuresList}>
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconWrapper}>
-                <Ionicons name="camera-outline" size={20} color="#0F3D1E" />
+            {[
+              { icon: 'camera-outline', title: 'Image Capture & Classification', desc: 'Capture coconut tree images and receive real-time YOLOv8-based classification results.' },
+              { icon: 'shield-checkmark-outline', title: 'Pest Management Recommendations', desc: 'Get context-sensitive prevention, control, and pesticide recommendations based on classification.' },
+              { icon: 'create-outline', title: 'Environmental Data Input', desc: 'Manually log climate and soil conditions as supplementary context for farm monitoring.' },
+              { icon: 'time-outline', title: 'Scan History Tracking', desc: 'Review and monitor previous classification results over time.' },
+              { icon: 'chatbubble-outline', title: 'User Feedback', desc: 'Submit ratings and suggestions to help continuously improve the system.' },
+            ].map((f, i) => (
+              <View key={i} style={styles.featureItem}>
+                <View style={styles.featureIconWrapper}>
+                  <Ionicons name={f.icon as any} size={20} color="#1F7A3E" />
+                </View>
+                <View style={styles.featureContent}>
+                  <Text style={styles.featureTitle}>{f.title}</Text>
+                  <Text style={styles.featureDesc}>{f.desc}</Text>
+                </View>
               </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>AI-Powered Scanning</Text>
-                <Text style={styles.featureDesc}>Camera-based detection with instant AI predictions</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconWrapper}>
-                <Ionicons name="bug-outline" size={20} color="#0F3D1E" />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>CRB Detection</Text>
-                <Text style={styles.featureDesc}>Identifies Oryctes Rhinoceros presence and damage signs</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconWrapper}>
-                <Ionicons name="create-outline" size={20} color="#0F3D1E" />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Manual Input</Text>
-                <Text style={styles.featureDesc}>Record weather, soil conditions, and observations</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconWrapper}>
-                <Ionicons name="time-outline" size={20} color="#0F3D1E" />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Scan History</Text>
-                <Text style={styles.featureDesc}>Review and track previous assessments over time</Text>
-              </View>
-            </View>
-
-            <View style={styles.featureItem}>
-              <View style={styles.featureIconWrapper}>
-                <Ionicons name="book-outline" size={20} color="#0F3D1E" />
-              </View>
-              <View style={styles.featureContent}>
-                <Text style={styles.featureTitle}>Knowledge Hub</Text>
-                <Text style={styles.featureDesc}>Prevention strategies and pesticide guidance</Text>
-              </View>
-            </View>
+            ))}
           </View>
         </View>
 
@@ -157,29 +167,54 @@ export default function AboutAppScreen() {
         <View style={[styles.card, styles.cardShadow]}>
           <View style={styles.sectionHeader}>
             <View style={styles.iconCircle}>
-              <Ionicons name="code-slash" size={20} color="#0F3D1E" />
+              <Ionicons name="code-slash" size={20} color="#1F7A3E" />
             </View>
             <Text style={styles.sectionTitle}>Built With</Text>
           </View>
           <Text style={styles.paragraph}>
-            Developed using modern technologies for a seamless, responsive experience across all devices.
+            Developed using modern technologies for a seamless, real-time classification experience on Android devices.
           </Text>
           <View style={styles.techStack}>
-            <View style={styles.techBadge}>
-              <Ionicons name="logo-react" size={16} color="#0F3D1E" />
-              <Text style={styles.techText}>React Native</Text>
+            {[
+              { icon: 'logo-react', label: 'React Native (Expo)' },
+              { icon: 'code-outline', label: 'JavaScript' },
+              { icon: 'terminal-outline', label: 'TypeScript' },
+              { icon: 'sparkles-outline', label: 'YOLOv8n-cls' },
+              { icon: 'cloud-outline', label: 'Roboflow' },
+              { icon: 'flame-outline', label: 'Firebase' },
+              { icon: 'logo-github', label: 'Hugging Face' },
+            ].map((t, i) => (
+              <View key={i} style={styles.techBadge}>
+                <Ionicons name={t.icon as any} size={15} color="#1F7A3E" />
+                <Text style={styles.techText}>{t.label}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Model Performance */}
+        <View style={[styles.card, styles.cardShadow]}>
+          <View style={styles.sectionHeader}>
+            <View style={styles.iconCircle}>
+              <Ionicons name="stats-chart" size={20} color="#1F7A3E" />
             </View>
-            <View style={styles.techBadge}>
-              <Ionicons name="navigate-circle-outline" size={16} color="#0F3D1E" />
-              <Text style={styles.techText}>Expo Router</Text>
+            <Text style={styles.sectionTitle}>Model Performance</Text>
+          </View>
+          <Text style={styles.paragraph}>
+            The YOLOv8n-cls model was trained on 14,000 annotated images across four classes using Roboflow, with GPU-accelerated training on a Tesla T4.
+          </Text>
+          <View style={styles.statRow}>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>98.57%</Text>
+              <Text style={styles.statLabel}>Top-1 Accuracy</Text>
             </View>
-            <View style={styles.techBadge}>
-              <Ionicons name="flash-outline" size={16} color="#0F3D1E" />
-              <Text style={styles.techText}>Expo SDK</Text>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>0.99</Text>
+              <Text style={styles.statLabel}>F1-Score</Text>
             </View>
-            <View style={styles.techBadge}>
-              <Ionicons name="sparkles-outline" size={16} color="#0F3D1E" />
-              <Text style={styles.techText}>TensorFlow</Text>
+            <View style={styles.statBox}>
+              <Text style={styles.statValue}>14,000</Text>
+              <Text style={styles.statLabel}>Images</Text>
             </View>
           </View>
         </View>
@@ -191,46 +226,29 @@ export default function AboutAppScreen() {
           </View>
           <Text style={styles.missionTitle}>Our Mission</Text>
           <Text style={styles.missionText}>
-            Empowering coconut farmers with accessible AI technology to protect their crops, 
-            increase yields, and build sustainable farming practices for future generations.
+            Empowering smallholder coconut farmers with accessible AI technology to classify CRB infestation early, reduce crop damage, and support sustainable farming practices in Kinawitnon, Babak, Island Garden City of Samal.
           </Text>
         </View>
 
-        {/* Interactive Credits */}
+        {/* Interactive Credits — DO NOT TOUCH */}
         <View style={styles.creditsBlock}>
           <View style={styles.creditsDivider} />
-
           <View style={styles.creditsButtonRow}>
             <TouchableOpacity
               style={[styles.creditsBtn, activeCredits === 'dev' && styles.creditsBtnActive]}
               onPress={() => setActiveCredits(activeCredits === 'dev' ? null : 'dev')}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="code-slash-outline"
-                size={11}
-                color={activeCredits === 'dev' ? '#0F3D1E' : '#9CA3AF'}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[styles.creditsBtnText, activeCredits === 'dev' && styles.creditsBtnTextActive]}>
-                Developers
-              </Text>
+              <Ionicons name="code-slash-outline" size={11} color={activeCredits === 'dev' ? '#0F3D1E' : '#9CA3AF'} style={{ marginRight: 4 }} />
+              <Text style={[styles.creditsBtnText, activeCredits === 'dev' && styles.creditsBtnTextActive]}>Developers</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               style={[styles.creditsBtn, activeCredits === 'res' && styles.creditsBtnActive]}
               onPress={() => setActiveCredits(activeCredits === 'res' ? null : 'res')}
               activeOpacity={0.7}
             >
-              <Ionicons
-                name="flask-outline"
-                size={11}
-                color={activeCredits === 'res' ? '#0F3D1E' : '#9CA3AF'}
-                style={{ marginRight: 4 }}
-              />
-              <Text style={[styles.creditsBtnText, activeCredits === 'res' && styles.creditsBtnTextActive]}>
-                Researchers
-              </Text>
+              <Ionicons name="flask-outline" size={11} color={activeCredits === 'res' ? '#0F3D1E' : '#9CA3AF'} style={{ marginRight: 4 }} />
+              <Text style={[styles.creditsBtnText, activeCredits === 'res' && styles.creditsBtnTextActive]}>Researchers</Text>
             </TouchableOpacity>
           </View>
 
@@ -242,39 +260,37 @@ export default function AboutAppScreen() {
               <Text style={styles.creditsPopName}>Mark Francis Cullamat</Text>
             </View>
           )}
-
           {activeCredits === 'res' && (
             <View style={styles.creditsPopBox}>
               <Text style={styles.creditsPopTitle}>Research Team</Text>
               <View style={styles.creditsPopDivider} />
-               <Text style={styles.creditsPopName}>Mark Francis Cullamat</Text>
-              <Text style={styles.creditsPopName}>Kaella May Cueme</Text>
               <Text style={styles.creditsPopName}>Francelyn Estorpe</Text>
+              <Text style={styles.creditsPopName}>Mark Francis Cullamat</Text>
+              <Text style={styles.creditsPopName}>Kaella May Cueme</Text>
               <Text style={styles.creditsPopName}>Stephen Dualan</Text>
             </View>
           )}
-
           <View style={styles.creditsDivider} />
         </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
-      
+
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7}>
           <Feather name="home" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/camera')} activeOpacity={0.7}>
           <Feather name="camera" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} activeOpacity={0.7} accessibilityLabel="View History">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} activeOpacity={0.7}>
           <Feather name="clock" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>History</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} activeOpacity={0.7} accessibilityLabel="Open Profile">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} activeOpacity={0.7}>
           <Feather name="user" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>
@@ -284,11 +300,11 @@ export default function AboutAppScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { 
-    flex: 1, 
-    backgroundColor: '#F9FAFB' 
+  safe: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
-  
+
   /* App Bar */
   appBar: {
     flexDirection: 'row',
@@ -299,29 +315,26 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: '#F0F0F0',
     shadowColor: '#000',
     shadowOpacity: 0.03,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
-  hamburger: {
-    padding: 8,
-    zIndex: 10,
-  },
+  hamburger: { padding: 8, zIndex: 10 },
   menuLineDark: {
-    width: 24,
-    height: 3,
-    backgroundColor: '#0F3D1E',
+    width: 22,
+    height: 2.5,
+    backgroundColor: '#1F7A3E',
     marginVertical: 2.5,
-    borderRadius: 2
+    borderRadius: 2,
   },
   brandTitle: {
-    color: '#0F3D1E',
-    fontSize: 22,
+    color: '#1A1A1A',
+    fontSize: 20,
     fontWeight: '900',
-    letterSpacing: 1.5,
+    letterSpacing: 2,
     position: 'absolute',
     left: 0,
     right: 0,
@@ -330,327 +343,269 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   logoBadge: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: '#1F4D36',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#F2C200',
+    borderWidth: 2,
+    borderColor: '#1F7A3E',
     shadowColor: '#000',
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.08,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
+    elevation: 2,
   },
-  logoEmoji: { 
-    fontSize: 20 
-  },
-  
+  logoEmoji: { fontSize: 18 },
+
   /* Menu Modal */
-  menuBackdrop: { 
-    flex: 1, 
-    backgroundColor: 'rgba(0,0,0,0.3)' 
-  },
-  menuBackdropTouch: {
-    ...StyleSheet.absoluteFillObject as any,
-  },
+  menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.2)' },
+  menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
   menuSheet: {
     position: 'absolute',
     top: 72,
     left: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 16,
     paddingVertical: 6,
-    width: 220,
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: '#F3F4F6',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 16
-  },
-  menuIcon: {
-    marginRight: 14,
-    width: 20,
-  },
-  menuItemText: {
-    color: '#111827',
-    fontSize: 16,
-    fontWeight: '700',
-    flex: 1,
-  },
-  menuDivider: {
-    height: 1,
-    backgroundColor: '#F3F4F6',
-    marginHorizontal: 12,
-  },
-  
-  /* Content */
-  content: { 
-    padding: 20, 
-    paddingBottom: 120,
-  },
-  
-  /* Hero Section */
-  heroWrapper: { 
-    borderRadius: 20,
-    overflow: 'hidden',
-    marginBottom: 20,
+    width: 210,
     shadowColor: '#000',
     shadowOpacity: 0.12,
-    shadowRadius: 12,
+    shadowRadius: 16,
     shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
+    elevation: 8,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
   },
-  heroBg: { 
-    height: 220,
-    justifyContent: 'flex-end',
+  menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 15 },
+  menuIcon: { marginRight: 12, width: 20 },
+  menuItemText: { color: '#111827', fontSize: 15, fontWeight: '700', flex: 1 },
+  menuDivider: { height: 1, backgroundColor: '#F5F5F5', marginHorizontal: 12 },
+
+  /* Content */
+  content: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 120,
+    backgroundColor: '#FFFFFF',
   },
-  heroBgImage: { 
-    borderRadius: 20,
+
+  /* Hero */
+  heroWrapper: {
+    borderRadius: 18,
+    overflow: 'hidden',
+    marginBottom: 18,
+    shadowColor: '#1F7A3E',
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
   },
-  heroOverlay: { 
-    ...StyleSheet.absoluteFillObject as any, 
-    backgroundColor: 'rgba(15, 61, 30, 0.75)',
+  heroBg: { height: 210, justifyContent: 'flex-end' },
+  heroBgImage: { borderRadius: 18 },
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject as any,
+    backgroundColor: 'rgba(10, 40, 20, 0.65)',
   },
-  heroContent: {
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-  },
+  heroContent: { padding: 22, alignItems: 'center', gap: 8 },
   heroIconBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(31, 77, 54, 0.9)',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#F2C200',
-    marginBottom: 4,
+    borderWidth: 2,
+    borderColor: 'rgba(242,194,0,0.8)',
+    marginBottom: 2,
   },
   heroTitle: {
     color: '#FFFFFF',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '900',
     textAlign: 'center',
-    letterSpacing: 0.5,
+    letterSpacing: 0.3,
   },
   heroSubtitle: {
-    color: '#FFFFFF',
-    fontSize: 14,
+    color: 'rgba(255,255,255,0.88)',
+    fontSize: 13,
     textAlign: 'center',
     lineHeight: 20,
-    opacity: 0.95,
     paddingHorizontal: 8,
   },
-  
+
   /* About Card */
   aboutCard: {
-    backgroundColor: '#EAF5EE',
-    borderRadius: 18,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#CFE6D2',
-  },
-  aboutHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
-  aboutTitle: { 
-    fontSize: 20,
-    color: '#0F3D1E',
-    fontWeight: '900',
-    flex: 1,
-  },
-  aboutContent: {
-    flexDirection: 'row',
-    gap: 16,
-    alignItems: 'flex-start',
-  },
-  aboutPhoto: { 
-    width: 120,
-    height: 120,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  aboutTextCol: { 
-    flex: 1,
-    gap: 12,
-  },
-  
-  /* Cards */
-  card: { 
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    borderRadius: 16,
     padding: 18,
+    marginBottom: 14,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 16,
+    borderColor: '#E8F5EC',
+    shadowColor: '#1F7A3E',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  aboutHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  aboutTitle: { fontSize: 18, color: '#1A1A1A', fontWeight: '900', flex: 1 },
+  aboutContent: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
+  aboutPhoto: {
+    width: 110,
+    height: 110,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#E8F5EC',
+  },
+  aboutTextCol: { flex: 1, gap: 10 },
+
+  /* Cards */
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+    marginBottom: 14,
   },
   cardShadow: {
     shadowColor: '#000',
     shadowOpacity: 0.04,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 1,
   },
-  
+
   /* Section Headers */
-  sectionHeader: { 
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-  },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F0FDF4',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F2FBF5',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#BBF7D0',
+    borderWidth: 1,
+    borderColor: '#D1EDD9',
   },
-  sectionTitle: { 
-    fontSize: 18,
-    color: '#111827',
-    fontWeight: '900',
-    flex: 1,
-  },
-  
-  paragraph: { 
-    fontSize: 15,
-    color: '#374151',
-    lineHeight: 24,
-    letterSpacing: 0.2,
-  },
-  
-  /* Features List */
-  featuresList: {
-    gap: 12,
-  },
-  featureItem: { 
+  sectionTitle: { fontSize: 17, color: '#1A1A1A', fontWeight: '900', flex: 1 },
+
+  paragraph: { fontSize: 14, color: '#4B5563', lineHeight: 22, letterSpacing: 0.1 },
+
+  /* Features */
+  featuresList: { gap: 10 },
+  featureItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: '#F9FAFB',
-    borderRadius: 14,
-    padding: 14,
+    backgroundColor: '#FAFFFE',
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    gap: 14,
+    borderColor: '#EAF5EE',
+    gap: 12,
   },
   featureIconWrapper: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: '#F0FDF4',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#F2FBF5',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: '#BBF7D0',
+    borderWidth: 1,
+    borderColor: '#D1EDD9',
   },
-  featureContent: {
-    flex: 1,
-    gap: 4,
-  },
-  featureTitle: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#111827',
-    letterSpacing: 0.2,
-  },
-  featureDesc: {
-    fontSize: 13,
-    color: '#6B7280',
-    lineHeight: 18,
-  },
-  
-  /* Technology Stack */
-  techStack: { 
+  featureContent: { flex: 1, gap: 3 },
+  featureTitle: { fontSize: 14, fontWeight: '800', color: '#1A1A1A', letterSpacing: 0.1 },
+  featureDesc: { fontSize: 12, color: '#6B7280', lineHeight: 17 },
+
+  /* Tech Stack */
+  techStack: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  techBadge: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#F2FBF5',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: '#D1EDD9',
+  },
+  techText: { color: '#1F7A3E', fontWeight: '800', fontSize: 12 },
+
+  /* Model Performance Stats */
+  statRow: {
+    flexDirection: 'row',
     gap: 10,
     marginTop: 14,
   },
-  techBadge: { 
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#F0FDF4',
+  statBox: {
+    flex: 1,
+    backgroundColor: '#F2FBF5',
     borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1.5,
-    borderColor: '#BBF7D0',
-  },
-  techText: { 
-    color: '#0F3D1E',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  
-  /* Mission Card */
-  missionCard: {
-    backgroundColor: '#0F3D1E',
-    borderRadius: 18,
-    padding: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#D1EDD9',
   },
-  missionIconWrapper: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: 'rgba(242, 194, 0, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-    borderWidth: 3,
-    borderColor: '#F2C200',
-  },
-  missionEmoji: {
-    fontSize: 36,
-  },
-  missionTitle: {
-    fontSize: 22,
+  statValue: {
+    fontSize: 16,
     fontWeight: '900',
-    color: '#F2C200',
-    marginBottom: 12,
-    textAlign: 'center',
+    color: '#1F7A3E',
+    marginBottom: 4,
   },
-  missionText: {
-    fontSize: 15,
-    color: '#FFFFFF',
+  statLabel: {
+    fontSize: 10,
+    color: '#6B7280',
+    fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 24,
-    opacity: 0.95,
     letterSpacing: 0.2,
   },
 
-  /* Interactive Credits */
+  /* Mission Card */
+  missionCard: {
+    backgroundColor: '#0F3D1E',
+    borderRadius: 16,
+    padding: 22,
+    alignItems: 'center',
+    shadowColor: '#0F3D1E',
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 5,
+    marginBottom: 14,
+  },
+  missionIconWrapper: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: 'rgba(242,194,0,0.6)',
+  },
+  missionEmoji: { fontSize: 32 },
+  missionTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#F2C200',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  missionText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
+    textAlign: 'center',
+    lineHeight: 22,
+    letterSpacing: 0.1,
+  },
+
+  /* Interactive Credits — UNCHANGED */
   creditsBlock: {
     alignItems: 'center',
     paddingVertical: 8,
@@ -723,7 +678,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  
+
   /* Footer */
   footerBar: {
     position: 'absolute',
@@ -732,28 +687,18 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: '#F0F0F0',
     paddingVertical: 8,
     paddingHorizontal: 8,
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: -4 },
-    elevation: 8,
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -3 },
+    elevation: 6,
   },
-  footerItem: {
-    flex: 1,
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-  },
-  footerLabel: {
-    fontSize: 11,
-    color: '#6B7280',
-    fontWeight: '600',
-    marginTop: 2,
-  },
+  footerItem: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 4 },
+  footerLabel: { fontSize: 11, color: '#6B7280', fontWeight: '600', marginTop: 2 },
 });

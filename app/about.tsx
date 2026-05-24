@@ -308,18 +308,19 @@ export default function AboutScreen() {
         onRequestClose={() => setZoomedImage(null)}
       >
         <View style={styles.lightboxBackdrop}>
-          {zoomedImage && (
-            <Image source={zoomedImage} style={styles.lightboxImage} resizeMode="cover" />
-          )}
           <SafeAreaView style={styles.lightboxTopBar}>
             <TouchableOpacity
-              style={styles.lightboxCloseBtn}
+              style={styles.lightboxBackBtn}
               onPress={() => setZoomedImage(null)}
-              accessibilityLabel="Close"
+              accessibilityLabel="Go back"
             >
-              <Feather name="x" size={22} color="#FFFFFF" />
+              <Feather name="arrow-left" size={20} color="#FFFFFF" />
+              <Text style={styles.lightboxBackText}>Back</Text>
             </TouchableOpacity>
           </SafeAreaView>
+          {zoomedImage && (
+            <Image source={zoomedImage} style={styles.lightboxImage} resizeMode="contain" />
+          )}
         </View>
       </Modal>
 
@@ -666,15 +667,9 @@ const styles = StyleSheet.create({
   /* ─── LIGHTBOX ─── */
   lightboxBackdrop: {
     flex: 1,
-    backgroundColor: '#000000',
-  },
-  lightboxImage: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    bottom: 0,
-    width: '100%' as any,
-    height: '100%' as any,
+    backgroundColor: 'rgba(0,0,0,0.96)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   lightboxTopBar: {
     position: 'absolute',
@@ -682,31 +677,29 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
-    justifyContent: 'flex-end',
     alignItems: 'center',
+    justifyContent: 'flex-start',
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 10,
     zIndex: 10,
   },
-  lightboxCloseBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.25)',
-  },
   lightboxBackBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   lightboxBackText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '600',
-  }
+  },
+  lightboxImage: {
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH,
+  },
 });
