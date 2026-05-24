@@ -12,6 +12,7 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -26,6 +27,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 
 const SCREEN = Dimensions.get('window');
 const SCREEN_WIDTH = SCREEN.width;
+const SCREEN_HEIGHT = SCREEN.height;
 const HERO_HEIGHT = 450;
 
 const HERO_IMAGES = [
@@ -490,6 +492,119 @@ const pheromoneTrapSections: AccordionSection[] = [
   },
 ];
 
+// ─── LIGHTBOX COMPONENT ────────────────────────────────────────────────────
+function Lightbox({
+  visible,
+  src,
+  label,
+  onClose,
+}: {
+  visible: boolean;
+  src: any;
+  label?: string;
+  onClose: () => void;
+}) {
+  const statusBarHeight = StatusBar.currentHeight ?? 0;
+  const topOffset = Platform.OS === 'android' ? statusBarHeight + 4 : 12;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      statusBarTranslucent
+      onRequestClose={onClose}
+    >
+      <View style={lbStyles.backdrop}>
+        {/* Tap backdrop to close */}
+        <TouchableOpacity
+          style={StyleSheet.absoluteFillObject}
+          activeOpacity={1}
+          onPress={onClose}
+        />
+
+        {/* Full-screen image — cover fills edge-to-edge */}
+        {src && (
+          <Image
+            source={src}
+            style={lbStyles.image}
+            resizeMode="cover"
+          />
+        )}
+
+        {/* Label at bottom */}
+        {label && (
+          <View style={lbStyles.labelContainer}>
+            <Text style={lbStyles.labelText}>{label}</Text>
+          </View>
+        )}
+
+        {/* X button — pinned to top-right corner */}
+        <TouchableOpacity
+          style={[lbStyles.closeBtn, { top: topOffset, right: 16 }]}
+          onPress={onClose}
+          activeOpacity={0.8}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Feather name="x" size={22} color="#FFFFFF" />
+        </TouchableOpacity>
+      </View>
+    </Modal>
+  );
+}
+
+const lbStyles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  image: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+  },
+  closeBtn: {
+    position: 'absolute',
+    right: 16,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(80,80,80,0.75)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 100,
+    shadowColor: '#000',
+    shadowOpacity: 0.4,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
+  },
+  labelContainer: {
+    position: 'absolute',
+    bottom: 48,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    zIndex: 99,
+  },
+  labelText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+});
+
 // ─── MAIN SCREEN ───────────────────────────────────────────────────────────
 export default function PreventionControlScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -545,7 +660,7 @@ export default function PreventionControlScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.mainScrollContent}
       >
-        {/* ── HERO (app bar lives inside here so it scrolls away) ── */}
+        {/* ── HERO ── */}
         <View style={styles.heroContainer}>
           <ScrollView
             horizontal pagingEnabled showsHorizontalScrollIndicator={false}
@@ -553,14 +668,19 @@ export default function PreventionControlScreen() {
             scrollEventThrottle={8} style={StyleSheet.absoluteFillObject}
           >
             {HERO_IMAGES.map((src, i) => (
-              <TouchableOpacity key={i} activeOpacity={0.92} onPress={() => setZoomedImage({ src })} style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}>
+              <TouchableOpacity
+                key={i}
+                activeOpacity={0.92}
+                onPress={() => setZoomedImage({ src })}
+                style={{ width: SCREEN_WIDTH, height: HERO_HEIGHT }}
+              >
                 <Image source={src} style={styles.heroBg} resizeMode="cover" />
                 <View style={styles.heroOverlay} />
               </TouchableOpacity>
             ))}
           </ScrollView>
 
-          {/* ── APP BAR — same pattern as About screen ── */}
+          {/* ── APP BAR ── */}
           <SafeAreaView style={styles.headerSafe}>
             <View style={styles.appBar}>
               <TouchableOpacity
@@ -604,6 +724,8 @@ export default function PreventionControlScreen() {
             <Text style={styles.sectionLabel}>Prevention</Text>
           </View>
           <Text style={styles.blockTitle}>Cultural Control</Text>
+
+          {/* Sanitation images strip */}
           <View style={styles.imageStrip}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.photoRow}>
               {sanitationImages.map((src, idx) => (
@@ -765,11 +887,17 @@ export default function PreventionControlScreen() {
                 ))}
                 <View style={styles.subCard}>
                   <Text style={styles.methodTitle}>Method of Application of FungOryctes</Text>
-                  <ImageBackground
-                    source={require('../assets/images/design/FungOryctes.jpg')}
-                    style={styles.methodImage}
-                    imageStyle={{ borderRadius: 12, resizeMode: 'cover' }}
-                  />
+                  {/* FungOryctes image — tappable */}
+                  <TouchableOpacity
+                    activeOpacity={0.85}
+                    onPress={() => setZoomedImage({ src: require('../assets/images/design/FungOryctes.jpg'), label: 'FungOryctes Application Method' })}
+                  >
+                    <ImageBackground
+                      source={require('../assets/images/design/FungOryctes.jpg')}
+                      style={styles.methodImage}
+                      imageStyle={{ borderRadius: 12, resizeMode: 'cover' }}
+                    />
+                  </TouchableOpacity>
                   <Text style={styles.methodBody}>
                     An environmentally friendly biological control method employs a highly effective green muscardine fungus to eliminate coconut rhinoceros beetles at all life stages. The fungus penetrates the beetle's body, leading to mummification. White fungal growth becomes visible within approximately 10 days and subsequently turns green after about three days.
                   </Text>
@@ -814,7 +942,6 @@ export default function PreventionControlScreen() {
                 </View>
               </View>
 
-              {/* Log Trap — Overview (always visible) */}
               <View style={overviewCardStyles.card}>
                 <View style={overviewCardStyles.titleRow}>
                   <View style={overviewCardStyles.iconBadge}>
@@ -851,7 +978,6 @@ export default function PreventionControlScreen() {
                 </View>
               </View>
 
-              {/* Pheromone Trap — Overview (always visible) */}
               <View style={overviewCardStyles.card}>
                 <View style={overviewCardStyles.titleRow}>
                   <View style={overviewCardStyles.iconBadge}>
@@ -940,22 +1066,13 @@ export default function PreventionControlScreen() {
         </View>
       </Modal>
 
-      {/* LIGHTBOX */}
-      <Modal visible={!!zoomedImage} transparent animationType="fade" onRequestClose={() => setZoomedImage(null)}>
-        <View style={styles.lightboxBackdrop}>
-          <View style={styles.lightboxContent}>
-            <TouchableOpacity style={styles.lightboxCloseBtn} onPress={() => setZoomedImage(null)}>
-              <Feather name="x" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
-            {zoomedImage && (
-              <Image source={zoomedImage.src} style={styles.lightboxImage} resizeMode="contain" />
-            )}
-            {zoomedImage?.label && (
-              <Text style={styles.lightboxCaption}>{zoomedImage.label}</Text>
-            )}
-          </View>
-        </View>
-      </Modal>
+      {/* ── UNIFIED LIGHTBOX — handles ALL image zooms ── */}
+      <Lightbox
+        visible={!!zoomedImage}
+        src={zoomedImage?.src ?? null}
+        label={zoomedImage?.label}
+        onClose={() => setZoomedImage(null)}
+      />
 
       {/* FOOTER */}
       <View style={styles.footerBar}>
@@ -980,7 +1097,7 @@ export default function PreventionControlScreen() {
   );
 }
 
-// ─── OVERVIEW CARD STYLES (always-visible, non-collapsible) ────────────────
+// ─── OVERVIEW CARD STYLES ──────────────────────────────────────────────────
 const overviewCardStyles = StyleSheet.create({
   card: {
     borderRadius: 12,
@@ -1042,7 +1159,7 @@ const overviewCardStyles = StyleSheet.create({
   },
 });
 
-// ─── TRAPPING-SPECIFIC STYLES ───────────────────────────────────────────────
+// ─── TRAPPING STYLES ───────────────────────────────────────────────────────
 const trappingStyles = StyleSheet.create({
   methodHeader: {
     flexDirection: 'row',
@@ -1072,25 +1189,18 @@ const trappingStyles = StyleSheet.create({
   },
 });
 
-// ─── STYLES ─────────────────────────────────────────────────────────────────
+// ─── MAIN STYLES ───────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#111827' },
 
   mainScroll: { flex: 1 },
   mainScrollContent: { paddingBottom: 0 },
 
-  /* ── HERO ── */
   heroContainer: { width: SCREEN_WIDTH, height: HERO_HEIGHT, position: 'relative' },
   heroBg: { position: 'absolute', width: '100%', height: '100%' },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(5,30,12,0.62)' },
+  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.38)' },
 
-  /* ── APP BAR inside hero (same as About screen) ── */
-  headerSafe: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-  },
+  headerSafe: { position: 'absolute', top: 0, left: 0, right: 0 },
   appBar: {
     paddingTop: 48,
     paddingHorizontal: 20,
@@ -1108,12 +1218,7 @@ const styles = StyleSheet.create({
     marginVertical: 3,
     borderRadius: 2,
   },
-  brandTitle: {
-    color: '#ffffff',
-    fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 1.2,
-  },
+  brandTitle: { color: '#ffffff', fontSize: 22, fontWeight: '900', letterSpacing: 1.2 },
   logoBadge: {
     width: 40,
     height: 40,
@@ -1132,25 +1237,91 @@ const styles = StyleSheet.create({
   logoEmoji: { fontSize: 20 },
 
   heroTextBlock: { position: 'absolute', bottom: 28, left: 20, right: 20 },
-  heroBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', backgroundColor: 'rgba(242,194,0,0.18)', borderWidth: 1, borderColor: 'rgba(242,194,0,0.5)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5, marginBottom: 10 },
+  heroBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(242,194,0,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(242,194,0,0.5)',
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    marginBottom: 10,
+  },
   heroBadgeText: { color: '#F2C200', fontSize: 11, fontWeight: '700', letterSpacing: 0.3 },
-  heroTitle: { color: '#FFFFFF', fontSize: 28, fontWeight: '900', lineHeight: 36, marginBottom: 6, textShadowColor: 'rgba(0,0,0,0.5)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 6 },
+  heroTitle: {
+    color: '#FFFFFF',
+    fontSize: 28,
+    fontWeight: '900',
+    lineHeight: 36,
+    marginBottom: 6,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 6,
+  },
   heroSubtitle: { color: 'rgba(255,255,255,0.75)', fontSize: 12, fontWeight: '500', marginBottom: 14 },
   dotsRow: { flexDirection: 'row', gap: 7, alignItems: 'center' },
   dot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: 'rgba(255,255,255,0.35)' },
   dotActive: { backgroundColor: '#F2C200', width: 22, borderRadius: 4 },
 
-  sheetCard: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, marginTop: -24, padding: 22, paddingBottom: 32, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 8, minHeight: 600 },
+  sheetCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -24,
+    padding: 22,
+    paddingBottom: 32,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: -6 },
+    elevation: 8,
+    minHeight: 600,
+  },
 
   sectionLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   sectionLabelAccent: { width: 4, height: 24, borderRadius: 2, backgroundColor: '#0F3D1E' },
   sectionLabel: { fontSize: 21, fontWeight: '900', color: '#111827' },
-  blockTitle: { fontSize: 14, fontWeight: '800', color: '#0F3D1E', marginBottom: 12, textTransform: 'uppercase', letterSpacing: 0.5 },
+  blockTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F3D1E',
+    marginBottom: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
 
   imageStrip: { position: 'relative', marginBottom: 14 },
   photoRow: { flexDirection: 'row', gap: 12, paddingRight: 6 },
-  stripImage: { width: 220, height: 140, borderRadius: 14, shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 2 },
-  photosCountChip: { position: 'absolute', right: 10, bottom: 10, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 5, flexDirection: 'row', alignItems: 'center', gap: 5, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 4, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  stripImage: {
+    width: 220,
+    height: 140,
+    borderRadius: 14,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 2,
+  },
+  photosCountChip: {
+    position: 'absolute',
+    right: 10,
+    bottom: 10,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
   photosCountText: { color: '#374151', fontSize: 12, fontWeight: '700' },
   imageCaption: { color: '#6B7280', fontSize: 11, marginTop: 4, fontWeight: '500' },
   captionNote: { color: '#9CA3AF', fontSize: 11, fontStyle: 'italic', marginBottom: 10 },
@@ -1162,35 +1333,105 @@ const styles = StyleSheet.create({
   tabTextActive: { color: '#0F3D1E', fontSize: 14, fontWeight: '800' },
   tabUnderline: { height: 3, backgroundColor: '#0F3D1E', borderRadius: 2, marginTop: 4 },
 
-  infoCard: { backgroundColor: '#FFFFFF', borderRadius: 16, borderWidth: 1, borderColor: '#E5E7EB', padding: 14, gap: 8, shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  infoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    padding: 14,
+    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
 
-  bulletCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12 },
-  bulletCardDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#0F3D1E', flexShrink: 0, marginTop: 6 },
+  bulletCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  bulletCardDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0F3D1E',
+    flexShrink: 0,
+    marginTop: 6,
+  },
   bulletPoint: { flex: 1, fontSize: 14, color: '#374151', lineHeight: 21, letterSpacing: 0.1 },
   infoHeading: { fontSize: 14, fontWeight: '800', color: '#0F3D1E', marginBottom: 3 },
   infoBody: { fontSize: 13, color: '#4B5563', lineHeight: 19 },
 
-  subCard: { backgroundColor: '#F0FDF4', borderRadius: 14, borderWidth: 1, borderColor: '#BBF7D0', padding: 14, marginTop: 10, gap: 10 },
+  subCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    padding: 14,
+    marginTop: 10,
+    gap: 10,
+  },
   methodTitle: { fontSize: 15, fontWeight: '800', color: '#047857', marginBottom: 4 },
-  methodImage: { width: '55%', height: 140, borderRadius: 12, overflow: 'hidden', alignSelf: 'center', marginBottom: 10 },
+  methodImage: {
+    width: '55%',
+    height: 140,
+    borderRadius: 12,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
   methodBody: { fontSize: 13, color: '#374151', lineHeight: 20, marginBottom: 4 },
 
   menuBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
   menuBackdropTouch: { ...StyleSheet.absoluteFillObject as any },
-  menuSheet: { position: 'absolute', top: 72, left: 16, backgroundColor: '#FFFFFF', borderRadius: 20, paddingVertical: 10, width: 230, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 12, borderWidth: 1, borderColor: '#F3F4F6' },
+  menuSheet: {
+    position: 'absolute',
+    top: 72,
+    left: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 10,
+    width: 230,
+    shadowColor: '#000',
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 12,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16 },
   menuIcon: { marginRight: 12 },
   menuItemText: { color: '#1F3D2A', fontSize: 16, fontWeight: '600' },
   menuDivider: { height: 1, backgroundColor: '#F3F4F6', marginHorizontal: 12 },
 
-  lightboxBackdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.96)', justifyContent: 'center', alignItems: 'center' },
-  lightboxTopBar: { position: 'absolute', top: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 10, zIndex: 10 },
-  lightboxBackBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.15)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  lightboxBackText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
-  lightboxCloseBtn: { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center' },
-  lightboxImage: { width: SCREEN_WIDTH, height: SCREEN_WIDTH },
-
-  footerBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 8, paddingHorizontal: 8, flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: -4 }, elevation: 8 },
+  footerBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    paddingVertical: 8,
+    paddingHorizontal: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 8,
+  },
   footerItem: { flex: 1, alignItems: 'center', gap: 4, paddingVertical: 4 },
   footerLabel: { fontSize: 11, color: '#6B7280', fontWeight: '600', marginTop: 2 },
 });

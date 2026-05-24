@@ -1,8 +1,8 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { getAuth } from 'firebase/auth';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { getAuth } from 'firebase/auth';
 import { addHistoryItem } from '../services/historyService';
 
 interface ResultParams {

@@ -20,16 +20,50 @@ const HERO_HEIGHT = 450;
 
 const HERO_IMAGES = [
   require('../assets/images/design/homepage.png'),
-  require('../assets/images/design/CRB.jpg'),
-  require('../assets/images/design/crb(2).png'),
-  require('../assets/images/design/crb(3).png'),
-  require('../assets/images/design/crb(4).png'),
+  require('../assets/images/design/crb-damage(2).jpg'),
+  require('../assets/images/design/crb-damage(5).jpg'),
+  require('../assets/images/design/crb-damage(7).jpg'),
+  require('../assets/images/design/crb-damage(1).jpg'),
 ];
+
+// ── V-SHAPED CUT IMAGES ───────────────────────────────────────────────────────
+const V_CUT_IMAGES = [
+  require('../assets/images/design/crb-damage(5).jpg'),
+  require('../assets/images/design/crb-damage(6).jpg'),
+  require('../assets/images/design/crb-damage(8).jpg'),
+  require('../assets/images/design/crb-damage(4).jpg'),
+];
+
+// ── BOREHOLE IMAGES ───────────────────────────────────────────────────────────
+const BOREHOLE_IMAGES = [
+  require('../assets/images/design/crb-damage(2).jpg'),
+  require('../assets/images/design/crb-damage(1).jpg'),
+  require('../assets/images/design/crb-damage(7).jpg'),
+  require('../assets/images/design/crb-damage(3).jpg'),
+];
+
+// ── CONTENT DATA ──────────────────────────────────────────────────────────────
+
+const V_CUT_BULLETS = [
+  'V-shaped or triangular cuts on leaflets — formed when the beetle feeds inside the tightly rolled spear leaf before it fully unfurls, leaving symmetrical notches across multiple leaflets once opened',
+  'Fan-shaped or wedge-shaped missing tissue along frond margins; damage is most visible on the 2nd–4th frond from the crown center where the beetle typically exits',
+  'Shortened, asymmetrical, or "ragged" fronds in the crown — the cut pattern is unique to CRB and distinguishes it from other pest or disease damage',
+  'In dwarf varieties, V-cuts appear closer to the crown base due to the compact growth habit, making them easier to spot at eye level compared to tall palms',
+];
+
+const BOREHOLE_BULLETS = [
+  'Circular to oval boreholes (1–3 cm diameter) visible on the petiole base, crown shaft, or soft trunk tissue near the growing point — the primary entry point of adult beetles',
+  'Fibrous frass (chewed palm fiber mixed with excrement) packed at or extruding from the borehole entrance; frass appearance ranges from dry and fibrous to moist and compacted depending on infestation age',
+  'Dark sap staining or oozing around borehole edges, often accompanied by a fermented or sour odor indicating active feeding or secondary microbial infection',
+  'In dwarf coconut, boreholes are accessible at lower trunk heights, allowing earlier ground-level detection compared to tall coconut varieties',
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export default function AboutScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
-  const [signsOpen, setSignsOpen] = useState(false);
-  const [symptomsOpen, setSymptomsOpen] = useState(false);
+  const [vCutOpen, setVCutOpen] = useState(false);
+  const [boreholeOpen, setBoreholeOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [zoomedImage, setZoomedImage] = useState<any>(null);
 
@@ -88,8 +122,8 @@ export default function AboutScreen() {
 
           {/* Hero text at bottom of hero */}
           <View style={styles.heroTextBlock}>
-            <Text style={styles.heroTitle}>What is Oryctes{'\n'}Rhinoceros?</Text>
-            <Text style={styles.heroSubtitle}>Tap to learn more about this coconut pest</Text>
+            <Text style={styles.heroTitle}>Visual Indicators{'\n'}of CRB Infestation</Text>
+            <Text style={styles.heroSubtitle}>Identifying signs of damage on dwarf coconut palms</Text>
             <View style={styles.dotsRow}>
               {HERO_IMAGES.map((_, i) => (
                 <View key={i} style={[styles.dot, i === activeSlide && styles.dotActive]} />
@@ -101,14 +135,14 @@ export default function AboutScreen() {
         {/* ── WHITE SHEET ── */}
         <View style={styles.sheetCard}>
 
-          {/* Title + Scientific name */}
-          <Text style={styles.beetleTitle}>Coconut Rhinoceros Beetle</Text>
+          {/* Title + Target variety badge */}
+          <Text style={styles.beetleTitle}>CRB Damage on Dwarf Coconut</Text>
           <View style={styles.scientificBadge}>
-            <Text style={styles.scientificLabel}>SCIENTIFIC NAME</Text>
-            <Text style={styles.scientificName}>Oryctes Rhinoceros</Text>
+            <Text style={styles.scientificLabel}>TARGET VARIETY</Text>
+            <Text style={styles.scientificName}>Cocos nucifera (Dwarf)</Text>
           </View>
 
-          {/* Overview Card */}
+          {/* Overview Card — always expanded */}
           <View style={styles.accordionCard}>
             <View style={styles.accordionHeader}>
               <View style={styles.accordionLeft}>
@@ -121,36 +155,38 @@ export default function AboutScreen() {
             <View style={styles.accordionBody}>
               <View style={styles.dividerLine} />
               <Text style={styles.paragraph}>
-                The Coconut Rhinoceros Beetle (Oryctes rhinoceros) is a destructive pest of coconut
-                and other palm trees. It damages plants by boring into the crown to feed on sap,
-                causing V-shaped cuts in leaves, reduced growth, and lower yields. Severe infestations
-                can kill young palms. Native to South and Southeast Asia, it has spread widely due to
-                its rapid reproduction and adaptability, making early detection and control crucial.
+                The Coconut Rhinoceros Beetle (Oryctes rhinoceros) attacks dwarf coconut trees by
+                boring into the crown and feeding on young developing tissue. Two key visual indicators
+                confirm CRB infestation: V-shaped cuts on leaves — formed as the beetle feeds inside
+                the tightly rolled spear leaf — and boreholes on the trunk or crown, often accompanied
+                by fibrous frass at the entry point. Dwarf coconut varieties are especially vulnerable
+                due to their compact crowns and lower trunk height, which makes both damage types
+                accessible and observable at ground level, enabling earlier detection.
               </Text>
             </View>
           </View>
 
-          {/* ── SIGNS ACCORDION ── */}
+          {/* ── V-SHAPED LEAF CUTS ACCORDION ── */}
           <View style={styles.accordionCard}>
             <TouchableOpacity
               style={styles.accordionHeader}
-              onPress={() => setSignsOpen(v => !v)}
+              onPress={() => setVCutOpen(v => !v)}
               activeOpacity={0.75}
             >
               <View style={styles.accordionLeft}>
                 <View style={styles.iconCircle}>
-                  <Feather name="eye" size={16} color="#0F3D1E" />
+                  <Feather name="scissors" size={16} color="#0F3D1E" />
                 </View>
-                <Text style={styles.accordionTitle}>Signs of Infestation</Text>
+                <Text style={styles.accordionTitle}>V-Shaped Cuts on Leaves</Text>
               </View>
               <Feather
-                name={signsOpen ? 'chevron-up' : 'chevron-down'}
+                name={vCutOpen ? 'chevron-up' : 'chevron-down'}
                 size={20}
                 color="#6B7280"
               />
             </TouchableOpacity>
 
-            {signsOpen && (
+            {vCutOpen && (
               <View style={styles.accordionBody}>
                 <View style={styles.dividerLine} />
 
@@ -159,12 +195,7 @@ export default function AboutScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.photoRow}
                 >
-                  {[
-                    require('../assets/images/design/v-cut-sign.jpg'),
-                    require('../assets/images/design/sign(2).png'),
-                    require('../assets/images/design/v-cut(2).jpg'),
-                    require('../assets/images/design/sign(3).jpg'),
-                  ].map((src, i) => (
+                  {V_CUT_IMAGES.map((src, i) => (
                     <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
                       <Image source={src} style={styles.signImage} resizeMode="cover" />
                     </TouchableOpacity>
@@ -172,11 +203,7 @@ export default function AboutScreen() {
                 </ScrollView>
 
                 <View style={styles.bulletList}>
-                  {[
-                    'V-shaped cuts, holes, or notched/missing tissue on fronds and leaflet margins',
-                    'Boreholes on the crown or trunk with frass (fibrous debris) at entry points or leaf bases',
-                    'Damaged or broken spear leaf',
-                  ].map((text, i) => (
+                  {V_CUT_BULLETS.map((text, i) => (
                     <View key={i} style={styles.bulletItem}>
                       <View style={styles.bulletDot} />
                       <Text style={styles.bulletText}>{text}</Text>
@@ -187,27 +214,27 @@ export default function AboutScreen() {
             )}
           </View>
 
-          {/* ── SYMPTOMS ACCORDION ── */}
+          {/* ── BOREHOLES & FRASS ACCORDION ── */}
           <View style={styles.accordionCard}>
             <TouchableOpacity
               style={styles.accordionHeader}
-              onPress={() => setSymptomsOpen(v => !v)}
+              onPress={() => setBoreholeOpen(v => !v)}
               activeOpacity={0.75}
             >
               <View style={styles.accordionLeft}>
                 <View style={styles.iconCircle}>
                   <Feather name="alert-circle" size={16} color="#0F3D1E" />
                 </View>
-                <Text style={styles.accordionTitle}>Damage Symptoms</Text>
+                <Text style={styles.accordionTitle}>Boreholes & Frass</Text>
               </View>
               <Feather
-                name={symptomsOpen ? 'chevron-up' : 'chevron-down'}
+                name={boreholeOpen ? 'chevron-up' : 'chevron-down'}
                 size={20}
                 color="#6B7280"
               />
             </TouchableOpacity>
 
-            {symptomsOpen && (
+            {boreholeOpen && (
               <View style={styles.accordionBody}>
                 <View style={styles.dividerLine} />
 
@@ -216,12 +243,7 @@ export default function AboutScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.photoRow}
                 >
-                  {[
-                    require('../assets/images/design/Symptoms(2).jpg'),
-                    require('../assets/images/design/Symptoms(3).jpg'),
-                    require('../assets/images/design/Symptoms(3).jpg'),
-                    require('../assets/images/design/Symptoms(4).jpg'),
-                  ].map((src, i) => (
+                  {BOREHOLE_IMAGES.map((src, i) => (
                     <TouchableOpacity key={i} onPress={() => setZoomedImage(src)} activeOpacity={0.85}>
                       <Image source={src} style={styles.signImage} resizeMode="cover" />
                     </TouchableOpacity>
@@ -229,11 +251,7 @@ export default function AboutScreen() {
                 </ScrollView>
 
                 <View style={styles.bulletList}>
-                  {[
-                    'Distorted or stunted fronds, reduced canopy density, and overall decline in vigor and nut yield',
-                    'Secondary infections in damaged crown tissue',
-                    'Severe, repeated attacks may lead to palm death (especially in young palms)',
-                  ].map((text, i) => (
+                  {BOREHOLE_BULLETS.map((text, i) => (
                     <View key={i} style={styles.bulletItem}>
                       <View style={styles.bulletDot} />
                       <Text style={styles.bulletText}>{text}</Text>
@@ -290,15 +308,10 @@ export default function AboutScreen() {
         onRequestClose={() => setZoomedImage(null)}
       >
         <View style={styles.lightboxBackdrop}>
+          {zoomedImage && (
+            <Image source={zoomedImage} style={styles.lightboxImage} resizeMode="cover" />
+          )}
           <SafeAreaView style={styles.lightboxTopBar}>
-            <TouchableOpacity
-              style={styles.lightboxBackBtn}
-              onPress={() => setZoomedImage(null)}
-              accessibilityLabel="Go back"
-            >
-              <Feather name="arrow-left" size={20} color="#FFFFFF" />
-              <Text style={styles.lightboxBackText}>Back</Text>
-            </TouchableOpacity>
             <TouchableOpacity
               style={styles.lightboxCloseBtn}
               onPress={() => setZoomedImage(null)}
@@ -307,9 +320,6 @@ export default function AboutScreen() {
               <Feather name="x" size={22} color="#FFFFFF" />
             </TouchableOpacity>
           </SafeAreaView>
-          {zoomedImage && (
-            <Image source={zoomedImage} style={styles.lightboxImage} resizeMode="contain" />
-          )}
         </View>
       </Modal>
 
@@ -656,9 +666,15 @@ const styles = StyleSheet.create({
   /* ─── LIGHTBOX ─── */
   lightboxBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.96)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#000000',
+  },
+  lightboxImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    width: '100%' as any,
+    height: '100%' as any,
   },
   lightboxTopBar: {
     position: 'absolute',
@@ -666,37 +682,31 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     flexDirection: 'row',
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
     paddingBottom: 10,
     zIndex: 10,
   },
+  lightboxCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.25)',
+  },
   lightboxBackBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
   },
   lightboxBackText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '600',
-  },
-  lightboxCloseBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lightboxImage: {
-    width: SCREEN_WIDTH,
-    height: SCREEN_WIDTH,
-  },
+  }
 });
