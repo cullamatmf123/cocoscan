@@ -2,25 +2,22 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Image,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Image,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { AuthService } from '../services/authService';
-import { HistoryItem, getUserHistory } from '../services/historyService';
 
 export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
   const [displayName, setDisplayName] = useState<string>('');
-  const [recentHistory, setRecentHistory] = useState<HistoryItem[]>([]);
 
   const handleStartScanning = () => router.push('/camera');
-  const handleHistoryPress = () => router.push('/history');
   const handleProfilePress = () => router.push('/profile');
   const handleMenuPress = () => setMenuVisible(true);
 
@@ -37,14 +34,6 @@ export default function HomeScreen() {
     const unsubscribe = AuthService.onAuthStateChanged((user) => {
       if (user) {
         setDisplayName(computeName(user.email, user.displayName));
-        (async () => {
-          try {
-            const items = await getUserHistory();
-            setRecentHistory((items || []).slice(0, 3));
-          } catch {
-            setRecentHistory([]);
-          }
-        })();
       } else {
         router.replace('/signin');
       }
@@ -177,39 +166,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* History header */}
-        <TouchableOpacity style={styles.historyHeader} onPress={handleHistoryPress}>
-          <Text style={styles.historyTitle}>History</Text>
-          <Text style={styles.chevron}>›</Text>
-        </TouchableOpacity>
-
-        {/* Recent History list (max 3 items) */}
-        {recentHistory.length === 0 ? (
-          <Text style={styles.historyEmpty}>No recent history.</Text>
-        ) : (
-          <View style={{ marginTop: 8 }}>
-            {recentHistory.slice(0, 3).map((item) => (
-              <TouchableOpacity
-                key={item.id || Math.random().toString(36)}
-                style={styles.historyItem}
-                onPress={() => router.push('/history')}
-                activeOpacity={0.85}
-                accessibilityLabel={`Open history item ${item.prediction || 'Unknown'}`}
-              >
-                {item.imageUri ? (
-                  <Image source={{ uri: item.imageUri }} style={styles.historyThumb} />
-                ) : (
-                  <View style={[styles.historyThumb, styles.historyThumbFallback]} />
-                )}
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.historyItemTitle}>{item.prediction || 'Unknown'}</Text>
-                  <Text style={styles.historyItemSub}>{new Date(item.timestamp || Date.now()).toLocaleString()}</Text>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
         <View style={{ height: 120 }} />
       </ScrollView>
 
@@ -222,10 +178,6 @@ export default function HomeScreen() {
         <TouchableOpacity style={styles.footerItem} onPress={handleStartScanning} activeOpacity={0.7} accessibilityLabel="Open Camera">
           <Feather name="camera" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Camera</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={handleHistoryPress} activeOpacity={0.7} accessibilityLabel="View History">
-          <Feather name="clock" size={24} color="#6B7280" />
-          <Text style={styles.footerLabel}>History</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.footerItem} onPress={handleProfilePress} activeOpacity={0.7} accessibilityLabel="Open Profile">
           <Feather name="user" size={24} color="#6B7280" />
@@ -457,56 +409,6 @@ const styles = StyleSheet.create({
     fontWeight: '700', 
     textAlign: 'center' 
   },
-  historyHeader: { 
-    marginTop: 16, 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'space-between' 
-  },
-  historyTitle: { 
-    color: '#111827', 
-    fontSize: 16, 
-    fontWeight: '800' 
-  },
-  chevron: { 
-    color: '#111827', 
-    fontSize: 24, 
-    fontWeight: '800' 
-  },
-  historyEmpty: { 
-    color: '#6B7280', 
-    marginTop: 8 
-  },
-  historyItem: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    backgroundColor: '#FFFFFF', 
-    borderRadius: 12, 
-    borderWidth: 1, 
-    borderColor: '#E5E7EB', 
-    padding: 10, 
-    marginBottom: 8 
-  },
-  historyThumb: { 
-    width: 54, 
-    height: 54, 
-    borderRadius: 12, 
-    backgroundColor: '#F3F4F6', 
-    marginRight: 12 
-  },
-  historyThumbFallback: { 
-    alignItems: 'center', 
-    justifyContent: 'center' 
-  },
-  historyItemTitle: { 
-    color: '#111827', 
-    fontWeight: '800' 
-  },
-  historyItemSub: { 
-    color: '#6B7280', 
-    fontSize: 12 
-  },
-  
   /* Footer */
   footerBar: {
     position: 'absolute',
