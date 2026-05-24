@@ -2,6 +2,7 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { getAuth } from 'firebase/auth';
 import { addHistoryItem } from '../services/historyService';
 
 interface ResultParams {
@@ -114,7 +115,7 @@ export default function ResultScreen() {
       if (!imageUri && !photoBase64) return;
       
       try {
-        await addHistoryItem({
+        const result = await addHistoryItem({
           imageUri: imageUri || null,
           photoBase64: photoBase64 || null,
           prediction: displayPrediction || 'Unknown',
@@ -131,11 +132,6 @@ export default function ResultScreen() {
         savedRef.current = true;
       } catch (error) {
         console.warn('Failed to save to history:', error);
-        Alert.alert(
-          'Save Failed', 
-          'Could not save to history. Please check your internet connection and try again.',
-          [{ text: 'OK' }]
-        );
       }
     };
     
@@ -540,7 +536,7 @@ export default function ResultScreen() {
 
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace(getAuth().currentUser ? '/home' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Go to Home">
           <Feather name="home" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
@@ -548,11 +544,11 @@ export default function ResultScreen() {
           <Feather name="camera" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/history')} activeOpacity={0.7} accessibilityLabel="View History">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push(getAuth().currentUser ? '/history' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="View History">
           <Feather name="clock" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>History</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/profile')} activeOpacity={0.7} accessibilityLabel="Open Profile">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push(getAuth().currentUser ? '/profile' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Open Profile">
           <Feather name="user" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>

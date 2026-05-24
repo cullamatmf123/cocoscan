@@ -63,32 +63,6 @@ const normalizePrediction = (
   return 'not infested';
 };
 
-interface DistanceGuideEntry {
-  label: string;
-  distance: string;
-  icon: string;
-}
-
-const DISTANCE_GUIDE: DistanceGuideEntry[] = [
-  { label: 'Not infested (healthy palm)', distance: '5-6 meters', icon: '🟢' },
-  { label: 'CRB infested (boreholes / near V-cut)', distance: '2-3 meters', icon: '🔴' },
-  { label: 'CRB infested (far away V-cut)', distance: '7-10+ meters', icon: '🔴' },
-  { label: 'Other damage / abnormalities', distance: 'Any distance', icon: '🔵' },
-];
-
-const getRecommendedDistance = (prediction: CocoClass): string => {
-  switch (prediction) {
-    case 'not infested':
-      return '5-6 meters';
-    case 'infested by CRB':
-      return '2-3 m (near boreholes/V-cut) or 7-10+ m (far V-cut)';
-    case 'other damage or abnormalities':
-      return 'Any distance';
-    default:
-      return 'N/A';
-  }
-};
-
 const safeJson = async (res: Response): Promise<any | null> => {
   try {
     return await res.json();
@@ -317,7 +291,6 @@ export default function CameraScreen() {
   const [capturedPhoto, setCapturedPhoto] = useState<any>(null);
   const [healthPrediction, setHealthPrediction] =
     useState<HealthPrediction | null>(null);
-  const [showGuide, setShowGuide] = useState(false);
 
   const cameraRef = useRef<CameraView>(null);
   const router = useRouter();
@@ -488,11 +461,6 @@ export default function CameraScreen() {
                   {capturedPhoto.healthResult.analysis.details}
                 </Text>
               )}
-
-            <Text style={styles.distanceRecommend}>
-              📏 Recommended capture distance:{'\n'}
-              {getRecommendedDistance(capturedPhoto.healthResult.prediction)}
-            </Text>
           </View>
         )}
 
@@ -516,36 +484,6 @@ export default function CameraScreen() {
   return (
     <View style={styles.container}>
       <CameraView style={styles.camera} facing="back" ref={cameraRef} />
-
-      {/* Distance Guide toggle button */}
-      <TouchableOpacity
-        style={styles.guideToggle}
-        onPress={() => setShowGuide((v) => !v)}
-        accessibilityLabel="Toggle distance guide"
-      >
-        <Text style={styles.guideToggleText}>📏</Text>
-      </TouchableOpacity>
-
-      {/* Distance Guide panel */}
-      {showGuide && (
-        <View style={styles.guidePanel}>
-          <View style={styles.guideHeader}>
-            <Text style={styles.guideTitle}>Recommended Capture Distance</Text>
-            <TouchableOpacity onPress={() => setShowGuide(false)}>
-              <Text style={styles.guideClose}>✕</Text>
-            </TouchableOpacity>
-          </View>
-          {DISTANCE_GUIDE.map((entry, i) => (
-            <View key={i} style={styles.guideRow}>
-              <Text style={styles.guideIcon}>{entry.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.guideLabel}>{entry.label}</Text>
-                <Text style={styles.guideValue}>{entry.distance}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
 
       <View style={styles.controlsContainer}>
         <TouchableOpacity
@@ -798,81 +736,5 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-  },
-
-  /* Distance Guide */
-  guideToggle: {
-    position: 'absolute',
-    top: 60,
-    right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 10,
-  },
-  guideToggleText: {
-    fontSize: 22,
-  },
-  guidePanel: {
-    position: 'absolute',
-    top: 110,
-    right: 20,
-    left: 20,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    borderRadius: 16,
-    padding: 16,
-    zIndex: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  guideHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  guideTitle: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  guideClose: {
-    color: '#ccc',
-    fontSize: 18,
-    paddingHorizontal: 4,
-  },
-  guideRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  guideIcon: {
-    fontSize: 14,
-    marginRight: 10,
-  },
-  guideLabel: {
-    color: '#ddd',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  guideValue: {
-    color: '#aaa',
-    fontSize: 12,
-    marginTop: 1,
-  },
-
-  /* Distance recommendation on preview */
-  distanceRecommend: {
-    color: '#fff',
-    fontSize: 13,
-    opacity: 0.9,
-    lineHeight: 18,
-    marginTop: 10,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.2)',
   },
 });

@@ -133,22 +133,35 @@ export default function ConditionsScreen() {
 
       router.push({
         pathname: '/result',
-        params: {
-          id: savedHistory.id,
-          // Mark as coming from history so ResultScreen does NOT save again
-          fromHistory: '1',
-          imageUri,
-          photoBase64,
-          prediction,
-          confidence,
-          details: enhancedDetails,
-          recommendations,
-          weather,
-          soil,
-          temperature,
-          humidity,
-          lightCondition,
-        },
+        params: savedHistory
+          ? {
+              id: savedHistory.id,
+              fromHistory: '1',
+              imageUri,
+              photoBase64,
+              prediction,
+              confidence,
+              details: enhancedDetails,
+              recommendations,
+              weather,
+              soil,
+              temperature,
+              humidity,
+              lightCondition,
+            }
+          : {
+              imageUri,
+              photoBase64,
+              prediction,
+              confidence,
+              details: enhancedDetails,
+              recommendations,
+              weather,
+              soil,
+              temperature,
+              humidity,
+              lightCondition,
+            },
       });
     } catch (error: any) {
       console.error('Error saving scan to history:', error);

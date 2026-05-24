@@ -101,8 +101,8 @@ export default function HomeScreen() {
           <Text style={styles.greetSubtitle}>Dashboard</Text>
         </View>
 
-        {/* What is CRB Visual Indicators? */}
-        <Text style={styles.sectionTitle}>What is CRB Visual Indicators</Text>
+        {/* What are CRB Visual Indicators? */}
+        <Text style={styles.sectionTitle}>What are CRB Visual Indicators</Text>
         <TouchableOpacity
           style={styles.heroButton}
           activeOpacity={0.9}

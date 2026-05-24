@@ -84,13 +84,13 @@ export const getUserHistory = async (): Promise<HistoryItem[]> => {
 
 export const addHistoryItem = async (
   item: Omit<HistoryItem, 'id' | 'userId' | 'timestamp'>
-): Promise<HistoryItem> => {
+): Promise<HistoryItem | null> => {
   try {
     const auth = getAuth();
     const user = auth.currentUser;
     
     if (!user) {
-      throw new Error('User not authenticated');
+      return null;
     }
 
     // Structure the data to match the security rules

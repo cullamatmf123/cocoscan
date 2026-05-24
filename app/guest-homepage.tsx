@@ -11,38 +11,12 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { AuthService } from '../services/authService';
-
 export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
-  const [displayName, setDisplayName] = useState<string>('');
 
   const handleStartScanning = () => router.push('/camera');
   const handleProfilePress = () => router.push('/profile');
   const handleMenuPress = () => setMenuVisible(true);
-
-  useEffect(() => {
-    const computeName = (email?: string | null, fallback?: string | null) => {
-      if (fallback && fallback.trim()) return fallback.trim();
-      if (!email) return 'User';
-      const handle = email.split('@')[0] || '';
-      const noTrailingDigits = handle.replace(/[0-9]+$/, '');
-      const base = noTrailingDigits || handle;
-      return base.charAt(0).toUpperCase() + base.slice(1).toLowerCase();
-    };
-
-    const unsubscribe = AuthService.onAuthStateChanged((user) => {
-      if (user) {
-        setDisplayName(computeName(user.email, user.displayName));
-      } else {
-        router.replace('/signin');
-      }
-    });
-
-    return () => {
-      if (typeof unsubscribe === 'function') unsubscribe();
-    };
-  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -86,17 +60,17 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Greeting */}
         <View style={styles.greetBox}>
-          <Text style={styles.greetTitle}>Hi, {displayName || 'User'}</Text>
+          <Text style={styles.greetTitle}>Welcome</Text>
           <Text style={styles.greetSubtitle}>Dashboard</Text>
         </View>
 
-        {/* What is CRB Visual Indicators? */}
-        <Text style={styles.sectionTitle}>What is CRB Visual Indicators</Text>
+        {/* What are CRB Visual Indicators? */}
+        <Text style={styles.sectionTitle}>What are CRB Visual Indicators</Text>
         <TouchableOpacity
           style={styles.heroButton}
           activeOpacity={0.9}
-          onPress={() => router.push('/about')}
-          accessibilityLabel="Learn more about Oryctes Rhinoceros"
+          onPress={() => router.push('/user')}
+          accessibilityLabel="Go to user page"
         >
           <Image
             source={require('../assets/images/design/homepage.png')}
@@ -107,7 +81,7 @@ export default function HomeScreen() {
 
         {/* Info Cards */}
         <View style={styles.cardRow}>
-          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9} onPress={() => router.push('/prevention-control')}>
+          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9} onPress={() => router.push('/user')}>
             <View style={styles.cardIconWrapper}>
               <Image
                 source={require('../assets/images/design/image.png')}
@@ -118,7 +92,7 @@ export default function HomeScreen() {
             <Text style={styles.cardTitle}>Prevention & Control</Text>
           </TouchableOpacity>
           <View style={{ width: 12 }} />
-          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9} onPress={() => router.push('/pesticides')}>
+          <TouchableOpacity style={styles.infoCard} activeOpacity={0.9} onPress={() => router.push('/user')}>
             <View style={styles.cardIconWrapper}>
               <Image
                 source={require('../assets/images/design/pesticide.png')}
