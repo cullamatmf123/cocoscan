@@ -5,6 +5,8 @@ import { Image, ImageBackground, Modal, SafeAreaView, ScrollView, StyleSheet, Te
 
 export default function AboutAppScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
+  const [activeCredits, setActiveCredits] = useState<'dev' | 'res' | null>(null);
+
   return (
     <SafeAreaView style={styles.safe}> 
       {/* App Bar */}
@@ -192,6 +194,67 @@ export default function AboutAppScreen() {
             Empowering coconut farmers with accessible AI technology to protect their crops, 
             increase yields, and build sustainable farming practices for future generations.
           </Text>
+        </View>
+
+        {/* Interactive Credits */}
+        <View style={styles.creditsBlock}>
+          <View style={styles.creditsDivider} />
+
+          <View style={styles.creditsButtonRow}>
+            <TouchableOpacity
+              style={[styles.creditsBtn, activeCredits === 'dev' && styles.creditsBtnActive]}
+              onPress={() => setActiveCredits(activeCredits === 'dev' ? null : 'dev')}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="code-slash-outline"
+                size={11}
+                color={activeCredits === 'dev' ? '#0F3D1E' : '#9CA3AF'}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.creditsBtnText, activeCredits === 'dev' && styles.creditsBtnTextActive]}>
+                Developers
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.creditsBtn, activeCredits === 'res' && styles.creditsBtnActive]}
+              onPress={() => setActiveCredits(activeCredits === 'res' ? null : 'res')}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="flask-outline"
+                size={11}
+                color={activeCredits === 'res' ? '#0F3D1E' : '#9CA3AF'}
+                style={{ marginRight: 4 }}
+              />
+              <Text style={[styles.creditsBtnText, activeCredits === 'res' && styles.creditsBtnTextActive]}>
+                Researchers
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {activeCredits === 'dev' && (
+            <View style={styles.creditsPopBox}>
+              <Text style={styles.creditsPopTitle}>System Developers</Text>
+              <View style={styles.creditsPopDivider} />
+              <Text style={styles.creditsPopName}>Francelyn Estorpe</Text>
+              <Text style={styles.creditsPopName}>Mark Francis Cullamat</Text>
+            </View>
+          )}
+
+          {activeCredits === 'res' && (
+            <View style={styles.creditsPopBox}>
+              <Text style={styles.creditsPopTitle}>Research Team</Text>
+              <View style={styles.creditsPopDivider} />
+               <Text style={styles.creditsPopName}>Mark Francis Cullamat</Text>
+              <Text style={styles.creditsPopName}>Kaella May Cueme</Text>
+              <Text style={styles.creditsPopName}>Francelyn Estorpe</Text>
+              <Text style={styles.creditsPopName}>Stephen Dualan</Text>
+            </View>
+          )}
+
+          <View style={styles.creditsDivider} />
         </View>
 
         <View style={{ height: 40 }} />
@@ -585,6 +648,80 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     opacity: 0.95,
     letterSpacing: 0.2,
+  },
+
+  /* Interactive Credits */
+  creditsBlock: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    marginBottom: 4,
+    gap: 10,
+  },
+  creditsDivider: {
+    width: 40,
+    height: 1,
+    backgroundColor: '#D1D5DB',
+    borderRadius: 1,
+    marginVertical: 2,
+  },
+  creditsButtonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  creditsBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+  },
+  creditsBtnActive: {
+    backgroundColor: '#F0FDF4',
+    borderColor: '#BBF7D0',
+  },
+  creditsBtnText: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '600',
+    letterSpacing: 0.3,
+  },
+  creditsBtnTextActive: {
+    color: '#0F3D1E',
+  },
+  creditsPopBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 200,
+  },
+  creditsPopTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0F3D1E',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 2,
+  },
+  creditsPopDivider: {
+    width: 30,
+    height: 1,
+    backgroundColor: '#BBF7D0',
+    borderRadius: 1,
+    marginBottom: 4,
+  },
+  creditsPopName: {
+    fontSize: 12,
+    color: '#6B7280',
+    fontWeight: '500',
+    textAlign: 'center',
   },
   
   /* Footer */
