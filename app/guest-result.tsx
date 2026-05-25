@@ -1,13 +1,9 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { getAuth } from 'firebase/auth';
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { addHistoryItem } from '../services/historyService';
 
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface ResultParams {
-  id?: string;
-  fromHistory?: string;
   imageUri?: string;
   photoBase64?: string;
   prediction?: string;
@@ -30,13 +26,10 @@ type CocoClass =
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as Partial<ResultParams>;
-  const savedRef = useRef(false);
   const [tab, setTab] = useState<'status' | 'pest'>('status');
   const [menuVisible, setMenuVisible] = useState(false);
 
   const {
-    id,
-    fromHistory,
     imageUri,
     photoBase64,
     prediction = 'Unknown',
@@ -108,36 +101,6 @@ export default function ResultScreen() {
   const isCrbRelated = resultClass === 'infested by CRB';
   const needsAction  = !isHealthy && !isUnspecified;
 
-  useEffect(() => {
-    const saveToHistory = async () => {
-      if (savedRef.current) return;
-      if (fromHistory === '1' || (id && id.length > 0)) return;
-      if (!imageUri && !photoBase64) return;
-      
-      try {
-        const result = await addHistoryItem({
-          imageUri: imageUri || null,
-          photoBase64: photoBase64 || null,
-          prediction: displayPrediction || 'Unknown',
-          confidence: confidence || '0',
-          details: details || '',
-          recommendations: recommendations || 'No specific recommendations available.',
-          weather: weather || 'Not specified',
-          soil: soil || 'Not specified',
-          temperature: temperature && !isNaN(parseFloat(temperature)) ? parseFloat(temperature) : undefined,
-          humidity: humidity && !isNaN(parseFloat(humidity)) ? parseFloat(humidity) : undefined,
-          lightCondition: lightCondition || 'Not specified'
-        });
-        
-        savedRef.current = true;
-      } catch (error) {
-        console.warn('Failed to save to history:', error);
-      }
-    };
-    
-    saveToHistory();
-  }, [id, fromHistory, imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition, displayPrediction]);
-
   const handleAboutPress = () => {
     router.push({
       pathname: '/about',
@@ -187,14 +150,10 @@ export default function ResultScreen() {
   const pestInfoDesc = React.useMemo((): string | null => {
     switch (resultClass) {
       case 'infested by CRB':
-        return 'The scan has detected visible signs and symptoms consistent with Coconut Rhinoceros Beetle (CRB) infestation on this coconut palm. While the adult Oryctes rhinoceros beetle may not be directly visible in the image, characteristic damage patterns associated with its feeding activity have been identified. Immediate action is recommended to prevent further damage and spread.';
+        return 'The scan detected visible signs and symptoms of CRB infestation on the coconut palm. The Oryctes rhinoceros beetle itself was not visible, but characteristic damage patterns were identified.';
       case 'infestation from other pest':
-<<<<<<< HEAD
-        return 'This coconut palm exhibits signs of infestation or disease that are not consistent with Coconut Rhinoceros Beetle (CRB) damage. No Oryctes rhinoceros beetle presence or CRB-specific infestation patterns were detected. The observed symptoms may be caused by a different pest species, fungal infection, or other plant disease. It is strongly advised to consult a qualified agricultural expert or plant pathologist for a thorough and accurate diagnosis.';
-=======
->>>>>>> 1884f602eff41686394a8230d9d644cfd2dfbda9
       case 'unspecified':
-        return 'The scanned image does not appear to be a coconut palm or any condition related to coconut pest and disease. The system was unable to classify this image within any known detection category. Please ensure the image clearly shows a coconut tree, its fronds, crown, or trunk for a valid and accurate scan result.';
+        return 'The scanned image does not appear to be a coconut tree or any related coconut pest/disease.';
       default:
         return null;
     }
@@ -230,7 +189,7 @@ export default function ResultScreen() {
 
   // Section title helpers
   const preventionTitle = React.useMemo((): string => {
-    if (isHealthy) return 'How to Maintain a Healthy Coconut Tree';
+    if (isHealthy) return 'Prevention to Maintain Healthy Coconut';
     if (isUnspecified) return 'No Prevention & Control Needed';
     return 'Prevention & Control';
   }, [resultClass, isHealthy, isUnspecified]);
@@ -273,14 +232,9 @@ export default function ResultScreen() {
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/user'); }}>
               <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
-            </TouchableOpacity>
-            <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
-              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
-              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -367,14 +321,14 @@ export default function ResultScreen() {
                   {isHealthy && (
                     <>
                       <Text style={[styles.sectionText, { marginTop: 6, lineHeight: 20 }]}>
-                        Your coconut palm is currently healthy and shows no signs of pest infestation. To sustain its condition and prevent future threats, consistently observe the following maintenance practices:
+                        Your coconut palm appears healthy! Follow these practices to keep it that way:
                       </Text>
                       <View style={{ gap: 6, marginTop: 6 }}>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Conduct regular inspections of the crown, fronds, and trunk to detect any early signs of pest activity, unusual damage, or discoloration.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Apply appropriate fertilizers and maintain a consistent irrigation schedule to promote strong, vigorous palm growth and improve natural resistance to pests and diseases.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Promptly remove and properly dispose of dead fronds, decaying logs, stumps, and organic debris surrounding the base of the tree, as these serve as primary breeding sites for the Coconut Rhinoceros Beetle (CRB).</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Install pheromone traps (Oryctalure) within the plantation to continuously monitor adult beetle activity and reduce the risk of infestation before it begins.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Ensure proper drainage throughout the plantation and maintain overall cleanliness to significantly reduce conditions favorable to pest breeding and disease development.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Regularly inspect the crown and fronds for early signs of pest activity.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Maintain proper fertilization and irrigation for optimal palm vigor.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Remove and dispose of dead organic matter around the base to prevent breeding sites.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Use pheromone traps nearby to monitor and deter Oryctes rhinoceros beetles.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Keep the plantation clean and well-drained to reduce disease and pest risk.</Text></View>
                       </View>
                     </>
                   )}
@@ -384,19 +338,19 @@ export default function ResultScreen() {
                     <>
                       <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 6 }]}>Prevention</Text>
                       <View style={{ gap: 6 }}>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Strictly maintain field sanitation by regularly removing and properly disposing of decaying logs, tree stumps, dead fronds, and any organic debris that may serve as breeding grounds for the Coconut Rhinoceros Beetle (CRB).</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Deploy pheromone traps (Oryctalure) strategically across the plantation to attract, monitor, and reduce adult beetle populations before they cause further damage.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Set up log traps baited with decomposing organic materials at key locations within the plantation to lure and capture adult beetles effectively.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Practice sound plantation management by adhering to proper fertilization schedules, routine pruning of damaged fronds, and maintaining adequate drainage to keep palms vigorous and naturally resistant to infestation.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Conduct frequent inspections of young and newly planted palms, as they are especially vulnerable to CRB attack during early growth stages.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Maintain field sanitation by removing and properly disposing of decaying logs, stumps, and organic debris that serve as breeding sites.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Use pheromone traps (Oryctalure) to attract and monitor adult beetle populations.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Set up log traps made from decomposing organic materials to lure and capture beetles.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Practice good plantation management, including proper fertilization, pruning, and drainage to keep trees healthy and resistant.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Regularly inspect young palms for early signs of beetle activity.</Text></View>
                       </View>
                       <Text style={[styles.sectionText, { fontWeight: '800', marginTop: 10 }]}>Control</Text>
                       <View style={{ gap: 6 }}>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Perform manual extraction of adult beetles found within the crown, bore holes, and nearby breeding sites to immediately reduce the active beetle population.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Apply proven biological control agents — including the entomopathogenic fungus Metarhizium anisopliae and the Oryctes rhinoceros nudivirus (OrNV) — to suppress beetle populations naturally and sustainably over time.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• When necessary, apply recommended chemical insecticides such as lambda-cyhalothrin, imidacloprid, or chlorantraniliprole in strict accordance with label instructions and established safety protocols to minimize environmental impact.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Implement an Integrated Pest Management (IPM) strategy that systematically combines biological, cultural, and chemical control methods to achieve effective and long-term suppression of CRB infestations.</Text></View>
-                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Carry out consistent post-treatment monitoring to evaluate the effectiveness of control measures and ensure that the beetle population does not rebound or spread to neighboring palms.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Conduct manual removal of adult beetles from the crown and breeding sites.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Apply biological control agents, such as the fungus Metarhizium anisopliae or the Oryctes rhinoceros nudivirus (OrNV), to naturally suppress populations.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Use chemical control cautiously with recommended insecticides like lambda-cyhalothrin, imidacloprid, or chlorantraniliprole, following safety guidelines.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Adopt an Integrated Pest Management (IPM) approach by combining biological, cultural, and chemical methods for long-term effectiveness.</Text></View>
+                        <View style={styles.bulletCard}><Text style={styles.bullet}>• Monitor regularly after treatment to ensure the pest population remains under control.</Text></View>
                       </View>
                     </>
                   )}
@@ -437,20 +391,6 @@ export default function ResultScreen() {
                 </View>
               )}
 
-<<<<<<< HEAD
-              {/* Other pest: disclaimer note */}
-              {resultClass === 'infestation from other pest' && (
-                <View style={styles.disclaimerCard}>
-                  <Text style={styles.disclaimerIcon}>📋</Text>
-                  <Text style={styles.disclaimerText}>
-                    <Text style={styles.disclaimerBold}>Note: </Text>
-                    The condition detected on this coconut palm does not appear to be related to Coconut Rhinoceros Beetle (CRB) infestation. The specific pest, pathogen, or disease responsible for the observed symptoms requires professional evaluation for accurate identification. Please consult your local agricultural extension office, a licensed plant pathologist, or a qualified agricultural technician to obtain a precise diagnosis and receive appropriate treatment recommendations tailored to the specific condition of your palm.
-                  </Text>
-                </View>
-              )}
-
-=======
->>>>>>> 1884f602eff41686394a8230d9d644cfd2dfbda9
               {/* Unspecified: not identified card */}
               {isUnspecified && (
                 <View style={styles.unspecifiedCard}>
@@ -458,7 +398,7 @@ export default function ResultScreen() {
                   <View style={{ flex: 1 }}>
                     <Text style={styles.unspecifiedTitle}>Image Not Identified</Text>
                     <Text style={styles.unspecifiedText}>
-                      The scanned image could not be recognized as a coconut palm or any associated pest and disease condition. This may be due to an unrelated subject in the photo, poor image quality, or an angle that does not clearly capture the palm. For accurate detection results, please retake the photo using a clear, well-lit image that directly shows the coconut palm, its crown, fronds, or trunk.
+                      The scanned image was not recognized as a coconut tree or any related pest/disease. This may be an unrelated object. Please try again with a clear photo of a coconut palm for accurate results.
                     </Text>
                   </View>
                 </View>
@@ -519,7 +459,7 @@ export default function ResultScreen() {
 
         {/* Scan Again button */}
         <View style={{ paddingHorizontal: 0, marginTop: 8, marginBottom: 20 }}>
-          <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/camera')} accessibilityLabel="Scan Again">
+          <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/guest-camera')} accessibilityLabel="Scan Again">
             <Text style={styles.scanAgainText}>Scan Again</Text>
           </TouchableOpacity>
         </View>
@@ -527,19 +467,15 @@ export default function ResultScreen() {
 
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace(getAuth().currentUser ? '/home' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Go to Home">
           <Feather name="home" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/guest-camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
           <Feather name="camera" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push(getAuth().currentUser ? '/history' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="View History">
-          <Feather name="clock" size={24} color="#6B7280" />
-          <Text style={styles.footerLabel}>History</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push(getAuth().currentUser ? '/profile' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Open Profile">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/guest-profile')} activeOpacity={0.7} accessibilityLabel="Open Profile">
           <Feather name="user" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>

@@ -87,7 +87,7 @@ export default function AboutAppScreen() {
                 CocoScan is a mobile application that classifies the condition of dwarf coconut trees based on visual indicators of Coconut Rhinoceros Beetle (Oryctes rhinoceros) infestation using a YOLOv8-based image classification model.
               </Text>
               <Text style={styles.paragraph}>
-                The system classifies coconut tree images into four categories: Infested by CRB, Not Infested, Infestation from Other Pest, and Unspecified — with a model accuracy of 98.57%.
+                The system classifies coconut tree images into four categories: Infested by CRB, Not Infested, Infestation from Other Pest, and Unspecified — with a model accuracy of 91.04%.
               </Text>
             </View>
           </View>
@@ -201,19 +201,19 @@ export default function AboutAppScreen() {
             <Text style={styles.sectionTitle}>Model Performance</Text>
           </View>
           <Text style={styles.paragraph}>
-            The YOLOv8n-cls model was trained on 14,000 annotated images across four classes using Roboflow, with GPU-accelerated training on a Tesla T4.
+            The YOLOv8n-cls model was trained on 9,660 annotated images across four classes using Roboflow, with GPU-accelerated training on a Tesla T4.
           </Text>
           <View style={styles.statRow}>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>98.57%</Text>
+              <Text style={styles.statValue}>91.04%</Text>
               <Text style={styles.statLabel}>Top-1 Accuracy</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>0.99</Text>
+              <Text style={styles.statValue}>0.91</Text>
               <Text style={styles.statLabel}>F1-Score</Text>
             </View>
             <View style={styles.statBox}>
-              <Text style={styles.statValue}>14,000</Text>
+              <Text style={styles.statValue}>9,660</Text>
               <Text style={styles.statLabel}>Images</Text>
             </View>
           </View>
