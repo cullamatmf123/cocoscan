@@ -98,7 +98,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greetBox}>
           <Text style={styles.greetTitle}>Hi, {displayName || 'User'}</Text>
-          <Text style={styles.greetSubtitle}>Dashboard</Text>
+
         </View>
 
         {/* What are CRB Visual Indicators? */}

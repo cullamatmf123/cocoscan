@@ -1,13 +1,9 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { getAuth } from 'firebase/auth';
-import React, { useEffect, useRef, useState } from 'react';
-import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { addHistoryItem } from '../services/historyService';
 
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface ResultParams {
-  id?: string;
-  fromHistory?: string;
   imageUri?: string;
   photoBase64?: string;
   prediction?: string;
@@ -30,13 +26,10 @@ type CocoClass =
 export default function ResultScreen() {
   const router = useRouter();
   const params = useLocalSearchParams() as Partial<ResultParams>;
-  const savedRef = useRef(false);
   const [tab, setTab] = useState<'status' | 'pest'>('status');
   const [menuVisible, setMenuVisible] = useState(false);
 
   const {
-    id,
-    fromHistory,
     imageUri,
     photoBase64,
     prediction = 'Unknown',
@@ -107,36 +100,6 @@ export default function ResultScreen() {
   const isUnspecified = resultClass === 'unspecified' || resultClass === 'infestation from other pest';
   const isCrbRelated = resultClass === 'infested by CRB';
   const needsAction  = !isHealthy && !isUnspecified;
-
-  useEffect(() => {
-    const saveToHistory = async () => {
-      if (savedRef.current) return;
-      if (fromHistory === '1' || (id && id.length > 0)) return;
-      if (!imageUri && !photoBase64) return;
-      
-      try {
-        const result = await addHistoryItem({
-          imageUri: imageUri || null,
-          photoBase64: photoBase64 || null,
-          prediction: displayPrediction || 'Unknown',
-          confidence: confidence || '0',
-          details: details || '',
-          recommendations: recommendations || 'No specific recommendations available.',
-          weather: weather || 'Not specified',
-          soil: soil || 'Not specified',
-          temperature: temperature && !isNaN(parseFloat(temperature)) ? parseFloat(temperature) : undefined,
-          humidity: humidity && !isNaN(parseFloat(humidity)) ? parseFloat(humidity) : undefined,
-          lightCondition: lightCondition || 'Not specified'
-        });
-        
-        savedRef.current = true;
-      } catch (error) {
-        console.warn('Failed to save to history:', error);
-      }
-    };
-    
-    saveToHistory();
-  }, [id, fromHistory, imageUri, photoBase64, prediction, confidence, details, recommendations, weather, soil, temperature, humidity, lightCondition, displayPrediction]);
 
   const handleAboutPress = () => {
     router.push({
@@ -269,14 +232,9 @@ export default function ResultScreen() {
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/user'); }}>
               <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
-            </TouchableOpacity>
-            <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
-              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
-              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -501,7 +459,7 @@ export default function ResultScreen() {
 
         {/* Scan Again button */}
         <View style={{ paddingHorizontal: 0, marginTop: 8, marginBottom: 20 }}>
-          <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/camera')} accessibilityLabel="Scan Again">
+          <TouchableOpacity style={styles.scanAgainBtn} onPress={() => router.replace('/guest-camera')} accessibilityLabel="Scan Again">
             <Text style={styles.scanAgainText}>Scan Again</Text>
           </TouchableOpacity>
         </View>
@@ -509,19 +467,15 @@ export default function ResultScreen() {
 
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace(getAuth().currentUser ? '/home' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Go to Home">
           <Feather name="home" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/guest-camera')} activeOpacity={0.7} accessibilityLabel="Open Camera">
           <Feather name="camera" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Camera</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push(getAuth().currentUser ? '/history' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="View History">
-          <Feather name="clock" size={24} color="#6B7280" />
-          <Text style={styles.footerLabel}>History</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.push(getAuth().currentUser ? '/profile' : '/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Open Profile">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.push('/guest-profile')} activeOpacity={0.7} accessibilityLabel="Open Profile">
           <Feather name="user" size={24} color="#6B7280" />
           <Text style={styles.footerLabel}>Profile</Text>
         </TouchableOpacity>

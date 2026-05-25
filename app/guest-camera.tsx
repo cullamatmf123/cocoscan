@@ -3,12 +3,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  BackHandler,
-  Image,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    BackHandler,
+    Image,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 type CocoClass =
@@ -365,7 +365,7 @@ export default function CameraScreen() {
   const handleDone = () => {
     if (capturedPhoto && capturedPhoto.healthResult) {
       router.push({
-        pathname: '/conditions',
+        pathname: '/guest-conditions',
         params: {
           imageUri: capturedPhoto.uri,
           prediction: capturedPhoto.healthResult.prediction,

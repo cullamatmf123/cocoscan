@@ -2,20 +2,21 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
-  Image,
-  Modal,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    Image,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
 
-  const handleStartScanning = () => router.push('/camera');
-  const handleProfilePress = () => router.push('/profile');
+  const handleStartScanning = () => router.push('/guest-camera');
+  const handleProfilePress = () => router.push('/guest-profile');
   const handleMenuPress = () => setMenuVisible(true);
 
   return (
@@ -43,14 +44,9 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.menuBackdropTouch} activeOpacity={1} onPress={() => setMenuVisible(false)} />
           <View style={styles.menuSheet}>
             <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/about-app'); }}>
+            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.push('/user'); }}>
               <Ionicons name="information-circle-outline" size={20} color="#1F3D2A" style={styles.menuIcon} />
               <Text style={styles.menuItemText}>About</Text>
-            </TouchableOpacity>
-            <View style={styles.menuDivider} />
-            <TouchableOpacity style={styles.menuItem} onPress={() => { setMenuVisible(false); router.replace('/'); }}>
-              <Ionicons name="log-out-outline" size={20} color="#DC2626" style={styles.menuIcon} />
-              <Text style={[styles.menuItemText, { color: '#DC2626' }]}>Logout</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -61,7 +57,7 @@ export default function HomeScreen() {
         {/* Greeting */}
         <View style={styles.greetBox}>
           <Text style={styles.greetTitle}>Welcome</Text>
-          <Text style={styles.greetSubtitle}>Dashboard</Text>
+
         </View>
 
         {/* What are CRB Visual Indicators? */}
@@ -145,7 +141,7 @@ export default function HomeScreen() {
 
       {/* Footer navigation */}
       <View style={styles.footerBar}>
-        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/home')} activeOpacity={0.7} accessibilityLabel="Go to Home">
+        <TouchableOpacity style={styles.footerItem} onPress={() => router.replace('/guest-homepage')} activeOpacity={0.7} accessibilityLabel="Go to Home">
           <Feather name="home" size={24} color="#1F3D2A" />
           <Text style={[styles.footerLabel, { color: '#1F3D2A', fontWeight: '700' }]}>Home</Text>
         </TouchableOpacity>

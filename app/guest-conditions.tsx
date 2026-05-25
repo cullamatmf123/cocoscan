@@ -2,19 +2,17 @@ import { Picker } from '@react-native-picker/picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  BackHandler,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-
-
 export default function ConditionsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
@@ -117,7 +115,7 @@ export default function ConditionsScreen() {
     const enhancedDetails = `${details}\n\nEnvironmental Conditions:\n• Weather: ${weather}\n• Soil: ${soil}\n• Temperature: ${temperature}°C\n• Humidity: ${humidity}%\n• Light: ${lightCondition}`;
 
     router.push({
-      pathname: '/result',
+      pathname: '/guest-result',
       params: {
         imageUri,
         photoBase64,
